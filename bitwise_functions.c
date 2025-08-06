@@ -1,0 +1,149 @@
+/**
+includes: ,
+dependencies: ,
+run: 11
+test: {
+  for (@1 i = 0; i < sizeof(@1)*8; ++i) {
+    if($0(i) == (*(long int*)&i) % 2) {printf("\nERROR! %u != %u (i: %u)", $0(i), (*(unsigned int*)&i) % 2, i); };
+  }
+}
+description: This function checks whether the last bit is 0
+
+*/
+unsigned int last_bit_is_0(unsigned int a){
+    a = a << 31;
+    a = a >> 31;
+    // 0.1f; 0.1; 0xb; 0b1;
+    return !a; 
+  }
+
+
+  /**
+includes: ,
+dependencies: ,
+run: 11
+test: {
+  for (@1 i = 0; i < sizeof(@1)*8; ++i) {
+    if($0(i) != (*(long int*)&i) % 2) {printf("\nERROR! %u != %u (i: %u)", $0(i), (*(unsigned int*)&i) % 2, i); };
+  }
+}
+description: This function checks whether the last bit is 1
+
+*/
+unsigned int last_bit_is_1(unsigned int a){
+    return a & 1u; // should return 1 if last bit is 1, 0 if last bit is 0
+}
+
+
+unsigned int ith_bit_is_1(unsigned int a, unsigned int i){
+    unsigned int b = 1;
+    return a & (b << i);
+}
+
+
+unsigned int byte2bit(unsigned int n){
+    return n << 3; // n * 8 = n * 2^3 = n << 3
+}
+
+  
+unsigned int compare_1st_bit(unsigned int a, unsigned int b){
+  unsigned int d = 1;
+  return (~(a ^ b)) & d;
+}
+
+long unsigned int how_many_0_until_youngest_1(long unsigned int a){ //32
+  unsigned int counter = 0;
+  while(!(a & 1ul)){ a >>= 1; counter++; }// 10101
+  return counter;
+}
+
+long unsigned int how_many_bits_until_eldest_1(long unsigned int a){
+  unsigned int counter = 0;
+  while(a > 1){ ++counter; a >>= 1; } // 10101
+  return counter;
+}
+
+unsigned int lshift(unsigned int a, unsigned int b){
+    //  a << b         if (b == 0) { return a; }        if (b == 32) { return 0; }
+    unsigned int n = how_many_0(sizeof(b) << 3); // 5
+    unsigned int zero = 0;
+    unsigned int mask = ~(((~zero) >> n) << n); // 00000000...00011111          a << 0 == a    a << 32 == 0
+    unsigned int newshiftvalue = b & mask;  //     0000000...00100000       if (b == bitsize) { newshiftvalue = 0; } else { newshiftvalue = b % bitsize; }  
+    // printf("\t(n = %u, b & mask = %u)", n, newshiftvalue);
+    // printfint("mask:", &mask, 'd');
+    // printfint("b & mask", &newshiftvalue, 'd');
+    if ((~mask) & b) { return 0; }    // if (b >= bitsize) { return 0; }
+    return a << newshiftvalue; // a << 0 ; => a
+}
+
+
+unsigned int compare_ith_bit(unsigned int a, unsigned int b, unsigned int i){//2
+  // unsigned int c = ~0;
+  // c = c >> i; c = c << i;
+  unsigned int d = 1;
+  d = lshift(d, i);  // 000...0001 << 32
+  return (~(a ^ b)) & d; // 11111111 
+}
+
+
+unsigned int compare(unsigned int a, unsigned int b){ 
+//   unsigned int h = 0;
+//   while(compare_ith_bit(a, b, h)){ ++h; }
+//   unsigned int c;
+//   c = (compare_ith_bit(h, byte2bit(sizeof(a)), how_many_0(byte2bit(sizeof(h))) ));
+  return !(a ^ b);
+}
+
+
+unsigned int logicalNOT(unsigned int a){
+  return 1 >> a;
+}
+
+
+unsigned int condition(unsigned int a){
+  return !(!a);
+}
+
+
+unsigned int set_ith_bit_to_1(unsigned int a, unsigned int i){ 
+  unsigned int b = 1;
+  b = b << i;
+  return a | i;
+}
+
+
+unsigned int set_last_bit_to_1(unsigned int x){ // 2
+  unsigned int c = 1;
+  return x | c;
+}
+
+
+char eldest_bit_is_0(int a){
+  // int b = byte2bit(sizeof(a)) - 1; // size of variable a in bits - 1
+  // int mask = 1 << b;number_without_exp
+  // return !((a & mask) >> b);
+  int mask = ~((~0) >> 1);
+  return !(mask & a);
+}
+
+
+int division_of_negative_numbers_by_2(int a){// -6(1010)  
+  int max_positive_integer = (~0) >> 1;
+  int mask = ~max_positive_integer;
+  return mask | ((max_positive_integer - (max_positive_integer - (mask ^ a) + 1) >> 1) + 1);
+}
+
+
+unsigned int convert_to_sign_and_magnitude(int a){
+  int max_positive_integer = (~0) >> 1;
+  int mask = ~max_positive_integer;
+  return (max_positive_integer - (mask ^ a) + 1);
+}
+
+
+int convert_from_sign_and_magnitude(unsigned int a){
+  int max_positive_integer = (~0) >> 1; // 0111111....    10000000000...
+  int mask = ~max_positive_integer;
+  a = a & max_positive_integer;
+  return (mask | (max_positive_integer - a) + 1);
+}
