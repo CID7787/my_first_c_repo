@@ -32,7 +32,7 @@ double safe_double_multiplication_without_rounding(dbits multiplicand, dbits mul
     exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
     exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; }
     // check whether of not exponent value bigger than MAX_DOUBLE_EXPONENT
-    *err = else0(exponent > MAX_DOUBLE_EXP, POSITIVE_OVERFLOW) | else0(!(exponent > MAX_DOUBLE_EXP), *err); if(*err){ return result.d; }
+    *err = else0(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERFLOW) | else0(exponent <=  MAX_NORM_DOUBLE_EXP), *err); if(*err){ return result.d; }
     result.parts.exp = exponent;
     result.parts.sign = multiplicand.parts.sign ^ multiplier.parts.sign;
     return result.d;
@@ -178,7 +178,7 @@ double safe_double_multiplication_with_rounding(dbits multiplicand, dbits multip
     exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
     exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; } 
     // check whether or not exponent value bigger than MAX_DOUBLE_EXPONENT
-    *err = else0(exponent > MAX_DOUBLE_EXP, POSITIVE_OVERF LOW) | else0(exponent <= MAX_DOUBLE_EXP, *err); if(*err){ return result.d; }
+    *err = else0(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERF LOW) | else0(exponent <= MAX_NORM_DOUBLE_EXP, *err); if(*err){ return result.d; }
     result.parts.exp = exponent;
     result.parts.sign = multiplicand.parts.sign ^ multiplier.parts.sign;
     return result.d;

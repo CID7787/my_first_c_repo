@@ -6,7 +6,7 @@ const unsigned int MAX_UINT = ~0u;
 const int MAX_INT = 0x7fffffff;
 const int MIN_INT = ~MAX_INT;
 const long unsigned int MAX_DOUBLE_MANTISSA = 0x001fffffffffffff;
-const unsigned int MAX_DOUBLE_EXP = 2046;
+const unsigned int MAX_NORM_DOUBLE_EXP = 2046;
 const long unsigned int DOUBLE_MANTISSA_HIDDEN_ONE = 0x0010000000000000;
 const unsigned int DOUBLE_EXP_BIAS = 0x000003ff;
 const unsigned char AMOUNT_OF_DOUBLE_MANTISSA_BITS = 52;
@@ -456,7 +456,7 @@ double safe_double_multiplication_without_rounding(dbits multiplicand, dbits mul
   exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
   exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; }
   // check whether of not exponent value bigger than
-  *err = else0(exponent > MAX_DOUBLE_EXPONENT, POSITIVE_OVERFLOW) | else0(!(exponent > MAX_DOUBLE_EXPONENT), *err); if(*err){ return result.d; }
+  *err = else0(exponent > MAX_NORM_DOUBLE_EXPONENT, POSITIVE_OVERFLOW) | else0(exponent <= MAX_NORM_DOUBLE_EXPONENT), *err); if(*err){ return result.d; }
   result.parts.exp = exponent;
   result.parts.sign = multiplicand.parts.sign ^ multiplier.parts.sign;
   return result.d;
