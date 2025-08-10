@@ -186,17 +186,18 @@ double safe_double_multiplication_with_rounding(dbits multiplicand, dbits multip
 
 int my_floor(float x, error* err){
     long int lintx = x;
-    lintx = else0(x < 0, lintx - 1) | else0(x  >=  0, lintx);
-    *err = else0(lintx > MAX_INT, POSITIVE_OVERFLOW) | else0(lintx < MIN_INT, NEGATIVE_OVERFLOW) | else0((lintx < MAX_INT) & (lintx > MIN_INT), *err);
+    lintx -= else0(x < 0, 1);
+    *err = ternary((lintx > MAX_INT) | (lintx < MIN_INT), ternary(lintx > MAX_INT, POSITIVE_OVERFLOW, NEGATIVE_OVERFLOW), *err);
     return lintx;
 }
 
 int my_ceil(float x, error* err){
     long int lintx = x;
-    lintx = else0(lintx < x, lintx + 1) | else0(lintx >= x, lintx);
-    *err = else0(lintx > MAX_INT, POSITIVE_OVERFLOW) | else0(lintx < MIN_INT, NEGATIVE_OVERFLOW) | else0((lintx < MAX_INT) & (lintx > MIN_INT), *err);
+    lintx += else0(lintx < x, 1);
+    *err = ternary((lintx > MAX_INT) | (lintx < MIN_INT), ternary(lintx > MAX_INT, POSITIVE_OVERFLOW, NEGATIVE_OVERFLOW), *err);
     return lintx;
 }
+
 
 int main(){
     dbits d1, d2;
