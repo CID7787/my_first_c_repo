@@ -198,6 +198,22 @@ int my_ceil(float x, error* err){
     return lintx;
 }
 
+long unsigned int new_lluint_multiplication(long unsigned int multiplicand, long unsigned int multiplier, unsigned int bin_point_shift){
+    long unsigned int result_l, result_r, product1, product2, product3, multiplicand_l, multiplicand_r, multiplier_l, multiplier_r, mask_r = 0x7ffffff;
+    error err = NO_ERROR;
+    multiplicand_l = multiplicand >> 27;
+    multiplier_l = multiplier >> 27;
+    multiplicand_r = multiplicand & mask_r
+    multiplier_r = multiplier & mask_r;
+    product1 = safe_luint_multiplication(multiplicand_l, multiplier_l, &err);// << (27 + 27)
+    product2 = safe_luint_multiplication(multiplicand_r, multiplier_l, &err);// << 27
+    result_r = safe_luint_multiplication(multiplicand_l, multiplier_r, &err);// << 27
+    product2 = safe_luin_addition(product2, result_r, &err);// << 27
+    product3 = safe_luint_multiplication(multiplicand_r, multiplier_r, &err);
+    result_r = product1 << 54;
+    result_l = product1 >> 10;
+}    
+
 
 int main(){
     dbits d1, d2;
