@@ -427,7 +427,7 @@ float float_division(float result, float m1, float precision){ // a = 9, b = 3 c
 
  // FUNCTION: double_multiplication_without_rounding(dbits, dbits, error*)
 
- dbits safe_double_magnitude_multiplication(dbits multiplicand, dbits multiplier, error* err){
+ dbits safe_double_mantissa_multiplication_without_rounding(dbits multiplicand, dbits multiplier, error* err){
   multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplicand.parts.magn;
   multiplier.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplier.parts.magn;
   // remove useless zeros
@@ -451,7 +451,7 @@ double safe_double_multiplication_without_rounding(dbits multiplicand, dbits mul
   // check whether or not one of arguments equal to 0
   if(!multiplicand.d | !multiplier.d){ return 0; }
   dbits result = multiplier;
-  result = safe_double_magnitude_multiplication(multiplicand, multiplier, err); if(*err){ return result.d; }
+  result = safe_double_mantissa_multiplication_without_rounding(multiplicand, multiplier, err); if(*err){ return result.d; }
   unsigned int exponent = safe_uint_addition(multiplicand.parts.exp, multiplier.parts.exp, err); if(*err){ return result.d; }
   exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
   exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; }
