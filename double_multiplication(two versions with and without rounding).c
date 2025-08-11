@@ -203,12 +203,12 @@ long unsigned int new_lluint_multiplication(long unsigned int multiplicand, long
     error err = NO_ERROR;
     multiplicand_l = multiplicand >> 27;
     multiplier_l = multiplier >> 27;
-    multiplicand_r = multiplicand & mask_r
+    multiplicand_r = multiplicand & mask_r;
     multiplier_r = multiplier & mask_r;
     product1 = safe_luint_multiplication(multiplicand_l, multiplier_l, &err);// << (27 + 27)
     product2 = safe_luint_multiplication(multiplicand_r, multiplier_l, &err);// << 27
     result_r = safe_luint_multiplication(multiplicand_l, multiplier_r, &err);// << 27
-    product2 = safe_luin_addition(product2, result_r, &err);// << 27
+    product2 = safe_luint_addition(product2, result_r, &err);// << 27
     product3 = safe_luint_multiplication(multiplicand_r, multiplier_r, &err);
     result_r = product1 << 54;
     result_l = product1 >> 10;
