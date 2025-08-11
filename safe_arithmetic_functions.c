@@ -171,7 +171,7 @@ long unsigned int safe_luint_addition(long unsigned int addend1, long unsigned i
 long unsigned int safe_luint_multiplication(long unsigned int multiplier, long unsigned int multiplicand, error* err){
     long unsigned int product = 0;
     while(multiplicand-- > 0){
-        if(*err){ return result; }
+        if(*err){ return product; }
         product = safe_luint_addition(product, multiplier, err); 
     }
     return product;
