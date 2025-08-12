@@ -108,9 +108,12 @@ long unsigned int new_lluint_multiplication(long unsigned int multiplicand, long
 
 dbits safe_double_mantissa_multiplication_with_rounding(dbits multiplicand, dbits multiplier, error* err){
     multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplicand.parts.magn;
+//TODO: CHANGE MAGN PARTS TO MANT
     multiplier.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplier.parts.magn;
     // remove useless zeros
-    if(how_many_0_until_youngest_1(multiplicand.luint) < how_many_0_until_youngest_1(multiplier.luint)) { while(!(multiplicand.luint & 1ul)) { multiplicand.luint >>= 1; multiplier.luint >>= 1; }}
+    if(how_many_0_until_youngest_1(multiplicand.luint) < how_many_0_until_youngest_1(multiplier.luint)) {
+	 while(!(multiplicand.luint & 1ul)) { multiplicand.luint >>= 1; multiplier.luint >>= 1; }
+    }
     else{ while(!(multiplier.luint & 1ul)) { multiplicand.luint >>= 1; multiplier.luint >>= 1; } }
 
     if((multiplicand.luint & multiplier.luint) == 1) { return (dbits){ .luint = DOUBLE_MANTISSA_HIDDEN_ONE}; }
@@ -138,6 +141,7 @@ int my_ceil(float x, error* err){
 
   double safe_double_multiplication_with_rounding(dbits multiplicand, dbits multiplier, error* err){
         if(!multiplicand.d | !multiplier.d){ return 0; }
+	// TODO: add error handling for NANs
         dbits result = safe_double_mantissa_multiplication_with_rounding(multiplicand, multiplier, err); if(*err){ return result.d; }
         unsigned int exponent = safe_uint_addition(multiplicand.parts.exp, multiplier.parts.exp, err); if(*err){ return result.d; }
         exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
