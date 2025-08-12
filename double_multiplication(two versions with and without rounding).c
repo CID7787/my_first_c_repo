@@ -70,19 +70,42 @@ long unsigned int old_lluint_multiplication(long unsigned int multiplicand, long
 }
 
 long unsigned int new_lluint_multiplication(long unsigned int multiplicand, long unsigned int multiplier, unsigned int bin_point_shift){
-    long unsigned int result_l, result_r, product1, product2, product3, multiplicand_l, multiplicand_r, multiplier_l, multiplier_r, mask_r = 0x7ffffff;
+    long unsigned int result_l, result_r, product1, product2, multiplicand_l, multiplicand_r, multiplier_l, multiplier_r, mask_r = 0x7ffffff;
     error err = NO_ERROR;
+    // getting left and right parts of multiplicand and multiplier 
     multiplicand_l = multiplicand >> 27;
     multiplier_l = multiplier >> 27;
     multiplicand_r = multiplicand & mask_r;
     multiplier_r = multiplier & mask_r;
+    // computing products
     product1 = safe_luint_multiplication(multiplicand_l, multiplier_l, &err);// << (27 + 27)
     product2 = safe_luint_multiplication(multiplicand_r, multiplier_l, &err);// << 27
     result_r = safe_luint_multiplication(multiplicand_l, multiplier_r, &err);// << 27
     product2 = safe_luint_addition(product2, result_r, &err);// << 27
-    product3 = safe_luint_multiplication(multiplicand_r, multiplier_r, &err);
+    result_r = safe_luint_multiplication(multiplicand_r, multiplier_r, &err);
+    // summing up products
+    product2 = safe_luint_addition(product2, result_r & (~0ul << 27), &err);
+    product1 = safe_luint_addition(product1, product2 & (~0ul << 54), &err);
+    result_r = product2 << 27;  
+    result_l = product2 >> (64 - 27);
     result_r = product1 << 54;
     result_l = product1 >> 10;
+    // getting exponent
+    product1 = how_many_bits_until_eldest_1(result_r);
+    product2 = how_many_bits_until_eldest_1(result_l);
+    product1 = ternary(result_l, product1 + 1, product1);
+    product2 = ternary(result_l, product2 + 1, product2);
+    bin_point_shift = ternary(product2, product2 >> safe_int_addition(bin_point_shift, -64, &err), product1 >> bin_point_shift);
+    bin_point_shift = !!(bin_point_shift & 0b10);
+    // normalizing number and putting bin_point_shift into exponent
+    result_l <<= safe_int_addition(64, -product2, &err); // 0000 0100
+    result_r >>= product2;
+    result_l |= result_r;
+    product1 = how_many_bits_until_eldest_1(result_l);
+    result_l = ternary(result_l < DOUBLE_MANTISSA_HIDDEN_ONE, result_l << safe_int_addition(52, -product1, &err), result_l >> safe_int_addition(product1, -52, &err));
+    result_l = (DOUBLE_MANTISSA_HIDDEN_ONE - 1) & result_l;
+    result_l = ternary(bin_point_shift, result_l | DOUBLE_MANTISSA_HIDDEN_ONE, result_l);
+    return result_l;
 }    
 
 dbits safe_double_mantissa_multiplication_with_rounding(dbits multiplicand, dbits multiplier, error* err){
