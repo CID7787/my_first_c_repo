@@ -111,10 +111,7 @@ dbits safe_double_mantissa_multiplication_with_rounding(dbits multiplicand, dbit
 //TODO: CHANGE MAGN PARTS TO MANT
     multiplier.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplier.parts.magn;
     // remove useless zeros
-    if(how_many_0_until_youngest_1(multiplicand.luint) < how_many_0_until_youngest_1(multiplier.luint)) {
-	 while(!(multiplicand.luint & 1ul)) { multiplicand.luint >>= 1; multiplier.luint >>= 1; }
-    }
-    else{ while(!(multiplier.luint & 1ul)) { multiplicand.luint >>= 1; multiplier.luint >>= 1; } }
+    while((multiplicand.luint & 1ul) | (multiplier.luint & 1ul){ multiplicand.luint >>= 1; multiplier.luint >>=1; }
 
     if((multiplicand.luint & multiplier.luint) == 1) { return (dbits){ .luint = DOUBLE_MANTISSA_HIDDEN_ONE}; }
     // variable declaration
