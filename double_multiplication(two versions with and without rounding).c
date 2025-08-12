@@ -120,18 +120,7 @@ dbits safe_double_mantissa_multiplication_with_rounding(dbits multiplicand, dbit
     return multiplier;
 }   
 
-double safe_double_multiplication_with_rounding(dbits multiplicand, dbits multiplier, error* err){
-    if(!multiplicand.d | !multiplier.d){ return 0; }
-    dbits result = safe_double_magnitude_multiplication_with_rounding(multiplicand, multiplier, err); if(*err){ return result.d; }
-    unsigned int exponent = safe_uint_addition(multiplicand.parts.exp, multiplier.parts.exp, err); if(*err){ return result.d; }
-    exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
-    exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; } 
-    // check whether or not exponent value bigger than MAX_DOUBLE_EXPONENT
-    *err = else0(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERF LOW) | else0(exponent <= MAX_NORM_DOUBLE_EXP, *err); if(*err){ return result.d; }
-    result.parts.exp = exponent;
-    result.parts.sign = multiplicand.parts.sign ^ multiplier.parts.sign;
-    return result.d;
-}
+
 
 int my_floor(float x, error* err){
     long int lintx = x;
@@ -147,13 +136,24 @@ int my_ceil(float x, error* err){
     return lintx;
 }
 
+  double safe_double_multiplication_with_rounding(dbits multiplicand, dbits multiplier, error* err){
+        if(!multiplicand.d | !multiplier.d){ return 0; }
+        dbits result = safe_double_mantissa_multiplication_with_rounding(multiplicand, multiplier, err); if(*err){ return result.d; }
+        unsigned int exponent = safe_uint_addition(multiplicand.parts.exp, multiplier.parts.exp, err); if(*err){ return result.d; }
+        exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
+        exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; }
+        // check whether or not exponent value bigger than MAX_DOUBLE_EXPONENT
+        *err = else0(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERFLOW) | else0(exponent <= MAX_NORM_DOUBLE_EXP, *err); if(*err){ return result.d; }
+        result.parts.exp = exponent;
+        result.parts.sign = multiplicand.parts.sign ^ multiplier.parts.sign;
+        return result.d;
+    }
 
-int main(){
-    dbits d1, d2;
-    d1.luint = 0x7fefffffffffffff;
-    d2.luint = 0xffefffffffffffff;
-    error err = NO_ERROR;
-        printf("\nthe product of multiplication %lf and %lf is equal to %lf\n error code: %u\n\n", d1.d, d2.d, safe_double_multiplication_with_rounding(d1, d2, &err), err);
-        printf("\n\n%u", err);
-    return 0;
-}
+    int main(){
+        double d1 = 3;
+        double d2 = 2;
+        error err = NO_ERROR;
+        printf("\nthe product of multiplication %lf \t and %lf \t equals to %lf\n error: %u", d1, d2, safe_double_multiplication_with_rounding((dbits){ .d = d1}, (dbits){ .d = d2}, &err), err);
+        printf("\n%u\n", err);
+        return 0;
+    }
