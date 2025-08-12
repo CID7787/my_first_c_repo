@@ -44,7 +44,7 @@ long unsigned int how_many_0_until_youngest_1(long unsigned int a){ //32
   return counter;
 }
 
-long unsigned int lluint_multiplication(long unsigned int multiplicand, long unsigned int multiplier, unsigned int exponent){
+long unsigned int old_lluint_multiplication(long unsigned int multiplicand, long unsigned int multiplier, unsigned int exponent){
     long unsigned int part1 = 0, part2 = 0;
     int n1, n2;
     unsigned int cond;
@@ -69,6 +69,22 @@ long unsigned int lluint_multiplication(long unsigned int multiplicand, long uns
     return ((long unsigned int)exponent << 52) | part2;
 }
 
+long unsigned int new_lluint_multiplication(long unsigned int multiplicand, long unsigned int multiplier, unsigned int bin_point_shift){
+    long unsigned int result_l, result_r, product1, product2, product3, multiplicand_l, multiplicand_r, multiplier_l, multiplier_r, mask_r = 0x7ffffff;
+    error err = NO_ERROR;
+    multiplicand_l = multiplicand >> 27;
+    multiplier_l = multiplier >> 27;
+    multiplicand_r = multiplicand & mask_r;
+    multiplier_r = multiplier & mask_r;
+    product1 = safe_luint_multiplication(multiplicand_l, multiplier_l, &err);// << (27 + 27)
+    product2 = safe_luint_multiplication(multiplicand_r, multiplier_l, &err);// << 27
+    result_r = safe_luint_multiplication(multiplicand_l, multiplier_r, &err);// << 27
+    product2 = safe_luint_addition(product2, result_r, &err);// << 27
+    product3 = safe_luint_multiplication(multiplicand_r, multiplier_r, &err);
+    result_r = product1 << 54;
+    result_l = product1 >> 10;
+}    
+
 dbits safe_double_mantissa_multiplication_with_rounding(dbits multiplicand, dbits multiplier, error* err){
     multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplicand.parts.magn;
     multiplier.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplier.parts.magn;
@@ -79,7 +95,7 @@ dbits safe_double_mantissa_multiplication_with_rounding(dbits multiplicand, dbit
     if((multiplicand.luint & multiplier.luint) == 1) { return (dbits){ .luint = DOUBLE_MANTISSA_HIDDEN_ONE}; }
     // variable declaration
 
-    multiplier.luint = lluint_multiplication(multiplicand.luint, multiplier.luint, how_many_bits_until_eldest_one(multiplicand.luint) << 1);
+    multiplier.luint = new_lluint_multiplication(multiplicand.luint, multiplier.luint, how_many_bits_until_eldest_one(multiplicand.luint) << 1);
     return multiplier;
 }   
 
@@ -109,22 +125,6 @@ int my_ceil(float x, error* err){
     *err = ternary((lintx > MAX_INT) | (lintx < MIN_INT), ternary(lintx > MAX_INT, POSITIVE_OVERFLOW, NEGATIVE_OVERFLOW), *err);
     return lintx;
 }
-
-long unsigned int new_lluint_multiplication(long unsigned int multiplicand, long unsigned int multiplier, unsigned int bin_point_shift){
-    long unsigned int result_l, result_r, product1, product2, product3, multiplicand_l, multiplicand_r, multiplier_l, multiplier_r, mask_r = 0x7ffffff;
-    error err = NO_ERROR;
-    multiplicand_l = multiplicand >> 27;
-    multiplier_l = multiplier >> 27;
-    multiplicand_r = multiplicand & mask_r;
-    multiplier_r = multiplier & mask_r;
-    product1 = safe_luint_multiplication(multiplicand_l, multiplier_l, &err);// << (27 + 27)
-    product2 = safe_luint_multiplication(multiplicand_r, multiplier_l, &err);// << 27
-    result_r = safe_luint_multiplication(multiplicand_l, multiplier_r, &err);// << 27
-    product2 = safe_luint_addition(product2, result_r, &err);// << 27
-    product3 = safe_luint_multiplication(multiplicand_r, multiplier_r, &err);
-    result_r = product1 << 54;
-    result_l = product1 >> 10;
-}    
 
 
 int main(){
