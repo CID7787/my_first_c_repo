@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <logical_functions_of_decision.c>
 #include <safe_arithmetic_function.c>
-#include <bitwise_functions.c
+#include <bitwise_functions.c>
 
 dbits safe_double_mantissa_multiplication_without_rounding(dbits multiplicand, dbits multiplier, error* err){
     multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplicand.parts.magn;
