@@ -113,7 +113,7 @@ dbits safe_double_mantissa_multiplication_with_rounding(dbits multiplicand, dbit
     // remove useless zeros
     while(!((multiplicand.luint | multiplicand.luint) & 1ul)){ multiplicand.luint >>= 1; multiplier.luint >>=1; }
 
-    if((multiplicand.luint & multiplier.luint) == 1) { return (dbits){ .luint = DOUBLE_MANTISSA_HIDDEN_ONE}; }
+//    if((multiplicand.luint & multiplier.luint) == 1) { return (dbits){ .luint = DOUBLE_MANTISSA_HIDDEN_ONE}; }
     // variable declaration
 
     multiplier.luint = new_lluint_multiplication(multiplicand.luint, multiplier.luint, how_many_bits_until_eldest_one(multiplicand.luint) << 1);
