@@ -120,7 +120,85 @@ dbits safe_double_mantissa_multiplication_with_rounding(dbits multiplicand, dbit
     return multiplier;
 }   
 
+typedef struct long_long_int {
+    long unsigned int high;
+    long unsigned int low;
+} lluint;
 
+lluint long_mantissa_multiplication(long unsigned int a, long unsigned int b){
+    // We are shifting the number by 27 to the left so that it becomes smaller
+    // There COULD be any number, but there SHOULD only be 1 number.
+    // Why 32?
+    // Because any number larger than 32 will not fit into long unsigned int when we multiply 2 of them together.
+    // N_sign_bits + N_exp_bits - 1
+    // seeeeeee eeeemmmm mmmmmmmm mmmmmmmm  mmmmmmmm mmmmmmmm mmmmmmmm mmmmmmmm
+    // 00000000 00011111 11111111 11111111  11111111 11111111 11111111 11111111 (a)
+    // =
+    // 00000000 00000000 00000000 00000000  11111111 11111111 11111111 11111111 (right)
+    // +
+    // 00000000 00000001 11111111 11111111  00000000 00000000 00000000 00000000 (left)
+    // 
+
+
+    // 00000000 00000001 11111111 11111111
+    // right * right = x < 64
+    // right_result = right * right == (a & mask) * (b & mask)
+    // left = 00000000 00000001 11111111 11111111 << 32
+    // left * left = 00000000 00000001 11111111 11111111 * 00000000 00000001 11111111 11111111 << 64
+    // result_left = (left >> 32) * (left >> 32) == (a >> 32) * (b >> 32)
+    // a * b = (a_left + a_right) * (b_left + b_right) = a_left * (b_left + b_right) + a_right * (b_left + b_right) == (a_left * b_left) + (a_left * b_right + a_right * b_left) + (a_right * b_right)
+    // a * b = left_result right_result + (a_left * b_right + a_right * b_left)
+    // a_left * b_right = (00000000 0000000a aaaaaaaa aaaaaaaa * bbbbbbbb bbbbbbbb bbbbbbbb bbbbbbbb) << 32
+    // a_right * b_left = (aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa * 00000000 0000000b bbbbbbbb bbbbbbbb) << 32
+ 	
+    // getting left and right parts of multiplicand and multiplier 
+    long unsigned int mask_r = 0xffffffff;
+    error err = NO_ERROR;
+    long unsigned int a_l = a >> (sizeof(a) << 2),
+                      b_l = b >> (sizeof(a) << 2),
+                      a_r = a & mask_r,
+                      a_r = a & mask_r;
+    lluint result = {.high = a_l * b_l,
+                     .low  = a_r * b_r }, 
+    long unsigned int middle = (a_l * b_r) + (a_r * b_l);
+    result.low = safe_luint_addition(result_r, middle << 32, &err);
+    result.high += (middle >> 32) + else0(err, 1);
+    return result;
+}    
+
+dbits safe_double_mantissa_multiplication_with_rounding(dbits multiplicand, dbits multiplier, error* err){
+    multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplicand.parts.magn;
+    multiplier.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplier.parts.magn;
+    // remove useless zeros: shift right until one of the numbers runs out of zeroes in the least significant 
+    char counter_of_lost_zeroes = 1;
+    while(!((multiplicand.luint | multiplicand.luint) & 1ul)) { multiplicand.luint >>= 1; multiplier.luint >>= 1; counter_of_lost_zeroes++; }
+
+    // if((multiplicand.luint & multiplier.luint) == 1) { multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE; return multiplicand; }
+
+    lluint result = long_mantissa_multiplication(multiplicand.luint, multiplier.luint);
+
+    unsigned int bin_point_shift = how_many_bits_until_eldest_one(multiplicand.luint) << 1;
+        // getting exponent
+    a = how_many_bits_until_eldest_1(result.high);
+    b = how_many_bits_until_eldest_1(result.low);
+    a += else0(result.high, 1);
+    b += else0(result.high, 1);
+    // 1.0 * 2^1
+    // 1.0 * 2^1
+    // 1.00 >> 2 = 1
+    bin_point_shift = ternary(a, result.high >> safe_int_addition(bin_point_shift, -64, &err), result.low >> bin_point_shift);
+    bin_point_shift = !!(bin_point_shift & 0b10);
+    // normalizing number and putting bin_point_shift into exponent
+    result.high <<= safe_int_addition(64, -a, &err); // 0000 0100
+    result.low >>= a;
+    result.high |= result.low;
+    a = how_many_bits_until_eldest_1(result.high);
+    result.high = ternary(result.high < DOUBLE_MANTISSA_HIDDEN_ONE, result.high << safe_int_addition(52, -a, &err), result.high >> safe_int_addition(a, -52, &err));
+    result.high = (DOUBLE_MANTISSA_HIDDEN_ONE - 1) & result.high;
+    result.high = ternary(bin_point_shift, result.high | DOUBLE_MANTISSA_HIDDEN_ONE, result.high);
+    return result.high;
+    return multiplier;
+}
 
 int my_floor(float x, error* err){
     long int lintx = x;
