@@ -91,6 +91,7 @@ long unsigned int safe_luint_multiplication(long unsigned int multiplier, long u
     return product;
 }
 
+
 long unsigned int new_lluint_multiplication(long unsigned int multiplicand, long unsigned int multiplier, unsigned int bin_point_shift){
     long unsigned int result_l, result_r, product1, product2, multiplicand_l, multiplicand_r, multiplier_l, multiplier_r, mask_r = 0x7ffffff;
     error err = NO_ERROR;
@@ -107,10 +108,8 @@ long unsigned int new_lluint_multiplication(long unsigned int multiplicand, long
     result_r = safe_luint_multiplication(multiplicand_r, multiplier_r, &err);
     // summing up products
     product2 = safe_luint_addition(product2, result_r & (~0ul << 27), &err);
-    product1 = safe_luint_addition(product1, product2 & (~0ul << 54), &err);
-    result_r = product2 << 27;
-    result_l = product2 >> (64 - 27);
-    result_r = product1 << 54;
+    product1 = safe_luint_addition(product1, product2 & (~0ul << 27), &err);
+    result_r = product1 << 54 | product2 << 27 | result_r;
     result_l = product1 >> 10;
     // getting exponent
     product1 = how_many_bits_until_eldest_1(result_r);
@@ -158,8 +157,8 @@ long unsigned int new_lluint_multiplication(long unsigned int multiplicand, long
     }
 
     int main(){
-        double d1 = 80;
-        double d2 =  2;// 6.76
+        double d1 = 3;
+        double d2 = 2;
         error err = NO_ERROR;
         printf("\nthe product of multiplication %lf \t and %lf \t equals to %lf\n error: %u", d1, d2, safe_double_multiplication_with_rounding((dbits){ .d = d1}, (dbits){ .d = d2}, &err), err);
         printf("\n%u\n", err);

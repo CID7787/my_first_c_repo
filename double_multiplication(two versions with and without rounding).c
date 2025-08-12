@@ -53,7 +53,7 @@ long unsigned int old_lluint_multiplication(long unsigned int multiplicand, long
         part1 = safe_luint_addition(part1, multiplier, &err); 
         if(err) { ++part2; part1 = multiplier - (MAX_LUINT - part1) - 1; }
     }
-    n1 = how_many_bits_until_eldest_(part1);
+    n1 = how_many_bits_until_eldest_1(part1);
     n2 = how_many_bits_until_eldest_1(part2);
     multiplicand = else0(part2, n2 + 1) | else0(!part2, n1 + 1);
     cond = multiplicand > SIZEOF_D_BITS;
@@ -85,10 +85,8 @@ long unsigned int new_lluint_multiplication(long unsigned int multiplicand, long
     result_r = safe_luint_multiplication(multiplicand_r, multiplier_r, &err);
     // summing up products
     product2 = safe_luint_addition(product2, result_r & (~0ul << 27), &err);
-    product1 = safe_luint_addition(product1, product2 & (~0ul << 54), &err);
-    result_r = product2 << 27;  
-    result_l = product2 >> (64 - 27);
-    result_r = product1 << 54;
+    product1 = safe_luint_addition(product1, product2 & (~0ul << 27), &err);
+    result_r = product1 << 54 | product2 << 27 | result_r;
     result_l = product1 >> 10;
     // getting exponent
     product1 = how_many_bits_until_eldest_1(result_r);
