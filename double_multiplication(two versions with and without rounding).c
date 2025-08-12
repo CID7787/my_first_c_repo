@@ -1,7 +1,7 @@
 #include <stdio.h>
-#include <.gitignore>/es
-#include <./safe_arithmetic_function.c>
-#include <./bitwise_functions.c>
+#include <logical_functions_of_decision.c>
+#include <safe_arithmetic_function.c>
+#include <bitwise_functions.c
 
 dbits safe_double_mantissa_multiplication_without_rounding(dbits multiplicand, dbits multiplier, error* err){
     multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplicand.parts.magn;
@@ -153,7 +153,7 @@ int main(){
     d1.luint = 0x7fefffffffffffff;
     d2.luint = 0xffefffffffffffff;
     error err = NO_ERROR;
-        printf("\nthe product of multiplication %lf and %lf is equal to %lf\n error code: %u\n\n", d1.d, d2.d, safe_double_multiplication(d1, d2, &err), err);
+        printf("\nthe product of multiplication %lf and %lf is equal to %lf\n error code: %u\n\n", d1.d, d2.d, safe_double_multiplication_with_rounding(d1, d2, &err), err);
         printf("\n\n%u", err);
     return 0;
 }
