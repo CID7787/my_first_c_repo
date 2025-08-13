@@ -116,7 +116,7 @@ long unsigned int new_lluint_multiplication(long unsigned int multiplicand, long
     product2 = how_many_bits_until_eldest_1(result_l);
     product1 = ternary(result_l, product1 + 1, product1);
     product2 = ternary(result_l, product2 + 1, product2);
-    bin_point_shift = ternary(product2, product2 >> safe_int_addition(bin_point_shift, -64, &err), product1 >> bin_point_shift);
+    bin_point_shift = ternary(product2, result_l >> safe_int_addition(bin_point_shift, -64, &err), result_r >> bin_point_shift);
     bin_point_shift = !!(bin_point_shift & 0b10);
     // normalizing number and putting bin_point_shift into exponent
     result_l <<= safe_int_addition(64, -product2, &err);// 0000 0100
@@ -157,8 +157,8 @@ long unsigned int new_lluint_multiplication(long unsigned int multiplicand, long
     }
 
     int main(){
-        double d1 = 3;
-        double d2 = 2;
+        double d1 = 2.6;
+        double d2 = 2.6;
         error err = NO_ERROR;
         printf("\nthe product of multiplication %lf \t and %lf \t equals to %lf\n error: %u", d1, d2, safe_double_multiplication_with_rounding((dbits){ .d = d1}, (dbits){ .d = d2}, &err), err);
         printf("\n%u\n", err);
