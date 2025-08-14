@@ -1,15 +1,6 @@
 #include <./bitwise_functions.c>
 #include <./else0.c>
 
-const long unsigned int MAX_LUINT = ~0ul;
-const unsigned int MAX_UINT = ~0u;
-const int MAX_INT = 0x7fffffff;
-const int MIN_INT = ~MAX_INT;
-const long unsigned int MAX_DOUBLE_MANTISSA = 0x001fffffffffffff;
-const unsigned int MAX_NORM_DOUBLE_EXP = 2046;
-const long unsigned int DOUBLE_MANTISSA_HIDDEN_ONE = 0x0010000000000000;
-const unsigned int DOUBLE_EXP_BIAS = 0x000003ff;
-const unsigned char AMOUNT_OF_DOUBLE_MANTISSA_BITS = 52;
 
 
 typedef enum error_code{
@@ -21,13 +12,14 @@ typedef enum error_code{
     DIVISION_BY_ZERO,
     ZERO_TO_ZERO// DESCRIPTION: ZERO TO THE POWER ZERO
 }error;
-
 typedef struct double_bitfields_sign_exponent_mantissa{
-    long unsigned int magn: 52;
+    long unsigned int mantissa: 52;
     long unsigned int exp: 11;
     long unsigned int sign: 1;
 } ieee754;
     
+
+
 typedef struct double_bitfields_sign_positive{
     long unsigned int positive: 63;
     long unsigned int sign: 1;
@@ -156,12 +148,10 @@ int safe_int_addition(int addend1, int addend2, error* err){
   *err = else0(neg_overflow_cond, NEGATIVE_OVERFLOW) | else0(!neg_overflow_cond, *err);
   return addend1 + ( addend2 & (else0(!pos_overflow_cond, ~0) & else0(!neg_overflow_cond, ~0)) );
 }
-
-
 // FUNCTION: long_unsigned_int_addition(long unsigned int, error*)
 
 long unsigned int safe_luint_addition(long unsigned int addend1, long unsigned int addend2, error* err){
-  char cond = addend2 > (MAX_LUINT - addend1);
+    char cond = addend2 > (MAX_LUINT - addend1);
   *err = else0(cond, POSITIVE_OVERFLOW) | else0(!cond, *err);
   return addend1 + (addend2 & else0(!cond, ~0));
 }
@@ -171,7 +161,7 @@ long unsigned int safe_luint_addition(long unsigned int addend1, long unsigned i
 long unsigned int safe_luint_multiplication(long unsigned int multiplier, long unsigned int multiplicand, error* err){
     long unsigned int product = 0;
     while(multiplicand-- > 0){
-        if(*err){ return product; }
+        if(*err){ return result; }
         product = safe_luint_addition(product, multiplier, err); 
     }
     return product;
@@ -200,16 +190,16 @@ unsigned int safe_uint_multiplication(unsigned int arg1, unsigned int arg2, erro
 
 // FUNCTION: double_multiplication(dbits, error*)
 
-inline long unsigned int safe_double_magnitude_multiplication(dbits multiplier, dbits multiplicand, error* err){
-    dbits result = (dbits) { .luint = safe_luint_multiplication((1ul << 52) | multiplier.parts.magn, (1ul << 52) | multiplicand.parts.magn, err)};// "1ul << 52" is long unsigned int number with 1 at 52(index) bit and 0 in all other bits
+inline long unsigned int safe_double_mantissa_multiplication(dbits multiplier, dbits multiplicand, error* err){
+    dbits result = (dbits) { .luint = safe_luint_multiplication((1ul << 52) | multiplier.parts.mantissa, (1ul << 52) | multiplicand.parts.mantissa, err)};// "1ul << 52" is long unsigned int number with 1 at 52(index) bit and 0 in all other bits
     int cond = result > ((~0ul) >> 11); // don't use magical numbers substitute it later with explaination what number this is 
     *err = else0(cond, OVERFLOW) | else0(!cond, *err);
-    return result.magn;
+    return result.mantissa;
 }
 
 double safe_double_multiplication(dbits multiplier, dbits multiplicand, error* err){// TODO
     dbits result = multiplier;
-    result.parts.magn = safe_double_magnitude_multiplication(multiplier, multiplicand, err);// TODO: make these functions inline
+    result.parts.mantissa = safe_double_mantissa_multiplication(multiplier, multiplicand, err);// TODO: make these functions inline
     result.parts.exp = safe_uint_addition(multiplier.parts.exp, multiplicand.parts.exp, err);
     *err = else0(mask > 2046, OVERFLOW) | else0(!(mask > 2046), *err);// 2046 is the exponent with all bits as '1': 11111111111
     result.parts.sign ^= multiplicand.parts.sign;   
@@ -375,14 +365,14 @@ float floating_division_by_2(float b) { // TODO: function works incorrect
        number_without_exp = (number_without_exp >> 1); // 0 00000000 mmmmmmmm...mmmm0 >> 1
       }
   } else {
-     int magnitude = convert_to_sign_and_magnitude(number_without_exp);
-      if (last_bit_is_1(magnitude)) {
-        magnitude = multiplication(magnitude, 5);
+     int mantissa = convert_to_sign_and_mantissa(number_without_exp);
+      if (last_bit_is_1(mantissa)) {
+        mantissa = multiplication(mantissa, 5);
         exp = ((exp >> 23) - 1) << 23;
       } else {
-        magnitude = magnitude >> 1;
+        mantissa = mantissa >> 1;
       }
-     number_without_exp = convert_from_sign_and_magnitude(magnitude);
+     number_without_exp = convert_from_sign_and_mantissa(mantissa);
     }
   number_without_exp = number_without_exp | exp;
   float result = *((float*)&number_without_exp);
@@ -427,9 +417,9 @@ float float_division(float result, float m1, float precision){ // a = 9, b = 3 c
 
  // FUNCTION: double_multiplication_without_rounding(dbits, dbits, error*)
 
- dbits safe_double_mantissa_multiplication_without_rounding(dbits multiplicand, dbits multiplier, error* err){
-  multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplicand.parts.magn;
-  multiplier.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplier.parts.magn;
+ dbits safe_double_mantissa_multiplication(dbits multiplicand, dbits multiplier, error* err){
+  multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplicand.parts.mantissa;
+  multiplier.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplier.parts.mantissa;
   // remove useless zeros
   while (!(multiplicand.luint & 1ul)) { multiplicand.luint >>= 1; }
   while (!(  multiplier.luint & 1ul)) { multiplier.luint >>= 1; }
@@ -451,12 +441,12 @@ double safe_double_multiplication_without_rounding(dbits multiplicand, dbits mul
   // check whether or not one of arguments equal to 0
   if(!multiplicand.d | !multiplier.d){ return 0; }
   dbits result = multiplier;
-  result = safe_double_mantissa_multiplication_without_rounding(multiplicand, multiplier, err); if(*err){ return result.d; }
+  result = safe_double_mantissa_multiplication(multiplicand, multiplier, err); if(*err){ return result.d; }
   unsigned int exponent = safe_uint_addition(multiplicand.parts.exp, multiplier.parts.exp, err); if(*err){ return result.d; }
   exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
   exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; }
   // check whether of not exponent value bigger than
-  *err = else0(exponent > MAX_NORM_DOUBLE_EXPONENT, POSITIVE_OVERFLOW) | else0(exponent <= MAX_NORM_DOUBLE_EXPONENT), *err); if(*err){ return result.d; }
+  *err = else0(exponent > MAX_DOUBLE_EXPONENT, POSITIVE_OVERFLOW) | else0(!(exponent > MAX_DOUBLE_EXPONENT), *err); if(*err){ return result.d; }
   result.parts.exp = exponent;
   result.parts.sign = multiplicand.parts.sign ^ multiplier.parts.sign;
   return result.d;

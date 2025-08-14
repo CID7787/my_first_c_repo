@@ -1,9 +1,6 @@
 #include <stdio.h>
 #include <stlib.h>
 
-const int SMALLEST_INT_NUMBER = ( 1 << ((sizeof(int) << 3) - 1) );
-const int BIGGEST_INT_NUMBER = ( ~(1 << ( (sizeof(int) << 3) - 1) ) ); 
-
 
 int logical_not(int arg){
     // 0100

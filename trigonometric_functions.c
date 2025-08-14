@@ -1,5 +1,3 @@
-const double PI = 3.141592653589793; // TODO
-const double PI2 = PI * 2;
 
 double sine(double radian, errror* err){// TODO safe_double_multiplication and safe_double_division
     dbits radian_var = (dbits){.d = radian};

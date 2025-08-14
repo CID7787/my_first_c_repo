@@ -1,11 +1,11 @@
-#include <stdio.h>
+#include <stdio.h>  
 #include <logical_functions_of_decision.c>
 #include <safe_arithmetic_function.c>
 #include <bitwise_functions.c>
 
 dbits safe_double_mantissa_multiplication_without_rounding(dbits multiplicand, dbits multiplier, error* err){
-    multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplicand.parts.magn;
-    multiplier.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplier.parts.magn;
+    multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplicand.parts.mantissa;
+    multiplier.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplier.parts.mantissa;
     // remove useless zeros
     while (!(multiplicand.luint & 1ul)) { multiplicand.luint >>= 1; }
     while (!(  multiplier.luint & 1ul)) { multiplier.luint >>= 1; }
@@ -27,7 +27,7 @@ double safe_double_multiplication_without_rounding(dbits multiplicand, dbits mul
     // check whether or not one of arguments equal to 0
     if(!multiplicand.d | !multiplier.d){ return 0; }
     dbits result = multiplier;
-    result = safe_double_magnitude_multiplication(multiplicand, multiplier, err); if(*err){ return result.d; }
+    result = safe_double_mantissaitude_multiplication(multiplicand, multiplier, err); if(*err){ return result.d; }
     unsigned int exponent = safe_uint_addition(multiplicand.parts.exp, multiplier.parts.exp, err); if(*err){ return result.d; }
     exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
     exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; }
@@ -107,9 +107,9 @@ long unsigned int new_lluint_multiplication(long unsigned int multiplicand, long
 }    
 
 dbits safe_double_mantissa_multiplication_with_rounding(dbits multiplicand, dbits multiplier, error* err){
-    multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplicand.parts.magn;
-//TODO: CHANGE MAGN PARTS TO MANT
-    multiplier.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplier.parts.magn;
+    multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplicand.parts.mantissa;
+//TODO: CHANGE mantissa PARTS TO MANT
+    multiplier.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplier.parts.mantissa;
     // remove useless zeros
     while(!((multiplicand.luint | multiplicand.luint) & 1ul)){ multiplicand.luint >>= 1; multiplier.luint >>=1; }
 
@@ -167,8 +167,8 @@ lluint long_mantissa_multiplication(long unsigned int a, long unsigned int b){
 }    
 
 dbits safe_double_mantissa_multiplication_with_rounding(dbits multiplicand, dbits multiplier, error* err){
-    multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplicand.parts.magn;
-    multiplier.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplier.parts.magn;
+    multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplicand.parts.mantissa;
+    multiplier.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplier.parts.mantissa;
     // remove useless zeros: shift right until one of the numbers runs out of zeroes in the least significant 
     char counter_of_lost_zeroes = 1;
     while(!((multiplicand.luint | multiplicand.luint) & 1ul)) { multiplicand.luint >>= 1; multiplier.luint >>= 1; counter_of_lost_zeroes++; }
