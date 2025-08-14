@@ -161,7 +161,7 @@ long unsigned int safe_luint_addition(long unsigned int addend1, long unsigned i
 long unsigned int safe_luint_multiplication(long unsigned int multiplier, long unsigned int multiplicand, error* err){
     long unsigned int product = 0;
     while(multiplicand-- > 0){
-        if(*err){ return result; }
+        if(*err){ return product; }
         product = safe_luint_addition(product, multiplier, err); 
     }
     return product;
@@ -446,7 +446,7 @@ double safe_double_multiplication_without_rounding(dbits multiplicand, dbits mul
   exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
   exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; }
   // check whether of not exponent value bigger than
-  *err = else0(exponent > MAX_DOUBLE_EXPONENT, POSITIVE_OVERFLOW) | else0(!(exponent > MAX_DOUBLE_EXPONENT), *err); if(*err){ return result.d; }
+  *err = else0(exponent > MAX_NORM_DOUBLE_EXPONENT, POSITIVE_OVERFLOW) | else0(!(exponent > MAX_NORM_DOUBLE_EXPONENT), *err); if(*err){ return result.d; }
   result.parts.exp = exponent;
   result.parts.sign = multiplicand.parts.sign ^ multiplier.parts.sign;
   return result.d;
