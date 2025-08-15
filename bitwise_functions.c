@@ -142,6 +142,7 @@ unsigned int convert_to_sign_and_magnitude(int a){
 
 
 int convert_from_sign_and_magnitude(unsigned int a){
+
   int max_positive_integer = (~0) >> 1; // 0111111....    10000000000...
   int mask = ~max_positive_integer;
   a = a & max_positive_integer;

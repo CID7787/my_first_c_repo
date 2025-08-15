@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <user_defined_datatypes.c>
+
 //cindex[1] == 1   <==>     *(cindex + 1*sizeof(char))
 // operator first of all implements from right side always , like 3[a] 2[=] 1[(1+2)];
 //    char* n = (char*){'a', 'b', 'c', 0}; // "abc"
@@ -9,27 +11,6 @@
     while (f1(arr, i++, size)){ } // this will be deleted, unless you disable compiler optimizations for loops
     while (f1(arr, i, size)){ i++; } // this will NOT be deleted
 */
-enum vectorErrors {
-  ALL_GOOD = 0,
-  OVERFLOW,
-  UNDERFLOW,
-  SQUARE_ROOT_OF_NEGATIVE_NUMBER,
-  RETURN_INFINITY,
-  ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER,
-  RETURN_REAL_PART,
-  UNDEFINED_BEHAVIOR,
-} typedef vERR;
-
-
-
-enum DATATYPES { // enumeration
-  INT = 0,
-  CHAR,
-  FLOAT,
-  DOUBLE,
-  UINT,
-} typedef datatype;
-
 
 int amount_of_bytes_in_this_datatype(datatype t){
   switch (t) {
@@ -41,26 +22,6 @@ int amount_of_bytes_in_this_datatype(datatype t){
   }
 }
 
-union POINTERS {
-  int* i;
-  char* c;
-  float* f;
-  unsigned int* u;
-  double* d;
-} typedef datapointer;
-
-struct vector_n {
-  datatype type;
-  unsigned int n; // this "n" is amount of elements
-  datapointer elements;
-  vERR error;
-//  type       n               elements
-//  datatype   unsigned int    int* i
-//                             char* c
-//                             float* f
-//                             unsigned int* u
-//                             double *d
-} typedef vecN;
 
 int element_is_nonzero(datapointer array, int iterations, int my_datasize){// {12,7,2}, 1, 4
   int last_byte_that_need_to_check = iterations + my_datasize;
@@ -71,9 +32,6 @@ int element_is_nonzero(datapointer array, int iterations, int my_datasize){// {1
   }
   return there_are_1s;
 }
-
-
-
 
 vecN vector_creation(datatype type, unsigned int n, datapointer array_elements){
   int size = amount_of_bytes_in_this_datatype(type);
