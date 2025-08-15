@@ -1,4 +1,8 @@
+
 #include <stdio.h>
+#include <time.h>
+
+
 
 const long unsigned int MAX_LUINT = ~0ul;
 const unsigned int MAX_UINT = ~0u;
@@ -140,35 +144,29 @@ dbits safe_double_mantissa_multiplication_with_rounding(dbits multiplicand, dbit
 }
 double safe_double_multiplication_with_rounding(dbits multiplicand, dbits multiplier, error* err){
     if(!multiplicand.d | !multiplier.d){ return 0; }
+
+    clock_t start_t = clock();
     dbits result = safe_double_mantissa_multiplication_with_rounding(multiplicand, multiplier, err); if(*err){ return result.d; }
+    // printf("\nmantissa compute time = %lg sec\n", (long double)(clock() - start_t));
+    clock_t mantissa_time = clock() - start_t;
+    start_t = clock();
     unsigned int exponent = safe_uint_addition(multiplicand.parts.exp, multiplier.parts.exp, err); if(*err){ return result.d; }
     exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
     exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; }
     // check whether or not exponent value bigger than MAX_DOUBLE_EXPONENT
+
     *err = else0(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERFLOW) | else0(exponent <= MAX_NORM_DOUBLE_EXP, *err); if(*err){ return result.d; }
     result.parts.exp = exponent;
     result.parts.sign = multiplicand.parts.sign ^ multiplier.parts.sign;
+    printf("function iner time:%lu", (clock() - start_t) + mantissa_time);
     return result.d;
 }
-int main(){
-// double_multiplication_with_rounding test going through all values  
-    double d1 = 0, d2 = 0;
-    double conteiner;
+
+int main(void)
+{
     error err = NO_ERROR;
-    long unsigned int index = 1;
-    for(int i = MIN_INT; i < MAX_INT; ++i){
-        for(int j = 0; j < 10; ++j){
-	    printf("%lu iteration:\t", index);
-	    conteiner = d2;
-            printf("a:%f \t b:%.9f \t resul:%.10lf\t", d1, d2, safe_double_multiplication_with_rounding((dbits){ .d = d1}, (dbits){ .d = d2}, &err));
-            printf("error: %u\n", err);
-            err = NO_ERROR;
-            ++index; 
-	    d2 /= 10;
-        }
-	conteiner = d2;
-    	d1 += 1;
-	d2 += 1;
-    }
+    clock_t start_t = clock();
+    safe_double_multiplication_with_rounding((dbits){ .d = 2.6}, (dbits){ .d = 2.5}, &err);
+    printf("\n time per second:  %lu sec \n", (clock() - start_t));
     return 0;
 }
