@@ -109,6 +109,7 @@ double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
     return result.d;
 }
 
+
 int main(){
     return 0;
 }
