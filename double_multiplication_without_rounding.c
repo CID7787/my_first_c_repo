@@ -1,13 +1,3 @@
-#include <stdio.h>  
-#include <user_defined_datatypes.c>
-#include <constants.c>
-#include <logical_functions_of_decision.c>
-#include <safe_arithmetic_functions.c>
-#include <bitwise_functions.c>
-#include <time.h>
-
-
-
    
 /* COMMENTS TO PROCESS OF BUILDING long_mantissa_multiplication FUNCTION
 We are shifting the number by 27 to the left so that it becomes smaller
@@ -64,8 +54,8 @@ dbits safe_double_mantissa_multiplication_with_rounding(dbits a, dbits b, error*
 
     lluint result = long_mantissa_multiplication(a.luint, b.luint);
 
-    unsigned int bin_point_shift = how_many_bits_until_eldest_one(a.luint) << 1;
-    // getting exponent
+    unsigned int bin_point_shift = how_many_bits_until_eldest_1(a.luint) << 1;
+    // getting exponen
     a.luint = how_many_bits_until_eldest_1(result.high);
     b.luint = how_many_bits_until_eldest_1(result.low);
     a.luint += else0(result.high, 1);
@@ -73,14 +63,14 @@ dbits safe_double_mantissa_multiplication_with_rounding(dbits a, dbits b, error*
     // 1.0 * 2^1
     // 1.0 * 2^1
     // 1.00 >> 2 = 1
-    bin_point_shift = ternary(a.luint, result.high >> safe_int_addition(bin_point_shift, -64, &err), result.low >> bin_point_shift);
+    bin_point_shift = ternary(a.luint, result.high >> safe_int_addition(bin_point_shift, -64, err), result.low >> bin_point_shift);
     bin_point_shift = !!(bin_point_shift & 0b10);
     // normalizing number and putting bin_point_shift into exponent
-    result.high <<= safe_int_addition(64, -a.luint, &err); // 0000 0100
+    result.high <<= safe_int_addition(64, -a.luint, err); // 0000 0100
     result.low >>= a.luint;
     result.high |= result.low;
     a.luint = how_many_bits_until_eldest_1(result.high);
-    result.high = ternary(result.high < DOUBLE_MANTISSA_HIDDEN_ONE, result.high << safe_int_addition(52, -a.luint, &err), result.high >> safe_int_addition(a.luint, -52, &err));
+    result.high = ternary(result.high < DOUBLE_MANTISSA_HIDDEN_ONE, result.high << safe_int_addition(52, -a.luint, err), result.high >> safe_int_addition(a.luint, -52, err));
     result.high = (DOUBLE_MANTISSA_HIDDEN_ONE - 1) & result.high;
     result.high = ternary(bin_point_shift, result.high | DOUBLE_MANTISSA_HIDDEN_ONE, result.high);
     b.luint = result.high;
@@ -93,10 +83,10 @@ double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
     char a_nan_cond = (a.parts.exp > MAX_NORM_DOUBLE_EXP) & a.parts.mantissa;
     char b_nan_cond = (b.parts.exp > MAX_NORM_DOUBLE_EXP) & b.parts.mantissa;
     if(a_nan_cond | b_nan_cond){ return ternary(a_nan_cond, a.d, b.d); }
-    printf("\ncheck part: %lu\n", clock() - start_t);
+    printf("\ncheck part: %lu(%lu)\n", clock() - start_t, clock());
     start_t = clock();
     dbits result = safe_double_mantissa_multiplication_with_rounding(a, b, err); if(*err){ return result.d; }
-    printf("mantissa: %lu\n", clock() - start_t);
+    printf("mantissa: %lu(%lu)\n", clock() - start_t, clock());
     start_t = clock();
     unsigned int exponent = safe_uint_addition(a.parts.exp, b.parts.exp, err); if(*err){ return result.d; }
     exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
@@ -105,11 +95,9 @@ double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
     *err = else0(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERFLOW) | else0(exponent <= MAX_NORM_DOUBLE_EXP, *err); if(*err){ return result.d; }
     result.parts.exp = exponent;
     result.parts.sign = a.parts.sign ^ b.parts.sign;
-    printf("exponent and sign handling: %lu\n", clock() - start_t);
+    printf("exponent and sign handling: %lu(%lu)\n", clock() - start_t, clock());
     return result.d;
 }
 
 
-int main(){
-    return 0;
-}
+

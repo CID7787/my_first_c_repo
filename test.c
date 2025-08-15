@@ -1,9 +1,10 @@
+
 #include <stdio.h> // Library name: StandarD Input/Output
                    // Header file: stdio.h
                    // compiler directive: #include int main(){
 #include <stdlib.h>
 #include <math.h>
-#include "printlib.h"
+
 //hello
 
 /**

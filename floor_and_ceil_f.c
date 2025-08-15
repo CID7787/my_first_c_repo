@@ -1,3 +1,9 @@
+#ifndef abracadabra
+    #include "user_defined_datatypes.c"
+    #include "constants.c"
+    #include "logical_functions_of_decision.c"
+#endif
+
 int my_floor(float x, error* err){
     long int lintx = x;
     lintx -= else0(x < 0, 1);

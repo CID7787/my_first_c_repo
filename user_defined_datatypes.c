@@ -33,11 +33,11 @@ typedef union double_bits{
     dluint bits;
 } dbits;
 
-union union_name{
+union union_name1{
   double d;
   long unsigned int luint;
 } v1;
-union union_name{
+union union_name2{
   double d;
   struct struct_name{
       long unsigned int luint1: 63;
@@ -45,16 +45,16 @@ union union_name{
   } luint;
 } union_var;
 
-enum vectorErrors {
-  ALL_GOOD = 0,
-  OVERFLOW,
-  UNDERFLOW,
-  SQUARE_ROOT_OF_NEGATIVE_NUMBER,
-  RETURN_INFINITY,
-  ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER,
-  RETURN_REAL_PART,
-  UNDEFINED_BEHAVIOR,
-} typedef vERR;
+ enum vectorErrors {
+   ALL_GOOD = 0,
+  // OVERFLOW,
+  // UNDERFLOW,
+   SQUARE_ROOT_OF_NEGATIVE_NUMBER,
+   RETURN_INFINITY,
+   ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER,
+   RETURN_REAL_PART,
+  // UNDEFINED_BEHAVIOR,
+ } typedef vERR;
 
 enum DATATYPES { // enumeration
   INT = 0,

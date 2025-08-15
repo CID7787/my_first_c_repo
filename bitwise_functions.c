@@ -65,7 +65,7 @@ long unsigned int how_many_bits_until_eldest_1(long unsigned int a){
 
 unsigned int lshift(unsigned int a, unsigned int b){
     //  a << b         if (b == 0) { return a; }        if (b == 32) { return 0; }
-    unsigned int n = how_many_0(sizeof(b) << 3); // 5
+    unsigned int n = how_many_0_until_youngest_1(sizeof(b) << 3); // 5
     unsigned int zero = 0;
     unsigned int mask = ~(((~zero) >> n) << n); // 00000000...00011111          a << 0 == a    a << 32 == 0
     unsigned int newshiftvalue = b & mask;  //     0000000...00100000       if (b == bitsize) { newshiftvalue = 0; } else { newshiftvalue = b % bitsize; }  
@@ -90,7 +90,7 @@ unsigned int compare(unsigned int a, unsigned int b){
 //   unsigned int h = 0;
 //   while(compare_ith_bit(a, b, h)){ ++h; }
 //   unsigned int c;
-//   c = (compare_ith_bit(h, byte2bit(sizeof(a)), how_many_0(byte2bit(sizeof(h))) ));
+//   c = (compare_ith_bit(h, byte2bit(sizeof(a)), how_many_0_until_youngest_1_until_youngest_1(byte2bit(sizeof(h))) ));
   return !(a ^ b);
 }
 
