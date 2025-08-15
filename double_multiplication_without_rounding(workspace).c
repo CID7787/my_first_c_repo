@@ -4,7 +4,7 @@
 #include <logical_functions_of_decision.c>
 #include <safe_arithmetic_functions.c>
 #include <bitwise_functions.c>
-
+#include <time.h>
 
 
 
@@ -88,11 +88,16 @@ dbits safe_double_mantissa_multiplication_with_rounding(dbits a, dbits b, error*
 }
 
 double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
+    clock_t start_t = clock();
     if(!a.d | !b.d){ return 0; }
     char a_nan_cond = (a.parts.exp > MAX_NORM_DOUBLE_EXP) & a.parts.mantissa;
     char b_nan_cond = (b.parts.exp > MAX_NORM_DOUBLE_EXP) & b.parts.mantissa;
     if(a_nan_cond | b_nan_cond){ return ternary(a_nan_cond, a.d, b.d); }
+    printf("\ncheck part: %lu\n", clock() - start_t);
+    start_t = clock();
     dbits result = safe_double_mantissa_multiplication_with_rounding(a, b, err); if(*err){ return result.d; }
+    printf("mantissa: %lu\n", clock() - start_t);
+    start_t = clock();
     unsigned int exponent = safe_uint_addition(a.parts.exp, b.parts.exp, err); if(*err){ return result.d; }
     exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
     exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; }
@@ -100,14 +105,10 @@ double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
     *err = else0(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERFLOW) | else0(exponent <= MAX_NORM_DOUBLE_EXP, *err); if(*err){ return result.d; }
     result.parts.exp = exponent;
     result.parts.sign = a.parts.sign ^ b.parts.sign;
+    printf("exponent and sign handling: %lu\n", clock() - start_t);
     return result.d;
 }
 
 int main(){
-    double d1 = 3;
-    double d2 = 2;
-    error err = NO_ERROR;
-    printf("\nthe product of multiplication %lf \t and %lf \t equals to %lf\n error: %u", d1, d2, safe_double_multiplication_with_rounding((dbits){ .d = d1}, (dbits){ .d = d2}, &err), err);
-    printf("\n%u\n", err);
     return 0;
 }
