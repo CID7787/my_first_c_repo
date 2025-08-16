@@ -1,5 +1,12 @@
+#ifndef abracadabra
+  #include "user_defined_datatypes.c"
+  #include "constants.c"
+  #include "logical_functions_of_decision.c"
+  #include "bitwise_functions.c"
+  #include "safe_arithmetic_functions.c"
+#endif
 #include <stdio.h>
-#include <stlib.h>
+#include <stdlib.h>
 
 
 int logical_not(int arg){
@@ -30,64 +37,31 @@ description: This function checks w
 hether the last bit is 0
 
 */
-  void* conditional_operator(int cond, void* (*true_condition_func)(), void* (*false_condition_func)()){
-    cond = !(!cond); // 1; 0
-    void* t = (void*) true_condition_func; // convert function pointer to data pointer
-    void* f = (void*) false_condition_func;
-
-    int big = ( cond << sizeof(int) ) << sizeof(int); // 0/0010000....
-    int r = (~0) >> big; // 00000000... | 11111111......
-
-    void* result = (r & t) | (r & f); // leave only one data pointer according to IF/OR logic, based on cond value
-
-    void* (*resulting_function)() = (void* (*)())result; // convert back to the function pointer
-    resulting_function(); // call a function
-    return result;
-    
-  }
+void* conditional_operator(int cond, void* (*true_cond_func)(), void* (*false_cond_func)()){
+  cond = !(!cond); // 1; 0
+  void* t = true_cond_func; // convert function pointer to data pointer
+  void* f = false_cond_func;
+  int big = cond << (sizeof(int) << 1); // 0/0010000....
+  int r = (~0) >> big; // 00000000... | 11111111......
+  // void* result = (r & t) | (r & f); // leave only one data pointer according to IF/OR logic, based on cond value
+  // void* (*resulting_function)() = (void* (*)())result; // convert back to the function pointer
+  resulting_function(); // call a function
+  // return result;
+}
   
 int absolute_value(int condition){ 
     int the_original_value = condition;
     condition = *((unsigned int*)&condition) >> ((sizeof(int) << 3) - 1);// condition if last bit of arg is 1(if number is negative) 
     return (1 - (condition << 1)) * the_original_value;
 }
-
-int trueXfalse0(unsigned int cond, int x){
-  unsigned int n_bits = sizeof(int) << 3;// sizeof(int) in bits, number of bits in registry. (x << 3) is the same as  (x * 8)
-  int any = (!cond) << n_bits;
-  return x >> any;// if(cond){return x;} else{ return 0;}
-}
-
-void ifnot(void* a, void* b){
-  int* c = (int*)a; 
-  int* d = (int*)b;
-  //    if(!(*c)){ *c = *d; }    
-  *c = trueXfalse0(*c, *d) | trueXfalse0(!(*c), *c);
-}
-  
   
 typedef enum function_state{
  NO_PROBLEM = 0,
  ROUNDING,
- OVERFLOW,
- UNDERFLOW,
+ F_OVERFLOW,
+ F_UNDERFLOW,
 }error;
     
-
-void swap_in_place(int* a, int* b){// through xor operator
-  (*a) = (*a) ^ (*b);// xor of couple numbers like this 0101 and 0110 equal to 0011
-  (*b) = (*a) ^ (*b);// then xor of result with any of these two numbers will result to another number, ex_1:0011 ^ 0101 = 0110
-  (*a) = (*a) ^ (*b);// ex_2: 0011 ^ 0110 = 0101
-}
-
-
-int safe_int_sum(int a, int b, error* e){ 
-  long int temp_sum = ( (long int)a ) + ( (long int)b );
-  int cond = trueXfalse0(temp_sum > BIGGEST_INT_NUMBER, OVERFLOW) | trueXfalse0(temp_sum < SMALLEST_INT_NUMBER, UNDERFLOW);
-  *e = trueXfalse0(cond, cond) | trueXfalse0(!cond, *e);
-  return (int)temp_sum;
-}
-
 
 unsigned int dist_uint(unsigned int a, unsigned int b){
   if(b > a){ swap_in_place(&a, &b); }
@@ -95,7 +69,7 @@ unsigned int dist_uint(unsigned int a, unsigned int b){
 }
   
   unsigned int dist_int(unsigned int a, unsigned int b){
-    return dist_uint(a ^ ((unsigned int)BIGGEST_INT_NUMBER + 1u), b ^ ((unsigned int)BIGGEST_INT_NUMBER + 1u));
+    return dist_uint(a ^ ((unsigned int)MAX_INT + 1u), b ^ ((unsigned int)MAX_INT + 1u));
 }
   
 
@@ -104,7 +78,7 @@ int integer_binary_search_v2(int num, int (*func)(int, error*), int left, int ri
   int sum, middle, var;
 
   while(1) {
-    (*err) = safe_int_sum(left, right, &sum);
+    *err = safe_int_addition(left, right, &sum);
     if(*err){ return middle; }
     middle = sum / 2;
   
@@ -126,40 +100,23 @@ int integer_binary_search_v2(int num, int (*func)(int, error*), int left, int ri
 }
 
 int integer_binary_search(int num, int (*func)(int, error*), int start, unsigned int size, unsigned int precision, error* err){
-  int middle;
+  int middle, func_of_middle, func_of_start, dis_num_to_func_of_start, func_of_end, dis_num_to_func_of_end;
   while(1){
-    middle = safe_int_sum(start, size / 2, err); if(*err){ return middle; }
-    int func_of_middle = (*func)(middle, err); if(*err){ return middle; }
+    middle = safe_int_addition(start, size / 2, err); if(*err){ return middle; }
+    func_of_middle = (*func)(middle, err); if(*err){ return middle; }
 
     if(num == func_of_middle){ return middle; }
-    size = safe_int_sum(middle, -start, err); if(*err){ return middle; }
+    size = safe_int_addtiion(middle, -start, err); if(*err){ return middle; }
     if(func_of_middle < num){ start = middle; } 
     if(size <= precision){
-      int func_of_start = (*func)(start, err); if(*err){ return middle; }
-      int dis_num_to_func_of_start = safe_int_sum(num, -func_of_start, err); if(*err){ return middle; }
+      func_of_start = (*func)(start, err); if(*err){ return middle; }
+      dis_num_to_func_of_start = safe_int_addition(num, -func_of_start, err); if(*err){ return middle; }
 
-      int func_of_end = (*func)(start + (int)size, err); if(*err){ return middle; }
-      int dis_num_to_func_of_end = safe_int_sum(num, -func_of_end, err); if(*err){ return middle; }
-      return trueXfalse0(dis_num_to_func_of_start <= dis_num_to_func_of_end, start) | trueXfalse0(dis_num_to_func_of_end < dis_num_to_func_of_start, end); 
+      func_of_end = (*func)(start + (int)size, err); if(*err){ return middle; }
+      dis_num_to_func_of_end = safe_int_addition(num, -func_of_end, err); if(*err){ return middle; }
+      return ternary(dis_num_to_func_of_start <= dis_num_to_func_of_end, start, size); 
     }
   }
-}
-
-
-
-float newton_method_func(float (*func)(float), float (*derivative)(float), float x0, float precision){
-    float x = x0;
-    while( ((*func)(x) >= precision) || ((*func)(x) <= -precision) ){// WANING!!! precision works only in this case(need to consider what precision need to put for other cases) 
-        x = x - ( (*func)(x) / (*derivative)(x) );// WARNING!!! division by 0 
-    }
-    return x;
-}
-
-
-int main(){
-    printf("%f", newton_method(&square, &square_derivative, 6, 0.1));
-    
-    return 0;
 }
 
 

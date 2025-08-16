@@ -1,6 +1,12 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <user_defined_datatypes.c>
+#ifndef abracadabra
+  #include <stdio.h>
+  #include <stdlib.h>
+  #include "user_defined_datatypes.c"
+  #include "constants.c"
+  #include "logical_functions_of_decision.c"
+  #include "bitwise_functions.c"
+  #include "safe_arithmetic_functions.c"
+#endif
 
 //cindex[1] == 1   <==>     *(cindex + 1*sizeof(char))
 // operator first of all implements from right side always , like 3[a] 2[=] 1[(1+2)];
@@ -71,7 +77,7 @@ void* vector_creation_old(datatype type, unsigned int n, void* arr){
   int size = amount_of_bytes_in_this_datatype(type);
   int i = 0;
   if (!n){
-    while (element_is_nonzero(arr, i, size)){ i++; } // this will NOT be deleted
+    // while (element_is_nonzero(arr, i, size)){ i++; } // this will NOT be deleted
     n = i;
   }
   void* result = malloc(1 + sizeof(n) + (size*n));
@@ -101,31 +107,31 @@ vecN vector_negation(vecN v){
 }
 
 
-void vector_negation_in_place_old(void* v){
-  int size = amount_of_bytes_in_this_datatype( ( (char*)v )[0]);
-  unsigned int n = ((unsigned int*)(((char*)v)[1]))[0];//  ? - NOT RIGHT , FIX!s int i = 1 + sizeof(n);
-  int i2 = i + n;
-  while(i < i2) {
-    switch( (datatype)(((char*)v)[0]) ){
-      case INT:
-        ( (int*)( ((char*)v)[1 + sizeof(unsigned int)]) )[i] = -(( (int*)( ((char*)v)[1 + sizeof(unsigned int)]) )[i]);
-        break;
-      case CHAR:
-        (((char*)v)[1 + sizeof(unsigned int)])[i] = -(( (char*)( ((char*)v)[1 + sizeof(unsigned int)]) )[i]);
-        break;
-      case FLOAT:
-        ( (float*)( ((char*)v)[1 + sizeof(unsigned int)]) )[i] = -(( (float*)( ((char*)v)[1 + sizeof(unsigned int)]) )[i]);
-        break;
-      case DOUBLE:
-        ( (double*)( ((char*)v)[1 + sizeof(unsigned int)]) )[i] = -(( (double*)( ((char*)v)[1 + sizeof(unsigned int)]) )[i]);
-        break;
-      case UINT:
-        ( (unsigned int*)( ((char*)v)[1 + sizeof(unsigned int)]) )[i] = -(( (unsigned int*)( ((char*)v)[1 + sizeof(unsigned int)]) )[i]);
-        break;
-    }
-  }
-  return;
-}
+// void vector_negation_in_place_old(void* v){
+//   int size = amount_of_bytes_in_this_datatype( ( (char*)v )[0]);
+//   unsigned int n = ((unsigned int*)(((char*)v)[1]))[0];//  ? - NOT RIGHT , FIX!s int i = 1 + sizeof(n); 
+//   int i2 = i + n;
+//   while(i < i2) {
+//     switch( (datatype)(((char*)v)[0]) ){
+//       case INT:
+//         ( (int*)( ((char*)v)[1 + sizeof(unsigned int)]) )[i] = -(( (int*)( ((char*)v)[1 + sizeof(unsigned int)]) )[i]);
+//         break;
+//       case CHAR:
+//         (((char*)v)[1 + sizeof(unsigned int)])[i] = -(( (char*)( ((char*)v)[1 + sizeof(unsigned int)]) )[i]);
+//         break;
+//       case FLOAT:
+//         ( (float*)( ((char*)v)[1 + sizeof(unsigned int)]) )[i] = -(( (float*)( ((char*)v)[1 + sizeof(unsigned int)]) )[i]);
+//         break;
+//       case DOUBLE:
+//         ( (double*)( ((char*)v)[1 + sizeof(unsigned int)]) )[i] = -(( (double*)( ((char*)v)[1 + sizeof(unsigned int)]) )[i]);
+//         break;
+//       case UINT:
+//         ( (unsigned int*)( ((char*)v)[1 + sizeof(unsigned int)]) )[i] = -(( (unsigned int*)( ((char*)v)[1 + sizeof(unsigned int)]) )[i]);
+//         break;
+//     }
+//   }
+//   return;
+// }
 
 
 void vector_negation_in_place(vecN v) {
@@ -175,7 +181,7 @@ vecN vector_addition(vecN v1, vecN v2){
         v1.elements.f[i] = (v1.elements.f[i] < 0) * (-v1.elements.f[i]) + (!(v1.elements.f[i] < 0)) * v1.elements.f[i];// here if evaluation of variable was negative number, then I will set it to positive, otherwise it will be the same  
         v2.elements.f[i] = (v2.elements.f[i] < 0) * (-v2.elements.f[i]) + (!(v2.elements.f[i] < 0)) * v2.elements.f[i];// here if evaluation of variable was negative number, then I will set it to positive, otherwise it will be the same          
         flag = ( (v1.elements.f[i] < 0) && (v2.elements.f[i] < 0) );
-        v.error = ( (v2.elements.f[i] >= 0) && ( v1.elements.f[i] > (float_max - v2.elements.f[i]) ) ) * OVERFLOW;// the result of this string must be either 0(it means ALL_GOOD) or 1(it means we have OVERFLOW) 
+        v.error = ( (v2.elements.f[i] >= 0) && ( v1.elements.f[i] > (float_max - v2.elements.f[i]) ) ) * V_OVERFLOW;// the result of this string must be either 0(it means ALL_GOOD) or 1(it means we have OVERFLOW) 
         
         v.elements.i[i] = v1.elements.i[i] + v2.elements.i[i]; 
         
@@ -186,7 +192,7 @@ vecN vector_addition(vecN v1, vecN v2){
         v1.elements.d[i] = (v1.elements.d[i] < 0) * (-v1.elements.d[i]) + (!(v1.elements.d[i] < 0)) * v1.elements.d[i];// here if evaluation of variable was negative number, then I will set it to positive, otherwise it will be the same  
         v2.elements.d[i] = (v2.elements.d[i] < 0) * (-v2.elements.d[i]) + (!(v2.elements.d[i] < 0)) * v2.elements.d[i];// here if evaluation of variable was negative number, then I will set it to positive, otherwise it will be the same          
         flag = ( (v1.elements.d[i] < 0) && (v2.elements.d[i] < 0) );
-        v.error = ( (v2.elements.d[i] >= 0) && ( v1.elements.d[i] > (double_max - v2.elements.d[i]) ) ) * OVERFLOW;// the result of this string must be either 0(it means ALL_GOOD) or 1(it means we have OVERFLOW) 
+        v.error = ( (v2.elements.d[i] >= 0) && ( v1.elements.d[i] > (double_max - v2.elements.d[i]) ) ) * V_OVERFLOW;// the result of this string must be either 0(it means ALL_GOOD) or 1(it means we have OVERFLOW) 
         
         v.elements.i[i] = v1.elements.d[i] + v2.elements.d[i]; 
         
@@ -194,7 +200,7 @@ vecN vector_addition(vecN v1, vecN v2){
         flag = 0; 
         break;
       case UINT:
-        v.error = ( (v2.elements.u[i] >= 0) && ( v1.elements.u[i] > (uint_max - v2.elements.u[i]) ) ) * OVERFLOW;// the result of this string must be either 0(it means ALL_GOOD) or 1(it means we have OVERFLOW) 
+        v.error = ( (v2.elements.u[i] >= 0) && ( v1.elements.u[i] > (uint_max - v2.elements.u[i]) ) ) * V_OVERFLOW;// the result of this string must be either 0(it means ALL_GOOD) or 1(it means we have OVERFLOW) 
         v.elements.u[i] = v1.elements.u[i] + v2.elements.u[i]; 
         break;
     }
@@ -351,10 +357,10 @@ vecN vector_exponentiation_real(vecN v1, vecN v2){ // here are some rules with d
   while(i--) {
     switch (v1.type){
       case INT:
-        v.elements.i[i] = exp_complement_for_int(v1.elements.i[i], v2.elements.i[i]);
+        // v.elements.i[i] = exp_complement_for_int(v1.elements.i[i], v2.elements.i[i]);
         break;
       case CHAR:
-        v.elements.c[i] = (char)exp_complement_for_int(v1.elements.c[i], v2.elements.c[i]);
+        // v.elements.c[i] = (char)exp_complement_for_int(v1.elements.c[i], v2.elements.c[i]);
         break;
       case FLOAT:
         v.elements.f[i] = (float)exp_complement_for_double((double)v1.elements.d[i], (double)v2.elements.d[i]);
@@ -433,37 +439,6 @@ vecN vectors_multiplication_via_dot_product(vecN v1, vecN v2){
  return result; 
 }
 
-
-
-
-
-  
-int main() {
-  void* 
-  
-  void* v0 = vector_creation(UINT, 0, (unsigned int[]){1, 0});
-  void* v1 = vector_creation(UINT, 0, (unsigned int[]){1, 0});
-  void* v2 = vector_creation(UINT, 0, (unsigned int[]){1, 0});
-  void* v3 = vector_creation(UINT, 0, (unsigned int[]){1, 0});
-  goto defer_continue;
-    defer:
-    free(v0);
-    free(v1);
-    free(v2);
-    free(v3);
-    return 0;
-    //
-  defer_continue:
-  
-   
-  // vector_addition();
-  // ...
-  printf("%d", ((char*)v0)[0]);
-  // ...
-   
-  
-  goto defer;
-}
 
 /*
 

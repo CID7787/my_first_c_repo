@@ -8,7 +8,7 @@
 #include "logical_functions_of_decision.c"
 #include "bitwise_functions.c"
 #include "safe_arithmetic_functions.c"
-#include "double_multiplication_without_rounding.c"
+#include "double_multiplication_with_rounding.c"
 
 int main(){
     long unsigned int sum = 0, current_clock = 0;

@@ -1,4 +1,12 @@
-   
+#ifndef abracadabra
+    #include <time.h>
+    #include "user_defined_datatypes.c"
+    #include "constants.c"
+    #include "logical_functions_of_decision.c"
+    #include "bitwise_functions.c"
+    #include "safe_arithmetic_functions.c"
+#endif
+
 /* COMMENTS TO PROCESS OF BUILDING long_mantissa_multiplication FUNCTION
 We are shifting the number by 27 to the left so that it becomes smaller
 There COULD be any number, but there SHOULD only be 1 number.

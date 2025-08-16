@@ -1,5 +1,13 @@
+#ifndef abracadabra
+    #include <stdio.h>
+    #include "user_defined_datatypes.c"
+    #include "constants.c"
+    #include "logical_functions_of_decision.c"
+    #include "bitwise_functions.c"
+    #include "safe_arithmetic_functions.c"
+#endif
 
-double sine(double radian, errror* err){// TODO safe_double_multiplication and safe_double_division
+double sine(double radian, error* err){// TODO safe_double_multiplication and safe_double_division
     dbits radian_var = (dbits){.d = radian};
     dbits PI2_var = (dbits){.d = PI2};
     radian = my_fmod(radian_var, PI2_var);

@@ -13,7 +13,7 @@ const all IEEE754_FLOAT_MASK = { .li =   0b10000001000000000000000000000000};
 const all IEEE754_DOUBLE_MASK = { .lui = 0b100000000001000000000000000000000000000000000000000000000000000};
 const all LONG_INT_SIGN_MASK = { .lui =  0b100000000000000000000000000000000000000000000000000000000000000};
 
-print_binary_actual_best_version_with_one_variable((all){ .d = 10.25}, (all){.lui = 0}, IEEE754_DOUBLE_MASK);
+// print_binary_actual_best_version_with_one_variable((all){ .d = 10.25}, (all){.lui = 0}, IEEE754_DOUBLE_MASK);
 
 void print_binary_actual_best_version_with_one_variable(all x, all stop_where_bit_is_1, all whitespace_mask){
     unsigned int i = sizeof(all) << 3;
@@ -77,13 +77,13 @@ void print_binary_new_version1(all x, unsigned int byte_amount, unsigned int *sp
     }
 }
 
-void print_binary_my_version(all x, dtype type){
-    long unsigned int mask = ~((~0ul) >> 1);
-    unsigned int sizeoftype = sizeof(all) << 3;
-    unsigned int sizeof_double_sign_exponent_bit_sum = 12;// aim: (conveniently)exhibit correct amount of bit in this datatype(argument)
-    for(int i = 0; i < sizeofall; ++i){
-        if((i == 1) | (i == sizeof_double_sign_exponent_bit_sum)){ printf(" "); }
-        printf("%u", !!(x.lui & mask));
-        mask >>= 1;
-    }
-}
+// void print_binary_my_version(all x, dtype type){
+//     long unsigned int mask = ~((~0ul) >> 1);
+//     unsigned int sizeoftype = sizeof(all) << 3;
+//     unsigned int sizeof_double_sign_exponent_bit_sum = 12;// aim: (conveniently)exhibit correct amount of bit in this datatype(argument)
+//     for(int i = 0; i < sizeofall; ++i){
+//         if((i == 1) | (i == sizeof_double_sign_exponent_bit_sum)){ printf(" "); }
+//         printf("%u", !!(x.lui & mask));
+//         mask >>= 1;
+//     }
+// }

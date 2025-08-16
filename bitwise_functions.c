@@ -51,17 +51,17 @@ unsigned int compare_1st_bit(unsigned int a, unsigned int b){
   return (~(a ^ b)) & d;
 }
 
-long unsigned int how_many_0_until_youngest_1(long unsigned int a){ //32
-  unsigned int counter = 0;
-  while(!(a & 1ul)){ a >>= 1; counter++; }// 10101
-  return counter;
-}
+  long unsigned int how_many_0_until_youngest_1(long unsigned int a){ //32
+    unsigned int counter = 0;
+    while(!(a & 1ul)){ a >>= 1; counter++; }// 10101
+    return counter;
+  }
 
-long unsigned int how_many_bits_until_eldest_1(long unsigned int a){
-  unsigned int counter = 0;
-  while(a > 1){ ++counter; a >>= 1; } // 10101
-  return counter;
-}
+  long unsigned int how_many_bits_until_eldest_1(long unsigned int a){
+    unsigned int counter = 0;
+    while(a > 1){ ++counter; a >>= 1; } // 10101
+    return counter;
+  }
 
 unsigned int lshift(unsigned int a, unsigned int b){
     //  a << b         if (b == 0) { return a; }        if (b == 32) { return 0; }
@@ -147,4 +147,10 @@ int convert_from_sign_and_magnitude(unsigned int a){
   int mask = ~max_positive_integer;
   a = a & max_positive_integer;
   return (mask | (max_positive_integer - a) + 1);
+}
+
+void swap_in_place_xor(int* a, int* b){// through xor operator
+  (*a) = (*a) ^ (*b);// xor of couple numbers like this 0101 and 0110 equal to 0011
+  (*b) = (*a) ^ (*b);// then xor of result with any of these two numbers will result to another number, ex_1:0011 ^ 0101 = 0110
+  (*a) = (*a) ^ (*b);// ex_2: 0011 ^ 0110 = 0101
 }

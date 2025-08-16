@@ -47,13 +47,13 @@ union union_name2{
 
  enum vectorErrors {
    ALL_GOOD = 0,
-  // OVERFLOW,
-  // UNDERFLOW,
+   V_OVERFLOW,
+   V_UNDERFLOW,
    SQUARE_ROOT_OF_NEGATIVE_NUMBER,
    RETURN_INFINITY,
    ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER,
    RETURN_REAL_PART,
-  // UNDEFINED_BEHAVIOR,
+   V_UNDEFINED_BEHAVIOR,
  } typedef vERR;
 
 enum DATATYPES { // enumeration

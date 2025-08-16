@@ -6,7 +6,7 @@ void operator_reference(){
   a--; // post decrement, returns the previous number, executes after all other operations
   ++a; // pre increment, returns the next number
   --a; // pre decrement, returns the previous number
-  1++; // increment doesn't work on literals!
+//1++; // increment doesn't work on literals!
 
 
 

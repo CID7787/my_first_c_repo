@@ -78,7 +78,7 @@ uint32_t fp32_mul_core (uint32_t a, uint32_t b)
     }
     /* result exponent: add argument exponents and adjust for biasing */
     expor = expoa + expob - FLOAT_EXPO_BIAS + 2 * EXPO_ADJUST;
-    mantb = mantb << FLOAT_EXPO_BITS; /* preshift to align result signficand */
+    mantb = mantb << FLOAT_EXPO_BITS;    /* preshift to align result signficand */
     /* result significand: multiply argument signficands */
     prod = (uint64_t)manta * mantb;
     mantr_hi = (uint32_t)(prod >> 32);
