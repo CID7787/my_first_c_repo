@@ -35,18 +35,19 @@ a_right * b_left = (aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa * 00000000 0000000b bbbb
 lluint long_mantissa_multiplication(long unsigned int a, long unsigned int b){ 	
     // getting left and right parts of multiplicand and multiplier 
     long unsigned int mask_r = 0xffffffff;
+    unsigned int sizeof_half_arg_type = sizeof(a) << 2; //(sizeof(a) << 3) >> 1 == sizeof_type_in_bits(sizeof(a) * 8(2^3)) / 2 == sizeof(a) * 4 
     error err = NO_ERROR;
-    long unsigned int a_l = a >> (sizeof(a) << 2),
-                      b_l = b >> (sizeof(a) << 2),
+    long unsigned int a_l = a >> sizeof_half_arg_type,
+                      b_l = b >> sizeof_half_arg_type,
                       a_r = a & mask_r,
                       b_r = b & mask_r;
     lluint result = {.high = a_l * b_l,
                      .low  = a_r * b_r };
     long unsigned int middle = (a_l * b_r) + (a_r * b_l);
-    result.low = safe_luint_addition(result.low, middle << 32, &err);
-    result.high += (middle >> 32) + else0(err, 1);
+    result.low = safe_luint_addition(result.low, middle << sizeof(sizeof_half_arg_type, &err);
+    result.high += (middle >> sizeof_half_arg_type) + else0(err, 1);
     return result;
-}    
+}
 
 dbits safe_double_mantissa_multiplication_with_rounding(dbits a, dbits b, error* err){
     a.luint = DOUBLE_MANTISSA_HIDDEN_ONE | a.parts.mantissa;
