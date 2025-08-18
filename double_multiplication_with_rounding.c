@@ -91,9 +91,8 @@ double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
     char b_nan_cond = (b.parts.exp > MAX_NORM_DOUBLE_EXP) & b.parts.mantissa;
     if(a_nan_cond | b_nan_cond){ return ternary(a_nan_cond, a.d, b.d); }
     dbits result = safe_double_mantissa_multiplication_with_rounding(a, b, err); if(*err){ return result.d; }
-    unsigned int exponent = safe_uint_addition(a.parts.exp, b.parts.exp, err); if(*err){ return result.d; }
-    exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
-    exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; }
+    unsigned int exponent = a.parts.exp + b.parts.exp + result.parts.exp;
+    exponent = (int)exponent - DOUBLE_EXP_BIAS ;
     // check whether or not exponent value bigger than MAX_DOUBLE_EXPONENT
     *err = else0(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERFLOW) | else0(exponent <= MAX_NORM_DOUBLE_EXP, *err); if(*err){ return result.d; }
     result.parts.exp = exponent;
