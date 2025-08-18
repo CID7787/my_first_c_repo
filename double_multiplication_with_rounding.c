@@ -1,4 +1,4 @@
-#ifndef abracadabra
+#ifndef headerfile
     #include <time.h>
     #include "user_defined_datatypes.c"
     #include "constants.c"
@@ -86,16 +86,11 @@ dbits safe_double_mantissa_multiplication_with_rounding(dbits a, dbits b, error*
 }
 
 double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
-    clock_t start_t = clock();
     if(!a.d | !b.d){ return 0; }
     char a_nan_cond = (a.parts.exp > MAX_NORM_DOUBLE_EXP) & a.parts.mantissa;
     char b_nan_cond = (b.parts.exp > MAX_NORM_DOUBLE_EXP) & b.parts.mantissa;
     if(a_nan_cond | b_nan_cond){ return ternary(a_nan_cond, a.d, b.d); }
-    printf("\ncheck part: %lu(%lu)\n", clock() - start_t, clock());
-    start_t = clock();
     dbits result = safe_double_mantissa_multiplication_with_rounding(a, b, err); if(*err){ return result.d; }
-    printf("mantissa: %lu(%lu)\n", clock() - start_t, clock());
-    start_t = clock();
     unsigned int exponent = safe_uint_addition(a.parts.exp, b.parts.exp, err); if(*err){ return result.d; }
     exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
     exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; }
@@ -103,9 +98,14 @@ double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
     *err = else0(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERFLOW) | else0(exponent <= MAX_NORM_DOUBLE_EXP, *err); if(*err){ return result.d; }
     result.parts.exp = exponent;
     result.parts.sign = a.parts.sign ^ b.parts.sign;
-    printf("exponent and sign handling: %lu(%lu)\n", clock() - start_t, clock());
     return result.d;
 }
 
 
+void my_lcg(void){
+    dbits a, b;
+    error err = NO_ERROR;
 
+    printf("the product of multiplication %f and \t %f equal to %f\n", a.d, b.d , safe_double_multiplication_with_rounding(a, b, &err));
+    printf("error%u", err);
+}

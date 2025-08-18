@@ -1,12 +1,6 @@
-typedef union variable_all_types{
-    double d;
-    long int li;
-    long unsigned int lui;
-    char c;
-    float f;
-    int i;
-    unsigned int ui;
-} all;
+#ifndef headerfile
+    #include "user_defined_datatypes.c"
+#endif
 
 // Example usage:
 const all IEEE754_FLOAT_MASK = { .li =   0b10000001000000000000000000000000};

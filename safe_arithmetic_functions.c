@@ -1,3 +1,11 @@
+#ifndef headerfile
+  #include "user_defined_datatypes.c"
+  #include "constants.c"
+  #include "logical_functions_of_decision.c"
+  #include "bitwise_functions.c"
+#endif
+
+
 
 // FUNCTION: f_mod(double and dbits)
 
@@ -78,8 +86,6 @@ double my_fmod_v4(double x, double y){
   temp.bits.sign = (long unsigned int)x;
   return temp.d;
 }
-
-  
   
   
 // FUNCTION: integer_addition(int, error*)
@@ -89,15 +95,33 @@ int safe_int_addition(int addend1, int addend2, error* err){
   unsigned int neg_overflow_cond =  (addend1 < 0) && (addend2 < ((long int)MIN_INT - (long int)addend1));
   *err = ternary(pos_overflow_cond, POSITIVE_OVERFLOW, *err);
   *err = ternary(neg_overflow_cond, NEGATIVE_OVERFLOW, *err);
-  return addend1 + ( addend2 & (else0(!pos_overflow_cond, ~0) & else0(!neg_overflow_cond, ~0)) );
+  return addend1 + addend2;
+}
+
+
+// FUNCTION: unsigned_int_addition(unsigned int, error*)
+
+unsigned int safe_uint_addition(unsigned int arg1, unsigned int arg2, error* err){
+  *err = ternary(arg2 > (MAX_UINT - arg1), POSITIVE_OVERFLOW, *err);
+  return arg1 + arg2;
+}
+
+
+// FUNCTION: unsigned_int_multiplication(unsigned int, error*)
+
+unsigned int safe_uint_multiplication(unsigned int arg1, unsigned int arg2, error* err){
+  unsigned int result = 0;
+  while(arg2 > 0){
+    result = safe_uint_addition(result, arg1, err);
+  }
+  return result;
 }
 
 
 // FUNCTION: long_unsigned_int_addition(long unsigned int, error*)
 
 long unsigned int safe_luint_addition(long unsigned int addend1, long unsigned int addend2, error* err){
-  unsigned int cond = addend2 > (MAX_LUINT - addend1);
-  *err = ternary(cond, POSITIVE_OVERFLOW, *err);
+  *err = ternary(addend2 > (MAX_LUINT - addend1), POSITIVE_OVERFLOW, *err);
   return addend1 + addend2;
 }
 
@@ -113,27 +137,6 @@ long unsigned int safe_luint_multiplication(long unsigned int multiplier, long u
 }
   
   
-// FUNCTION: unsigned_int_addition(unsigned int, error*)
-
-unsigned int safe_uint_addition(unsigned int arg1, unsigned int arg2, error* err){
-  unsigned int cond = (arg1 > 0) && (arg2 > (MAX_UINT - arg1));
-  *err = ternary(cond, POSITIVE_OVERFLOW, *err);
-  return arg1 + arg2;
-}
-
-
-// FUNCTION: unsigned_int_multiplication(unsigned int, error*)
-
-unsigned int safe_uint_multiplication(unsigned int arg1, unsigned int arg2, error* err){
-  unsigned int result = 0;
-  while(arg2 > 0){
-    result = safe_uint_addition(result, arg1, err);
-  }
-  return result;
-}
-  
-  
-
 // FUNCTION: factorial(unsigned int, error*)
 
 #define factorial_lookup_table_size 11
@@ -179,7 +182,7 @@ unsigned int increment(unsigned int* x){
 
 // FUNCTION: addition(unsigned int, unsigned int)
 
-unsigned int int_addition(unsigned int a, unsigned int b){
+unsigned int int_addition_v1(unsigned int a, unsigned int b){
   // implement addition using increment and loops -- реализовать сложение используя инкремент и циклы
   unsigned int x = 0;
   while ( x < b ) { increment(&x); increment(&a); }
@@ -194,7 +197,7 @@ unsigned int uint_multiplication(unsigned int a, unsigned int b){
   // implement multiplication using addition and loops -- реализовать умножение используя сложение и циклы
   int c = 0;
   int d = 0;
-  while ( c < b ) { increment(&c); d = int_addition(d, a); }
+  while ( c < b ) { increment(&c); d = int_addition_v1(d, a); }
   // printf ("\n c:%d a:%d d:%d b:%d", c, a, d, b);
   return d;
 }
@@ -340,39 +343,37 @@ float float_division(float result, float m1, float precision){ // a = 9, b = 3 c
 
 // FUNCTION: double_multiplication_without_rounding(dbits, dbits, error*)
 
-dbits safe_double_mantissa_multiplication(dbits multiplicand, dbits multiplier, error* err){
-  multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplicand.parts.mantissa;
-  multiplier.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplier.parts.mantissa;
+dbits safe_double_mantissa_multiplication_without_rouding(dbits a, dbits b, error* err){
+  unsigned int a_exp = b.parts.exp, b_exp = b.parts.exp;
+  a.luint = DOUBLE_MANTISSA_HIDDEN_ONE | a.parts.mantissa;
+  b.luint = DOUBLE_MANTISSA_HIDDEN_ONE | b.parts.mantissa;
   // remove useless zeros
-  while (!(multiplicand.luint & 1ul)) { multiplicand.luint >>= 1; }
-  while (!(  multiplier.luint & 1ul)) { multiplier.luint >>= 1; }
+  while (!(a.luint & 1ul)) { a.luint >>= 1; }
+  while (!(b.luint & 1ul)) { b.luint >>= 1; }
   // variable declaration
-  unsigned int bits_after_binary_point = safe_uint_addition(how_many_bits_until_eldest_1(multiplicand.luint), how_many_bits_until_eldest_1(multiplier.luint), err); if(*err){ return multiplicand; }
-  
-  multiplier.luint = safe_luint_multiplication(multiplicand.luint, multiplier.luint, err); if(*err){ return multiplier; } //@TODO: make it so any result fits.(in the version with rounding)
-  // variable declararion 
-  unsigned int mant_overflow_cond = multiplier.luint > MAX_DOUBLE_MANTISSA; // I suspect this can be simpler with binary operators. Something like this: (multiplier.luint & ~MAX_DOUBLE_MANTISSA) 
-  *err = else0(mant_overflow_cond, POSITIVE_OVERFLOW) | else0(!mant_overflow_cond, *err); if(*err){ return multiplicand; }
-  bits_after_binary_point = safe_int_addition(how_many_bits_until_eldest_1(multiplier.luint), -bits_after_binary_point, err); if(*err){ return multiplier; }
+  int bin_point_shift = safe_int_addition(how_many_bits_until_eldest_1(a.luint), how_many_bits_until_eldest_1(b.luint), err); if(*err){ return a; }
+  b.luint = safe_luint_multiplication(a.luint, b.luint, err); if(*err){ *err = ternary((a_exp + b_exp) - DOUBLE_EXP_BIAS, POSITIVE_OVERFLOW, UNDERFLOW); return a; }
+  *err = ternary(b.luint > MAX_DOUBLE_MANTISSA, POSITIVE_OVERFLOW, *err); if(*err){ return a; }
+  bin_point_shift = safe_int_addition(how_many_bits_until_eldest_1(b.luint), -bin_point_shift, err); if(*err){ return b; }
   // moving product's first one to hidden one position
-  multiplier.luint <<= safe_int_addition(AMOUNT_OF_DOUBLE_MANTISSA_BITS, -how_many_bits_until_eldest_1(multiplier.luint), err); if(*err){ return multiplier; }
-  multiplier.parts.exp = bits_after_binary_point;
-  return multiplier;
+  b.luint <<= safe_int_addition(AMOUNT_OF_DOUBLE_MANTISSA_BITS, -how_many_bits_until_eldest_1(b.luint), err); if(*err){ return b; }
+  b.parts.exp = bin_point_shift;
+  return b;
 }
 
-double safe_double_multiplication_without_rounding(dbits multiplicand, dbits multiplier, error* err){
-  // check whether or not one of arguments equal to 0
-  if(!multiplicand.d | !multiplier.d){ return 0; }
-  dbits result = multiplier;
-  result = safe_double_mantissa_multiplication(multiplicand, multiplier, err); if(*err){ return result.d; }
-  unsigned int exponent = safe_uint_addition(multiplicand.parts.exp, multiplier.parts.exp, err); if(*err){ return result.d; }
-  exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
-  exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; }
-  // check whether of not exponent value bigger than
-  *err = else0(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERFLOW) | else0(!(exponent > MAX_NORM_DOUBLE_EXP), *err); if(*err){ return result.d; }
-  result.parts.exp = exponent;
-  result.parts.sign = multiplicand.parts.sign ^ multiplier.parts.sign;
-  return result.d;
+double safe_double_multiplication_without_rounding(dbits a, dbits b, error* err){
+// check whether or not one of arguments equal to 0
+if(!a.d | !b.d){ return 0; }
+dbits result = b;
+result = safe_double_mantissa_multiplication_without_rouding(a, b, err); if(*err){ return result.d; }
+unsigned int exponent = safe_uint_addition(a.parts.exp, b.parts.exp, err); if(*err){ return result.d; }
+exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
+exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; }
+// check whether of not exponent value bigger than
+*err = else0(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERFLOW) | else0(!(exponent > MAX_NORM_DOUBLE_EXP), *err); if(*err){ return result.d; }
+result.parts.exp = exponent;
+result.parts.sign = a.parts.sign ^ b.parts.sign;
+return result.d;
 }
 
 // FUNCTION: double_multiplication_with_rounding(dbits,dbits,error*)

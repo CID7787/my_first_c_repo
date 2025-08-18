@@ -45,16 +45,26 @@ union union_name2{
   } luint;
 } union_var;
 
- enum vectorErrors {
-   ALL_GOOD = 0,
-   V_OVERFLOW,
-   V_UNDERFLOW,
-   SQUARE_ROOT_OF_NEGATIVE_NUMBER,
-   RETURN_INFINITY,
-   ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER,
-   RETURN_REAL_PART,
-   V_UNDEFINED_BEHAVIOR,
- } typedef vERR;
+typedef union variable_all_types{
+    double d;
+    long int li;
+    long unsigned int lui;
+    char c;
+    float f;
+    int i;
+    unsigned int ui;
+} all;
+
+enum vectorErrors {
+  ALL_GOOD = 0,
+  V_OVERFLOW,
+  V_UNDERFLOW,
+  SQUARE_ROOT_OF_NEGATIVE_NUMBER,
+  RETURN_INFINITY,
+  ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER,
+  RETURN_REAL_PART,
+  V_UNDEFINED_BEHAVIOR,
+} typedef vERR;
 
 enum DATATYPES { // enumeration
   INT = 0,

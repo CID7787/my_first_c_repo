@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <time.h>
 
-#define abracadabra 1
+#define headerfile 1
 
 #include "user_defined_datatypes.c"
 #include "constants.c"
