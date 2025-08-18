@@ -51,19 +51,10 @@ lluint long_mantissa_multiplication(long unsigned int a, long unsigned int b){
 dbits safe_double_mantissa_multiplication_with_rounding(dbits a, dbits b, error* err){
     a.luint = DOUBLE_MANTISSA_HIDDEN_ONE | a.parts.mantissa;
     b.luint = DOUBLE_MANTISSA_HIDDEN_ONE | b.parts.mantissa;
-    // remove useless zeros: shift right until one of the numbers runs out of zeroes in the least significant 
-    // char counter_of_lost_zeroes = 1;
-    while(!((a.luint | b.luint) & 1ul)) {
-         a.luint >>= 1; b.luint >>= 1;
-        //  counter_of_lost_zeroes++; 
-    }
-
-    // if((multiplicand.luint & multiplier.luint) == 1) { multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE; return multiplicand; }
-
     lluint result = long_mantissa_multiplication(a.luint, b.luint);
 
     unsigned int bin_point_shift = how_many_bits_until_eldest_1(a.luint) << 1;
-    // getting exponen
+    // getting exponent
     a.luint = how_many_bits_until_eldest_1(result.high);
     b.luint = how_many_bits_until_eldest_1(result.low);
     a.luint += else0(result.high, 1);
@@ -87,8 +78,8 @@ dbits safe_double_mantissa_multiplication_with_rounding(dbits a, dbits b, error*
 
 double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
     if(!a.d | !b.d){ return 0; }
-    char a_nan_cond = (a.parts.exp > MAX_NORM_DOUBLE_EXP) & a.parts.mantissa;
-    char b_nan_cond = (b.parts.exp > MAX_NORM_DOUBLE_EXP) & b.parts.mantissa;
+    char a_nan_cond = (a.parts.exp > MAX_NORM_DOUBLE_EXP) && a.parts.mantissa;
+    char b_nan_cond = (b.parts.exp > MAX_NORM_DOUBLE_EXP) && b.parts.mantissa;
     if(a_nan_cond | b_nan_cond){ return ternary(a_nan_cond, a.d, b.d); }
     dbits result = safe_double_mantissa_multiplication_with_rounding(a, b, err); if(*err){ return result.d; }
     int exponent = a.parts.exp + b.parts.exp + result.parts.exp - DOUBLE_EXP_BIAS;
