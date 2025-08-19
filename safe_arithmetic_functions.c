@@ -91,12 +91,10 @@ double my_fmod_v4(double x, double y){
 // FUNCTION: integer_addition(int, error*)
 
 int safe_int_addition(int addend1, int addend2, error* err){
-  unsigned int pos_overflow_cond = (addend1 > 0) && (addend2 > ((long int)MAX_INT - (long int)addend1));
-  unsigned int neg_overflow_cond =  (addend1 < 0) && (addend2 < ((long int)MIN_INT - (long int)addend1));
-  *err = ternary(pos_overflow_cond, POSITIVE_OVERFLOW, *err);
-  *err = ternary(neg_overflow_cond, NEGATIVE_OVERFLOW, *err);
+  *err = ternary((addend1 > 0) && (addend2 > ((long int)MAX_INT - (long int)addend1)), POSITIVE_OVERFLOW, *err);
+  *err = ternary((addend1 < 0) && (addend2 < ((long int)MIN_INT - (long int)addend1)), NEGATIVE_OVERFLOW, *err);
   return addend1 + addend2;
-}
+  }
 
 
 // FUNCTION: unsigned_int_addition(unsigned int, error*)
@@ -111,7 +109,7 @@ unsigned int safe_uint_addition(unsigned int arg1, unsigned int arg2, error* err
 
 unsigned int safe_uint_multiplication(unsigned int arg1, unsigned int arg2, error* err){
   unsigned int result = 0;
-  while(arg2 > 0){
+  while((arg2-- > 0) && !(*err)){
     result = safe_uint_addition(result, arg1, err);
   }
   return result;
