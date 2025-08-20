@@ -1,5 +1,6 @@
 #ifndef headerfile
     #include <time.h>
+    #include <stdlib.h>
     #include "user_defined_datatypes.c"
     #include "constants.c"
     #include "logical_functions_of_decision.c"
@@ -73,13 +74,23 @@ double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
     result.parts.sign = a.parts.sign ^ b.parts.sign;
     return result.d;
 }
+unsigned int random_uint(unsigned int v, unsigned int u){
+    v = 36969*(v & 65535) + (v >> 16);
+    u = 18000*(u & 65535) + (u >> 16);
+    return (v << 16) + (u & 65535);
+}
 
-
-// void my_lcg(void){
-//     dbits a, b;
-//     error err = NO_ERROR;
-
-//     printf("the product of multiplication %f and \t %f equal to %f\n", a.d, b.d , safe_double_multiplication_with_rounding(a, b, &err));
-//     printf("error%u", err);
-// }
-
+void d_mul_test(void){
+    dbits a, b;
+    error err = NO_ERROR;
+    for(int i = 0; i < 99999; ++i){
+        srand(time(NULL));
+        a.luint  = ((long unsigned int)rand() << (sizeof(int) << 3)) | random_uint(time(NULL), rand());
+        srand(clock());
+        b.luint  = ((long unsigned int)rand() << (sizeof(int) << 3)) | random_uint(time(NULL), rand());
+        printf("%d.\t", i);
+        printf("the product of multiplication %f  and \t %f equal to \t %f\n", a.d, b.d , safe_double_multiplication_with_rounding(a, b, &err));
+        printf("error: %u\n", err);
+        err = NO_ERROR;
+    }
+}
