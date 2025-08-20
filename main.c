@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #define headerfile 1
 
+#include <math.h>
 #include "user_defined_datatypes.c"
 #include "constants.c"
 #include "logical_functions_of_decision.c"

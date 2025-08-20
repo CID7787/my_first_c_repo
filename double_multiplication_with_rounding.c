@@ -42,11 +42,10 @@ lluint long_mantissa_multiplication(long unsigned int a, long unsigned int b){
                       b_l = b >> sizeof_half_arg_type,
                       a_r = a & mask_r,
                       b_r = b & mask_r;
-    lluint result = {.high = a_l * b_l,
-                     .low  = a_r * b_r };
     long unsigned int middle = (a_l * b_r) + (a_r * b_l);
-    result.low = safe_luint_addition(result.low, middle << sizeof(sizeof_half_arg_type), &err);
-    result.high += (middle >> sizeof_half_arg_type) + else0(err, 1);
+    lluint result = {.high = (a_l * b_l) + (middle >> sizeof_half_arg_type),
+                     .low  = safe_luint_addition(a_r * b_r, middle << sizeof_half_arg_type, &err) };
+    result.high += else0(err, 1);
     return result;
 }
 
@@ -62,18 +61,17 @@ dbits safe_double_mantissa_multiplication_with_rounding(dbits a, dbits b, error*
 }
 
 double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
-    if(!a.d | !b.d){ return 0; }
-    char a_nan_cond = (a.parts.exp > MAX_NORM_DOUBLE_EXP) && a.parts.mantissa;
-    char b_nan_cond = (b.parts.exp > MAX_NORM_DOUBLE_EXP) && b.parts.mantissa;
-    if(a_nan_cond | b_nan_cond){ return ternary(a_nan_cond, a.d, b.d); }
-    dbits result = safe_double_mantissa_multiplication_with_rounding(a, b, err); if(*err){ return result.d; }   
+    if(!a.d | !b.d){ return 0; } // check whether or not one of argument is equal to 0
+    if((a.parts.exp > MAX_NORM_DOUBLE_EXP) && a.parts.mantissa){ return a.d; }// check whether or not a is NaN
+    if((b.parts.exp > MAX_NORM_DOUBLE_EXP) && b.parts.mantissa){ return b.d; }// check whether or not b is NaN
+    dbits result = safe_double_mantissa_multiplication_with_rounding(a, b, err);
     int exponent = a.parts.exp + b.parts.exp + result.parts.exp - DOUBLE_EXP_BIAS;
-    // check whether or not exponent value bigger than MAX_DOUBLE_EXPONENT
-    *err = ternary(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERFLOW, ternary(exponent < 0, UNDERFLOW, *err)); if(*err){ return result.d; }
+    *err = ternary(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERFLOW, ternary(exponent < 0, UNDERFLOW, *err)); if(*err){ return result.d; }    // check whether or not exponent value bigger than MAX_DOUBLE_EXPONENT
     result.parts.exp = exponent;
     result.parts.sign = a.parts.sign ^ b.parts.sign;
     return result.d;
 }
+
 unsigned int random_uint(unsigned int v, unsigned int u){
     v = 36969*(v & 65535) + (v >> 16);
     u = 18000*(u & 65535) + (u >> 16);
@@ -81,16 +79,28 @@ unsigned int random_uint(unsigned int v, unsigned int u){
 }
 
 void d_mul_test(void){
-    dbits a, b;
+    dbits a, b, result;
     error err = NO_ERROR;
-    for(int i = 0; i < 99999; ++i){
-        srand(time(NULL));
-        a.luint  = ((long unsigned int)rand() << (sizeof(int) << 3)) | random_uint(time(NULL), rand());
-        srand(clock());
-        b.luint  = ((long unsigned int)rand() << (sizeof(int) << 3)) | random_uint(time(NULL), rand());
-        printf("%d.\t", i);
-        printf("the product of multiplication %f  and \t %f equal to \t %f\n", a.d, b.d , safe_double_multiplication_with_rounding(a, b, &err));
-        printf("error: %u\n", err);
-        err = NO_ERROR;
+    srand(899);
+    unsigned int sizeof_int_in_bits = sizeof(int) << 3;
+    for(int i = 0; i < 1000; ++i){
+        a.luint  = ((long unsigned int)rand() << sizeof_int_in_bits) | rand();
+        b.luint  = ((long unsigned int)rand() << sizeof_int_in_bits) | rand();
+        result.d = safe_double_multiplication_with_rounding(a, b, &err);
+        printf("%d::: %g   * \t %g = \t %g\n %064lb * %064lb = ", i, a.d, b.d , result.d, a.d, b.d);
+        printf("%064lb \nerror: %u\n", result.luint, err);
+        
+        err = NO_ERROR;  
     }
+    a.luint = 0b00000000111111111111000101010110010010001011000011010001110111111001100;
+    printf("nan? %d\n", isnormal(a.d));
+
+    a.d = fmod(4.7, 2.2);
+    printf("%f\n", a.d);
 }
+
+
+/*
+ nan   *         3.32825e-294 =          9.22337e+18
+ 0 00000001111 11111111000101010110010010001011000011010001110111111001100 * 10101011110111001110110101100100101000010001000 = 11111110011011100100111001000001001000000111100
+*/
