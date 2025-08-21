@@ -30,6 +30,7 @@ void print_binary_actual_best_version_with_one_variable(all x, unsigned int byte
 }
 
 void print_binary_with_arrays(all x, unsigned int byte_amount, unsigned char* whitespace_after_bit_indexes, unsigned int array_size){// whitespace indexes have absolute index starting from leftmost bit
+    if(!whitespace_after_bit_indexes){ return; }
     if(!byte_amount){ return; }
     unsigned int i = sizeof(all);
     if(byte_amount <= i){ i = byte_amount; } else { printf("The number of bytes is larger than there are bytes in the variable \n"); }
@@ -51,6 +52,7 @@ void print_binary_first_amirako_version(all x){// x = 0
 }
 
 void print_binary_new_version1(all x, unsigned int byte_amount, unsigned int *spaces){// TODO: rewrite it as function that accepts array that contain information about at what postion to put spaces
+    if(!spaces){ return; }
     unsigned int i = sizeof(all);
     if(byte_amount == 0){ return; }
     if(byte_amount <= i){ i = byte_amount; } else { printf("The number of bytes is larger than there are bytes in the variable \n"); }

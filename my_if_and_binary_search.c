@@ -74,6 +74,7 @@ unsigned int dist_uint(unsigned int a, unsigned int b){
   
 
 int integer_binary_search_v2(int num, int (*func)(int, error*), int left, int right, int precision, error* err) { 
+  if(!err){ return num; }
   if(left > right) { swap_in_place(&left, &right); }
   int sum, middle, var;
 
@@ -100,6 +101,7 @@ int integer_binary_search_v2(int num, int (*func)(int, error*), int left, int ri
 }
 
 int integer_binary_search(int num, int (*func)(int, error*), int start, unsigned int size, unsigned int precision, error* err){
+  if(!err){ return num; }
   int middle, func_of_middle, func_of_start, dis_num_to_func_of_start, func_of_end, dis_num_to_func_of_end;
   while(1){
     middle = safe_int_addition(start, size / 2, err); if(*err){ return middle; }

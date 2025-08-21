@@ -19,7 +19,7 @@ int trueXfalse0(unsigned int cond, int x){
     return x >> any;// if(cond){return x;} else{ return 0;}
 }
   
-void ifnot(void* a, void* b){
-  int* array[2] = {(int*)a, (int*)b};
-  *(array[0]) = array[!(*(array[0]))];
+void ifnot(void* a, void* b){// ask Amirako!
+    int* array[2] = {(int*)a, (int*)b};
+    *(array[0]) = array[!(*(array[0]))];
 }

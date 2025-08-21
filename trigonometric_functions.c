@@ -8,6 +8,7 @@
 #endif
 
 double sine(double radian, error* err){// TODO safe_double_multiplication and safe_double_division
+    if(!err){ return radian; }
     dbits radian_var = (dbits){.d = radian};
     dbits PI2_var = (dbits){.d = PI2};
     radian = my_fmod(radian_var, PI2_var);
@@ -16,6 +17,7 @@ double sine(double radian, error* err){// TODO safe_double_multiplication and sa
 }
 
 double cosine(double radian, error* err){// TODO safe_double_multiplication and safe_double_division
+    if(*err){ return radian; }
     dbits radian_var = (dbits){.d = radian};
     dbits PI2_var = (dbits){.d = PI2};
     radian = my_fmod(radian_var, PI2_var);

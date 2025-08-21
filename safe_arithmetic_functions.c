@@ -91,6 +91,7 @@ double my_fmod_v4(double x, double y){
 // FUNCTION: integer_addition(int, error*)
 
 int safe_int_addition(int addend1, int addend2, error* err){
+  if(!err){ return addend1; }
   *err = ternary((addend1 > 0) && (addend2 > ((long int)MAX_INT - (long int)addend1)), POSITIVE_OVERFLOW, *err);
   *err = ternary((addend1 < 0) && (addend2 < ((long int)MIN_INT - (long int)addend1)), NEGATIVE_OVERFLOW, *err);
   return addend1 + addend2;
@@ -100,6 +101,7 @@ int safe_int_addition(int addend1, int addend2, error* err){
 // FUNCTION: unsigned_int_addition(unsigned int, error*)
 
 unsigned int safe_uint_addition(unsigned int arg1, unsigned int arg2, error* err){
+  if(!err){ return arg1; }
   *err = ternary(arg2 > (MAX_UINT - arg1), POSITIVE_OVERFLOW, *err);
   return arg1 + arg2;
 }
@@ -108,6 +110,7 @@ unsigned int safe_uint_addition(unsigned int arg1, unsigned int arg2, error* err
 // FUNCTION: unsigned_int_multiplication(unsigned int, error*)
 
 unsigned int safe_uint_multiplication(unsigned int arg1, unsigned int arg2, error* err){
+  if(!err){ return arg1; }
   unsigned int result = 0;
   while((arg2-- > 0) && !(*err)){
     result = safe_uint_addition(result, arg1, err);
@@ -119,6 +122,7 @@ unsigned int safe_uint_multiplication(unsigned int arg1, unsigned int arg2, erro
 // FUNCTION: long_unsigned_int_addition(long unsigned int, error*)
 
 long unsigned int safe_luint_addition(long unsigned int addend1, long unsigned int addend2, error* err){
+  if(!err){ return addend1; }
   *err = ternary(addend2 > (MAX_LUINT - addend1), POSITIVE_OVERFLOW, *err);
   return addend1 + addend2;
 }
@@ -126,6 +130,7 @@ long unsigned int safe_luint_addition(long unsigned int addend1, long unsigned i
 
 // FUNCTION: long_unsigned_int_multipication(long unsigned int, error*)
 long unsigned int safe_luint_multiplication(long unsigned int multiplier, long unsigned int multiplicand, error* err){
+  if(!err){ return multiplicand; }
   long unsigned int product = 0;
   while(multiplicand-- > 0){
     if(*err){ return product; }
@@ -141,6 +146,7 @@ long unsigned int safe_luint_multiplication(long unsigned int multiplier, long u
 const unsigned int factorial_lookup_table[factorial_lookup_table_size] = {1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800};  // DESCRIPTION: factorial values list of numbers from 0 to 10
 
 unsigned int factorial(unsigned int a, error* err){
+  if(!err){ return a; }
   if(a < factorial_lookup_table_size){ return factorial_lookup_table[a]; }
   unsigned int result = a;
   while(a-- > 1){
@@ -153,6 +159,7 @@ unsigned int factorial(unsigned int a, error* err){
 // FUNCTION: increment(unsigned int*)
 
 unsigned int increment_error(unsigned int * x){// TODO: how to distinguish case when argument is 0 and when it is ~0
+  if(!x){ return 0; }
   int a = (*x);
   if (compare(a, ~0)) { return 1; } // special case 111111...111111
   unsigned int c = 1;
@@ -165,6 +172,7 @@ unsigned int increment_error(unsigned int * x){// TODO: how to distinguish case 
 }
 
 unsigned int increment(unsigned int* x){
+  if(!x){ return 0; }
   unsigned int a = (*x); // a = 0
   
   unsigned int c = 1; // c = 1
@@ -223,6 +231,7 @@ unsigned int unsigned_integer_division_by_2(unsigned int a){ // 4, 5, 8, 10
 // FUNCTION: decrement(unsigned int*)
 
 unsigned int decrement(unsigned int* x){ // TODO: function works incorrect, fix it
+  if(!x){ return ~0; }
   unsigned int a = (*x);
   if(compare(a, 0)){ return ~0u; }
   unsigned int b = 1;
@@ -238,7 +247,7 @@ unsigned int decrement(unsigned int* x){ // TODO: function works incorrect, fix 
 // FUNCTION: integer_division(unsigned int, unsigned int, unsigned int* isNull)
 
 unsigned int integer_division(unsigned int a, unsigned int b, unsigned int* isNull){
-  //  2     0
+  if(!isNull){ return a; }
   if (!b)  { (*isNull) = 2; return -1; }// TODO: how to distinguish division of any number by 0 and division of ~0 by 1
   if (!a)  { return 0; }
   
@@ -342,6 +351,7 @@ float float_division(float result, float m1, float precision){ // a = 9, b = 3 c
 // FUNCTION: double_multiplication_without_rounding(dbits, dbits, error*)
 
 dbits safe_double_mantissa_multiplication_without_rouding(dbits a, dbits b, error* err){
+  if(!err){ return a; }
   unsigned int a_exp = b.parts.exp, b_exp = b.parts.exp;
   a.luint = DOUBLE_MANTISSA_HIDDEN_ONE | a.parts.mantissa;
   b.luint = DOUBLE_MANTISSA_HIDDEN_ONE | b.parts.mantissa;
@@ -360,18 +370,19 @@ dbits safe_double_mantissa_multiplication_without_rouding(dbits a, dbits b, erro
 }
 
 double safe_double_multiplication_without_rounding(dbits a, dbits b, error* err){
-// check whether or not one of arguments equal to 0
-if(!a.d | !b.d){ return 0; }
-dbits result = b;
-result = safe_double_mantissa_multiplication_without_rouding(a, b, err); if(*err){ return result.d; }
-unsigned int exponent = safe_uint_addition(a.parts.exp, b.parts.exp, err); if(*err){ return result.d; }
-exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
-exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; }
-// check whether of not exponent value bigger than
-*err = else0(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERFLOW) | else0(!(exponent > MAX_NORM_DOUBLE_EXP), *err); if(*err){ return result.d; }
-result.parts.exp = exponent;
-result.parts.sign = a.parts.sign ^ b.parts.sign;
-return result.d;
+  if(!err){ return a.d; }
+  // check whether or not one of arguments equal to 0
+  if(!a.d | !b.d){ return 0; }
+  dbits result = b;
+  result = safe_double_mantissa_multiplication_without_rouding(a, b, err); if(*err){ return result.d; }
+  unsigned int exponent = safe_uint_addition(a.parts.exp, b.parts.exp, err); if(*err){ return result.d; }
+  exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
+  exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; }
+  // check whether of not exponent value bigger than
+  *err = else0(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERFLOW) | else0(!(exponent > MAX_NORM_DOUBLE_EXP), *err); if(*err){ return result.d; }
+  result.parts.exp = exponent;
+  result.parts.sign = a.parts.sign ^ b.parts.sign;
+  return result.d;
 }
 
 // FUNCTION: double_multiplication_with_rounding(dbits,dbits,error*)
@@ -439,6 +450,7 @@ long unsigned int lluint_multiplication_v2(long unsigned int multiplicand, long 
 }    
 
 dbits safe_double_mantissa_multiplication_with_rounding_v1(dbits multiplicand, dbits multiplier, error* err){
+  if(!err){ return multiplicand; }
   multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplicand.parts.mantissa;
   //TODO: CHANGE mantissa PARTS TO MANT
   multiplier.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplier.parts.mantissa;
@@ -451,6 +463,7 @@ dbits safe_double_mantissa_multiplication_with_rounding_v1(dbits multiplicand, d
 }
 
 double safe_double_multiplication_with_rounding_v1(dbits a, dbits b, error* err){
+  if(!err){ return a.d; }
   if(!a.d | !b.d){ return 0; }
   char a_nan_cond = (a.parts.exp > MAX_NORM_DOUBLE_EXP) & a.parts.mantissa;
   char b_nan_cond = (b.parts.exp > MAX_NORM_DOUBLE_EXP) & b.parts.mantissa;
@@ -469,6 +482,7 @@ double safe_double_multiplication_with_rounding_v1(dbits a, dbits b, error* err)
 // FUNCTION: double_base_to_unsigned_int_power(double, unsigned int, error*)
 
 double exp_double2uint(double base, unsigned int power, error* err){// DESCRIPTION: base of type 'double' to power of type 'unsigned int'
+  if(!err){ return base; }
   if (*err != NO_ERROR) { return 1.0; }
   if(!power){ 
     if(base == 0.0){ *err = ZERO_TO_ZERO; }// OPTIMIZE

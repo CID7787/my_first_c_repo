@@ -49,7 +49,7 @@ lluint long_mantissa_multiplication(long unsigned int a, long unsigned int b){
     return result;
 }
 
-dbits safe_double_mantissa_multiplication_with_rounding(dbits a, dbits b, error* err){
+dbits safe_double_mantissa_multiplication_with_rounding(dbits a, dbits b){
     a.luint = DOUBLE_MANTISSA_HIDDEN_ONE | a.parts.mantissa;
     b.luint = DOUBLE_MANTISSA_HIDDEN_ONE | b.parts.mantissa;
     lluint result = long_mantissa_multiplication(a.luint, b.luint);
@@ -64,7 +64,8 @@ double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
     if(!a.d | !b.d){ return 0; } // check whether or not one of argument is equal to 0
     if((a.parts.exp > MAX_NORM_DOUBLE_EXP) && a.parts.mantissa){ return a.d; }// check whether or not a is NaN
     if((b.parts.exp > MAX_NORM_DOUBLE_EXP) && b.parts.mantissa){ return b.d; }// check whether or not b is NaN
-    dbits result = safe_double_mantissa_multiplication_with_rounding(a, b, err);
+    if(!err){ return a.d; }
+    dbits result = safe_double_mantissa_multiplication_with_rounding(a, b);
     int exponent = a.parts.exp + b.parts.exp + result.parts.exp - DOUBLE_EXP_BIAS;
     *err = ternary(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERFLOW, ternary(exponent < 0, UNDERFLOW, *err)); if(*err){ return result.d; }    // check whether or not exponent value bigger than MAX_DOUBLE_EXPONENT
     result.parts.exp = exponent;

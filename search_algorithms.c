@@ -1,4 +1,8 @@
+#ifndef headerfile
+  #include "user_defined_datatypes.c"
+#endif
 unsigned int binary_search_array_element_index(int *array, unsigned int size, int value){ //10
+  if(!array){ return 0; }
   if (value > array[size - 1]){return -1;}
   
   unsigned int f = 0;
@@ -66,25 +70,15 @@ int array_binary_search(void* array, void* x, unsigned int size, char type){
 }
 
 
-
-
-typedef enum error_code{
-  NOERROR = 0,
-  UNDEFINEDBEHAVIOR,
-  OVERFLOW,
-  UNDERFLOW,
-  DIVISION_BY_ZERO,
-  ZERO_TO_ZERO// DESCRIPTION: ZERO TO THE POWER ZERO
-}error;
-
 double newton_method(double (*function)(double, error*), double (*derivative)(double, error*), double x0, double precision, error* err){
+  if(!err) { return x0; }
   double x = x0;
   while( ((*function)(x, err) <= precision) | ((*function)(x, err) >= precision) ){
-      if(*err != NOERROR){ return x; }
-      double dx0 = (*derivative)(x0, err); if(*err != NOERROR) { return x; }
+      if(*err != NO_ERROR){ return x; }
+      double dx0 = (*derivative)(x0, err); if(*err != NO_ERROR) { return x; }
       double f0 = (*function)(x0, err); if (*err) { return x; }
       x = x0 - safe_double_division(f0, derivative, err); // OVERFLOW, UNDERFLOW, DIVISION BY ZERO
-      if(*err != NOERROR){ return x; }
+      if(*err != NO_ERROR){ return x; }
   }
   return x;
 }
