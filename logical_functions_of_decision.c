@@ -3,23 +3,13 @@ long unsigned int else0_array(unsigned int cond, int x){
     return array[!cond];
 }
 
-int else0(int cond, int x){
-    return x & (~0 + !cond);
+inline long unsigned int else0(long unsigned int condition, long unsigned int x){
+    return x & (~0ul + !condition);
+    // return -!!condition & x;
 }
 
 
-
-long unsigned int ternary(unsigned char condition, long unsigned int true_value, long unsigned int false_value){
+inline long unsigned int ternary(unsigned char condition, long unsigned int true_value, long unsigned int false_value){
     long unsigned int array[2] = {true_value, false_value};
     return array[!condition];
-}
-
-int trueXfalse0(unsigned int cond, int x){
-    int any = (!cond) << (sizeof(int) + 1);
-    return x >> any;// if(cond){return x;} else{ return 0;}
-}
-  
-void ifnot(void* a, void* b){// ask Amirako!
-    int* array[2] = {(int*)a, (int*)b};
-    *(array[0]) = array[!(*(array[0]))];
 }

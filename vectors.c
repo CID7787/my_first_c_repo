@@ -1,4 +1,4 @@
-#ifndef abracadabra
+#ifndef headerfile
   #include <stdio.h>
   #include <stdlib.h>
   #include "user_defined_datatypes.c"

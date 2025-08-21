@@ -12,6 +12,7 @@
  #include "double_multiplication_with_rounding.c"
 
 int main(){ 
-	d_mul_test();
+    // error err = NO_ERROR;
+    // safe_double_multiplication_with_rounding((dbits){ .luint = 0x}, (dbits){ .luint = }, &err);
     return 0;
 }

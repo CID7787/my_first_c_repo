@@ -1,3 +1,7 @@
+unsigned int logicalNOT(unsigned int a){
+  return 1 >> a;
+}
+
 /**
 includes: ,
 dependencies: ,
@@ -10,13 +14,15 @@ test: {
 description: This function checks whether the last bit is 0
 
 */
-unsigned int last_bit_is_0(unsigned int a){
+unsigned int last_bit_is_0_with_shift(unsigned int a){
     a = a << 31;
     a = a >> 31;
     // 0.1f; 0.1; 0xb; 0b1;
-    return !a; 
-  }
-
+    return !a;
+}
+unsigned int last_bit_is_0(unsigned int a){
+    return !(a & 1);
+}
 
   /**
 includes: ,
@@ -36,8 +42,7 @@ unsigned int last_bit_is_1(unsigned int a){
 
 
 unsigned int ith_bit_is_1(unsigned int a, unsigned int i){
-    unsigned int b = 1;
-    return a & (b << i);
+    return a & (1u << i);// 1u is 1 of type unsigned int
 }
 
 
@@ -46,28 +51,30 @@ unsigned int byte2bit(unsigned int n){
 }
 
   
-unsigned int compare_1st_bit(unsigned int a, unsigned int b){
-  unsigned int d = 1;
-  return (~(a ^ b)) & d;
+unsigned int is_first_bit_same(unsigned int a, unsigned int b){
+  return (~(a ^ b)) & 1u;
 }
 
-  long unsigned int how_many_0_until_youngest_1(long unsigned int a){ //32
+unsigned int is_first_bit_different(unsigned int a, unsigned int b){
+  return (a ^ b) & 1u;
+}
+
+long unsigned int how_many_0_until_youngest_1(long unsigned int a){ //32
     unsigned int counter = 0;
     while(!(a & 1ul)){ a >>= 1; counter++; }// 10101
     return counter;
-  }
+}
 
-  long unsigned int how_many_bits_until_eldest_1(long unsigned int a){
-    unsigned int counter = 0;
-    while(a > 1){ ++counter; a >>= 1; } // 10101
-    return counter;
-  }
+long unsigned int how_many_bits_until_eldest_1(long unsigned int a){
+  unsigned int counter = 0;
+  while(a > 1){ ++counter; a >>= 1; } // 10101
+  return counter;
+}
 
 unsigned int lshift(unsigned int a, unsigned int b){
     //  a << b         if (b == 0) { return a; }        if (b == 32) { return 0; }
     unsigned int n = how_many_0_until_youngest_1(sizeof(b) << 3); // 5
-    unsigned int zero = 0;
-    unsigned int mask = ~(((~zero) >> n) << n); // 00000000...00011111          a << 0 == a    a << 32 == 0
+    unsigned int mask = ~(((~0u) >> n) << n); // 00000000...00011111          a << 0 == a    a << 32 == 0
     unsigned int newshiftvalue = b & mask;  //     0000000...00100000       if (b == bitsize) { newshiftvalue = 0; } else { newshiftvalue = b % bitsize; }  
     // printf("\t(n = %u, b & mask = %u)", n, newshiftvalue);
     // printfint("mask:", &mask, 'd');
@@ -77,12 +84,12 @@ unsigned int lshift(unsigned int a, unsigned int b){
 }
 
 
-unsigned int compare_ith_bit(unsigned int a, unsigned int b, unsigned int i){//2
-  // unsigned int c = ~0;
-  // c = c >> i; c = c << i;
-  unsigned int d = 1;
-  d = lshift(d, i);  // 000...0001 << 32
-  return (~(a ^ b)) & d; // 11111111 
+unsigned int is_ith_bit_same(unsigned int a, unsigned int b, unsigned int i){//2
+  return (~((a ^ b) >> i)) & 1u; 
+}
+
+unsigned int is_ith_bit_different(unsigned int a, unsigned int b, unsigned int i){//2
+  return ((a ^ b) >> i) & 1u; 
 }
 
 
@@ -94,36 +101,23 @@ unsigned int compare(unsigned int a, unsigned int b){
   return !(a ^ b);
 }
 
-
-unsigned int logicalNOT(unsigned int a){
-  return 1 >> a;
-}
-
-
 unsigned int condition(unsigned int a){
   return !(!a);
 }
 
 
 unsigned int set_ith_bit_to_1(unsigned int a, unsigned int i){ 
-  unsigned int b = 1;
-  b = b << i;
-  return a | i;
+  return a | (1u << i);
 }
 
 
 unsigned int set_last_bit_to_1(unsigned int x){ // 2
-  unsigned int c = 1;
-  return x | c;
+  return x | 1u;
 }
 
 
-char eldest_bit_is_0(int a){
-  // int b = byte2bit(sizeof(a)) - 1; // size of variable a in bits - 1
-  // int mask = 1 << b;number_without_exp
-  // return !((a & mask) >> b);
-  int mask = ~((~0) >> 1);
-  return !(mask & a);
+char eldest_bit_is_1(unsigned int a){
+  return a >> (byte2bit(sizeof(a)) - 1);
 }
 
 
@@ -150,7 +144,7 @@ int convert_from_sign_and_magnitude(unsigned int a){
 }
 
 void swap_in_place_xor(int* a, int* b){// through xor operator
-  if(a & b){ return; }
+  if((long int)a & (long int)b){ return; }// TODO: THINK OVER TO WHAT TYPE NEED CAST
   (*a) = (*a) ^ (*b);// xor of couple numbers like this 0101 and 0110 equal to 0011
   (*b) = (*a) ^ (*b);// then xor of result with any of these two numbers will result to another number, ex_1:0011 ^ 0101 = 0110
   (*a) = (*a) ^ (*b);// ex_2: 0011 ^ 0110 = 0101

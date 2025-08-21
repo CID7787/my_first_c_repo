@@ -1,4 +1,4 @@
-#ifndef abracadabra
+#ifndef headerfile
     #include "user_defined_datatypes.c"
     #include "constants.c"
     #include "logical_functions_of_decision.c"

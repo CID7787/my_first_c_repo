@@ -387,93 +387,41 @@ double safe_double_multiplication_without_rounding(dbits a, dbits b, error* err)
 
 // FUNCTION: double_multiplication_with_rounding(dbits,dbits,error*)
 
-long unsigned int luint_multiplication_v1(long unsigned int multiplicand, long unsigned int multiplier, unsigned int exponent){
-  long unsigned int part1 = 0, part2 = 0;
-  int n1, n2;
-  unsigned int cond;
-  error err = NO_ERROR;
-  while(multiplicand--){
-    part1 = safe_luint_addition(part1, multiplier, &err); 
-    if(err) { ++part2; part1 = multiplier - (MAX_LUINT - part1) - 1; }
-  }
-  n1 = how_many_bits_until_eldest_1(part1);
-  n2 = how_many_bits_until_eldest_1(part2);
-  multiplicand = else0(part2, n2 + 1) | else0(!part2, n1 + 1);
-  cond = multiplicand > (sizeof(double) << 3);
-  multiplier = (else0(cond, part2) | else0(!cond, part1)) >> (exponent - else0(cond, (sizeof(double) << 3)));
-  exponent = multiplier & 0b10;
-  part1 >>= n2 + else0(part2, 1);
-  part2 <<= 63 - n2;
-  part2 |= part1;
-  n2 = how_many_bits_until_eldest_1(part2);
-  part2 >>= else0(part2 > MAX_DOUBLE_MANTISSA, safe_int_addition(n2, -52, &err));
-  part2 <<= else0(part2 <= MAX_DOUBLE_MANTISSA, safe_int_addition(52, -n2, &err));
-  part2 ^= DOUBLE_MANTISSA_HIDDEN_ONE;
-  return ((long unsigned int)exponent << 52) | part2;
-}
-
-long unsigned int lluint_multiplication_v2(long unsigned int multiplicand, long unsigned int multiplier, unsigned int bin_point_shift){
-  long unsigned int result_l, result_r, product1, product2, multiplicand_l, multiplicand_r, multiplier_l, multiplier_r, mask_r = 0x7ffffff;
-  error err = NO_ERROR;
+lluint long_mantissa_multiplication(long unsigned int a, long unsigned int b){ 	
   // getting left and right parts of multiplicand and multiplier 
-  multiplicand_l = multiplicand >> 27;
-  multiplier_l = multiplier >> 27;
-  multiplicand_r = multiplicand & mask_r;
-  multiplier_r = multiplier & mask_r;
-  // computing products
-  product1 = safe_luint_multiplication(multiplicand_l, multiplier_l, &err);// << (27 + 27)
-  product2 = safe_luint_multiplication(multiplicand_r, multiplier_l, &err);// << 27
-  result_r = safe_luint_multiplication(multiplicand_l, multiplier_r, &err);// << 27
-  product2 = safe_luint_addition(product2, result_r, &err);// << 27
-  result_r = safe_luint_multiplication(multiplicand_r, multiplier_r, &err);
-  // summing up products
-  product2 = safe_luint_addition(product2, result_r & (~0ul << 27), &err);
-  product1 = safe_luint_addition(product1, product2 & (~0ul << 27), &err);
-  result_r = product1 << 54 | product2 << 27 | result_r;
-  result_l = product1 >> 10;
-  // getting exponent
-  product1 = how_many_bits_until_eldest_1(result_r);
-  product2 = how_many_bits_until_eldest_1(result_l);
-  product1 = ternary(result_l, product1 + 1, product1);
-  product2 = ternary(result_l, product2 + 1, product2);
-  bin_point_shift = ternary(product2, product2 >> safe_int_addition(bin_point_shift, -64, &err), product1 >> bin_point_shift);
-  bin_point_shift = !!(bin_point_shift & 0b10);
-  // normalizing number and putting bin_point_shift into exponent
-  result_l <<= safe_int_addition(64, -product2, &err); // 0000 0100
-  result_r >>= product2;
-  result_l |= result_r;
-  product1 = how_many_bits_until_eldest_1(result_l);
-  result_l = ternary(result_l < DOUBLE_MANTISSA_HIDDEN_ONE, result_l << safe_int_addition(52, -product1, &err), result_l >> safe_int_addition(product1, -52, &err));
-  result_l = (DOUBLE_MANTISSA_HIDDEN_ONE - 1) & result_l;
-  result_l = ternary(bin_point_shift, result_l | DOUBLE_MANTISSA_HIDDEN_ONE, result_l);
-  return result_l;
-}    
-
-dbits safe_double_mantissa_multiplication_with_rounding_v1(dbits multiplicand, dbits multiplier, error* err){
-  if(!err){ return multiplicand; }
-  multiplicand.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplicand.parts.mantissa;
-  //TODO: CHANGE mantissa PARTS TO MANT
-  multiplier.luint = DOUBLE_MANTISSA_HIDDEN_ONE | multiplier.parts.mantissa;
-  // remove useless zeros
-  while(!((multiplicand.luint | multiplicand.luint) & 1ul)){ multiplicand.luint >>= 1; multiplier.luint >>=1; }
-  //    if((multiplicand.luint & multiplier.luint) == 1) { return (dbits){ .luint = DOUBLE_MANTISSA_HIDDEN_ONE}; }
-  // variable declaration
-  multiplier.luint = lluint_multiplication_v2(multiplicand.luint, multiplier.luint, how_many_bits_until_eldest_1(multiplicand.luint) << 1);// TODO: separte lluint_multiplication to multiplication and rounding parts
-  return multiplier;
+  long unsigned int mask_r = 0xffffffff;
+  unsigned int sizeof_half_arg_type = sizeof(a) << 2; //(sizeof(a) << 3) >> 1 == sizeof_type_in_bits(sizeof(a) * 8(2^3)) / 2 == sizeof(a) * 4 
+  error err = NO_ERROR;
+  long unsigned int a_l = a >> sizeof_half_arg_type,
+                    b_l = b >> sizeof_half_arg_type,
+                    a_r = a & mask_r,
+                    b_r = b & mask_r;
+  long unsigned int middle = (a_l * b_r) + (a_r * b_l);
+  lluint result = {.high = (a_l * b_l) + (middle >> sizeof_half_arg_type),
+                   .low  = safe_luint_addition(a_r * b_r, middle << sizeof_half_arg_type, &err) };
+  result.high += else0(err, 1);
+  return result;
 }
 
-double safe_double_multiplication_with_rounding_v1(dbits a, dbits b, error* err){
+dbits safe_double_mantissa_multiplication_with_rounding(dbits a, dbits b){
+  a.luint = DOUBLE_MANTISSA_HIDDEN_ONE | a.parts.mantissa;
+  b.luint = DOUBLE_MANTISSA_HIDDEN_ONE | b.parts.mantissa;
+  lluint result = long_mantissa_multiplication(a.luint, b.luint);
+  unsigned int exp = (result.high & (1ul << 41));
+  a.luint = (result.high << (23 - exp)) | result.low >> (41 + exp);
+  a.luint >>= 12;
+  a.parts.exp = exp;
+  return a;
+}
+
+double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
+  if(!a.d | !b.d){ return 0; } // check whether or not one of argument is equal to 0
+  if((a.parts.exp > MAX_NORM_DOUBLE_EXP) && a.parts.mantissa){ return a.d; }// check whether or not a is NaN
+  if((b.parts.exp > MAX_NORM_DOUBLE_EXP) && b.parts.mantissa){ return b.d; }// check whether or not b is NaN
   if(!err){ return a.d; }
-  if(!a.d | !b.d){ return 0; }
-  char a_nan_cond = (a.parts.exp > MAX_NORM_DOUBLE_EXP) & a.parts.mantissa;
-  char b_nan_cond = (b.parts.exp > MAX_NORM_DOUBLE_EXP) & b.parts.mantissa;
-  if(a_nan_cond | b_nan_cond){ return ternary(a_nan_cond, a.d, b.d); }
-  dbits result = safe_double_mantissa_multiplication_with_rounding_v1(a, b, err); if(*err){ return result.d; }
-  unsigned int exponent = safe_uint_addition(a.parts.exp, b.parts.exp, err); if(*err){ return result.d; }
-  exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
-  exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; }
-  // check whether or not exponent value bigger than MAX_DOUBLE_EXPONENT
-  *err = else0(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERFLOW) | else0(exponent <= MAX_NORM_DOUBLE_EXP, *err); if(*err){ return result.d; }
+  dbits result = safe_double_mantissa_multiplication_with_rounding(a, b);
+  int exponent = a.parts.exp + b.parts.exp + result.parts.exp - DOUBLE_EXP_BIAS;
+  *err = ternary(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERFLOW, ternary(exponent < 0, UNDERFLOW, *err)); if(*err){ return result.d; }    // check whether or not exponent value bigger than MAX_DOUBLE_EXPONENT
   result.parts.exp = exponent;
   result.parts.sign = a.parts.sign ^ b.parts.sign;
   return result.d;

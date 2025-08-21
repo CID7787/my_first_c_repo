@@ -1,29 +1,13 @@
-#ifndef abracadabra
+#ifndef headerfile
+  #include <stdio.h>
+  #include <stdlib.h>
   #include "user_defined_datatypes.c"
   #include "constants.c"
   #include "logical_functions_of_decision.c"
   #include "bitwise_functions.c"
   #include "safe_arithmetic_functions.c"
 #endif
-#include <stdio.h>
-#include <stdlib.h>
 
-
-int logical_not(int arg){
-    // 0100
-    // 0001
-    // ???1
-    int last_bit =  arg ^ 1; // => ???! // 0101 1 last bit = -(last bit)
-    last_bit  = last_bit & 1;
-    int previous_last_bit = (arg >> 1) ^ 1; // => 0??! // 0011 1 last bit = -(previous last bit)
-    previous_last_bit = previous_last_bit & 1;
-    int second_bit = (arg >> 2) ^ 1; // => 00?! // 0000 0 last bit = -(second bit)
-    second_bit = second_bit & 1;
-    int first_bit = (arg >> 3) ^ 1; // => 000! // 0001 1 last bit = -(first bit)
-    first_bit = first_bit & 1;
-    return last_bit & previous_last_bit & second_bit & first_bit; // == 0 if at least one 0, == 1 in every other case
-  }
-  
   /**
 includes: ,
 dependencies: ,
