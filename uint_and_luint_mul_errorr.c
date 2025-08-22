@@ -39,8 +39,8 @@ long unsigned int safe_luint_multiplication(long unsigned int a, long unsigned i
   }
 
   dbits safe_double_mantissa_multiplication_with_rounding(dbits a, dbits b){
-    a.luint = DOUBLE_MANTISSA_HIDDEN_ONE | a.parts.mantissa;
-    b.luint = DOUBLE_MANTISSA_HIDDEN_ONE | b.parts.mantissa;
+    a.luint = DOUBLE_MANTISSA_IMPLICIT_ONE | a.parts.mantissa;
+    b.luint = DOUBLE_MANTISSA_IMPLICIT_ONE | b.parts.mantissa;
     lluint result = long_mantissa_multiplication(a.luint, b.luint);
     unsigned int exp = (result.high & (1ul << 41));
     a.luint = (result.high << (23 - exp)) | result.low >> (41 + exp);

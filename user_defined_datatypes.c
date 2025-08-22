@@ -19,7 +19,7 @@ typedef struct double_bitfields_sign_exponent_mantissa{
     long unsigned int mantissa: 52;
     long unsigned int exp: 11;
     long unsigned int sign: 1;
-} ieee754;
+} dieee754;
     
 typedef struct double_bitfields_sign_positive{
     long unsigned int positive: 63;
@@ -29,9 +29,27 @@ typedef struct double_bitfields_sign_positive{
 typedef union double_bits{
     double d;
     long unsigned int luint;
-    ieee754 parts; 
+    dieee754 parts; 
     dluint bits;
 } dbits;
+
+typedef struct float_bitfields_sign_exponent_mantissa{
+  unsigned int mantissa: 23;
+  unsigned int exp: 8;
+  unsigned int sign: 1;
+} fieee754;
+  
+typedef struct float_bitfields_sign_positive{
+  unsigned int positive: 31;
+  unsigned int sign: 1;
+} fuint;
+
+typedef union float_bits{
+  float f;
+  unsigned int uint;
+  fieee754 parts; 
+  fuint bits;
+} fbits;
 
 union union_name1{
   double d;
@@ -57,29 +75,42 @@ typedef union variable_all_types{
 
 enum vectorErrors {
   ALL_GOOD = 0,
-  V_OVERFLOW,
+  V_POSITIVE_OVERFLOW,
+  v_NEGATIVE_OVERFLOW,
   V_UNDERFLOW,
   SQUARE_ROOT_OF_NEGATIVE_NUMBER,
   RETURN_INFINITY,
   ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER,
   RETURN_REAL_PART,
   V_UNDEFINED_BEHAVIOR,
+  QNAN,
+  SNAN,
 } typedef vERR;
 
 enum DATATYPES { // enumeration
-  INT = 0,
-  CHAR,
-  FLOAT,
-  DOUBLE,
+  CHAR = 0,
+  UCHAR,
+  INT,
   UINT,
+  FBITS,
+  FLOAT,
+  LINT,
+  LUINT,
+  DBITS,
+  DOUBLE,
 } typedef datatype;
 
 union POINTERS {
-  int* i;
   char* c;
-  float* f;
+  unsigned char* uc;
+  int* i;
   unsigned int* u;
+  fbits* fb;
+  float* f;
+  dbits* db;
   double* d;
+  long unsigned int* lui;
+  long int* li;
 } typedef datapointer;
   
 struct vector_n {

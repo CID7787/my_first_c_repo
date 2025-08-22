@@ -252,8 +252,6 @@ KEY POINTS OF AMIRAKO'S LECTURE
                                             -> architecture
   2) high-level abstractions -> algorithms & data structures -> return to basics
   
->> 1
- 00000001|10|101
 
 
   magnitude (прямой код)
@@ -340,24 +338,6 @@ typedef int frobcount;
 Even though the type enum foo is compatible with int, they are not the same type.
 
 
- ```
-
- ```
-Initializing a variable means assigning some value to it for the very first time. 
-We must override garbage value, just after variable declaration. 
-
- ```
- ```
-   /*Memory leaks happens when you assign a value to a pointer, and then you lose the original value of the pointer.
-   For example:
-int main(){
-char* a = "old text"; // allocate memory
-a = "new text"; // after this assignment, "old text
-is now a region in memory lost.
-return 0;
-}
-The "old text" is still within a program memory, so OS cannot clear it. But inside a program, you 
-have lost track of it.*/
  ```
 
 ```

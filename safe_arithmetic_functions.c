@@ -353,8 +353,8 @@ float float_division(float result, float m1, float precision){ // a = 9, b = 3 c
 dbits safe_double_mantissa_multiplication_without_rouding(dbits a, dbits b, error* err){
   if(!err){ return a; }
   unsigned int a_exp = b.parts.exp, b_exp = b.parts.exp;
-  a.luint = DOUBLE_MANTISSA_HIDDEN_ONE | a.parts.mantissa;
-  b.luint = DOUBLE_MANTISSA_HIDDEN_ONE | b.parts.mantissa;
+  a.luint = DOUBLE_MANTISSA_IMPLICIT_ONE | a.parts.mantissa;
+  b.luint = DOUBLE_MANTISSA_IMPLICIT_ONE | b.parts.mantissa;
   // remove useless zeros
   while (!(a.luint & 1ul)) { a.luint >>= 1; }
   while (!(b.luint & 1ul)) { b.luint >>= 1; }
@@ -404,8 +404,8 @@ lluint long_mantissa_multiplication(long unsigned int a, long unsigned int b){
 }
 
 dbits safe_double_mantissa_multiplication_with_rounding(dbits a, dbits b){
-  a.luint = DOUBLE_MANTISSA_HIDDEN_ONE | a.parts.mantissa;
-  b.luint = DOUBLE_MANTISSA_HIDDEN_ONE | b.parts.mantissa;
+  a.luint = DOUBLE_MANTISSA_IMPLICIT_ONE | a.parts.mantissa;
+  b.luint = DOUBLE_MANTISSA_IMPLICIT_ONE | b.parts.mantissa;
   lluint result = long_mantissa_multiplication(a.luint, b.luint);
   unsigned int exp = (result.high & (1ul << 41));
   a.luint = (result.high << (23 - exp)) | result.low >> (41 + exp);
