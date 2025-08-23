@@ -55,7 +55,7 @@ vecN vector_creation(datatype type, unsigned int n, datapointer array_elements){
       case CHAR:    vector_result.elements.c[i] = array_elements.c[i]; break;
       case FLOAT:   vector_result.elements.f[i] = array_elements.f[i]; break;
       case DOUBLE:  vector_result.elements.d[i] = array_elements.d[i]; break;
-      case UINT:    vector_result.elements.u[i] = array_elements.u[i]; break;
+      case UINT:    vector_result.elements.ui[i] = array_elements.ui[i]; break;
     }
   }
   return vector_result;
@@ -101,7 +101,7 @@ vecN vector_negation(vecN v){
       case CHAR:    result.elements.c[i] = -v.elements.c[i]; break;
       case FLOAT:   result.elements.f[i] = -v.elements.f[i]; break;
       case DOUBLE:  result.elements.d[i] = -v.elements.d[i]; break;
-      case UINT:    result.elements.u[i] = -v.elements.u[i]; break;
+      case UINT:    result.elements.ui[i] = -v.elements.ui[i]; break;
     }
   }
   return result;
@@ -144,7 +144,7 @@ void vector_negation_in_place(vecN v) {
       case CHAR:    v.elements.c[i] = -v.elements.c[i]; break;
       case FLOAT:   v.elements.f[i] = -v.elements.f[i]; break;
       case DOUBLE:  v.elements.d[i] = -v.elements.d[i]; break;
-      case UINT:    v.elements.u[i] = -v.elements.u[i]; break;
+      case UINT:    v.elements.ui[i] = -v.elements.ui[i]; break;
     }
   }
  return;
@@ -156,14 +156,10 @@ vecN vector_addition(vecN v1, vecN v2){
   unsigned int i = v1.n;
 
   char flag = 0;
-  unsigned int uint_max = ~0U;
-  char char_max = ~0;
-  int int_max = ( ~(0b0) ) >> 1;
-  long unsigned int instr = (~(0U) >> 1) ^ (1 << 23);
-  long unsigned int *ptr = &instr;
-  float float_max = *( (float*)ptr );
-  instr = ( ~(0UL) ) ^ ( (1UL) << 52 );
-  double double_max = *( (double*)ptr ); 
+  unsigned int instr = (~0U >> 1) ^ (1 << 23);
+  float float_max = *((float*)&instr);
+  instr = (~0ul >> 1) ^ (1ul << 52);
+  double double_max = *( (double*)&instr ); 
 
   while(i--) {
     
@@ -171,12 +167,12 @@ vecN vector_addition(vecN v1, vecN v2){
       case INT:
         v.elements.i[i] = v1.elements.i[i] + v2.elements.i[i];
         v.error = (v.elements.i[i] < 0) & (v1.elements.i[i] >= 0);
-        v.error = (v.error + !v.error) && ( ~int_max & (v1.elements.i[i] ^ v2.elements.i[i]) );
+        v.error = 1 && ( MIN_INT & (v1.elements.i[i] ^ v2.elements.i[i]) );
         break;
       case CHAR:    
         v.elements.c[i] = v1.elements.c[i] + v2.elements.c[i]; 
         v.error = (v.elements.c[i] < 0) & (v1.elements.c[i] >= 0);
-        v.error = (v.error + !v.error) && ( ~int_max & (v1.elements.c[i] ^ v2.elements.c[i]) );                
+        v.error = (v.error + !v.error) && ( MIN_INT & (v1.elements.c[i] ^ v2.elements.c[i]) );                
         
         break;
       case FLOAT:   
@@ -202,8 +198,8 @@ vecN vector_addition(vecN v1, vecN v2){
         flag = 0; 
         break;
       case UINT:
-        v.error = ( (v2.elements.u[i] >= 0) && ( v1.elements.u[i] > (uint_max - v2.elements.u[i]) ) ) * V_POSITIVE_OVERFLOW;// the result of this string must be either 0(it means ALL_GOOD) or 1(it means we have OVERFLOW) 
-        v.elements.u[i] = v1.elements.u[i] + v2.elements.u[i]; 
+        v.error = ( (v2.elements.ui[i] >= 0) && ( v1.elements.ui[i] > (MAX_UINT - v2.elements.ui[i]) ) ) * V_POSITIVE_OVERFLOW;// the result of this string must be either 0(it means ALL_GOOD) or 1(it means we have OVERFLOW) 
+        v.elements.ui[i] = v1.elements.ui[i] + v2.elements.ui[i]; 
         break;
     }
   }
@@ -218,7 +214,7 @@ void vector_addition_in_place(vecN v1, vecN v2){
       case CHAR:    v1.elements.c[i] = v1.elements.c[i] + v2.elements.c[i]; break;
       case FLOAT:   v1.elements.f[i] = v1.elements.f[i] + v2.elements.f[i]; break;
       case DOUBLE:  v1.elements.d[i] = v1.elements.d[i] + v2.elements.d[i]; break;
-      case UINT:    v1.elements.u[i] = v1.elements.u[i] + v2.elements.u[i]; break;
+      case UINT:    v1.elements.ui[i] = v1.elements.ui[i] + v2.elements.ui[i]; break;
     }
   }
   return ;
@@ -234,7 +230,7 @@ vecN vector_multiplication(vecN v1, vecN v2){
       case CHAR:    v.elements.c[i] = v1.elements.c[i] * v2.elements.c[i]; break;
       case FLOAT:   v.elements.f[i] = v1.elements.f[i] * v2.elements.f[i]; break;
       case DOUBLE:  v.elements.d[i] = v1.elements.d[i] * v2.elements.d[i]; break;
-      case UINT:    v.elements.u[i] = v1.elements.u[i] * v2.elements.u[i]; break;
+      case UINT:    v.elements.ui[i] = v1.elements.ui[i] * v2.elements.ui[i]; break;
     }
   }
   return v; 
@@ -248,7 +244,7 @@ void vector_multiplication_in_place(vecN v1, vecN v2){
       case CHAR:    v1.elements.c[i] = v1.elements.c[i] * v2.elements.c[i]; break;
       case FLOAT:   v1.elements.f[i] = v1.elements.f[i] * v2.elements.f[i]; break;
       case DOUBLE:  v1.elements.d[i] = v1.elements.d[i] * v2.elements.d[i]; break;
-      case UINT:    v1.elements.u[i] = v1.elements.u[i] * v2.elements.u[i]; break;    
+      case UINT:    v1.elements.ui[i] = v1.elements.ui[i] * v2.elements.ui[i]; break;    
     }
   }
   return ; 
@@ -371,7 +367,7 @@ vecN vector_exponentiation_real(vecN v1, vecN v2){ // here are some rules with d
         v.elements.d[i] = exp_complement_for_double(v1.elements.d[i], v2.elements.d[i]);
         break;
       case UINT:
-        v.elements.u[i] = exp_complement_for_uint(v1.elements.u[i], v2.elements.u[i]);
+        v.elements.ui[i] = exp_complement_for_uint(v1.elements.ui[i], v2.elements.ui[i]);
         break;
     }
   }  
@@ -406,7 +402,7 @@ vecN vector_exponentiation_int(vecN v1, vecN v2){ // here is one case, when func
         v.elements.c[i] = (char)exp_complement_for_int(v1.elements.c[i], v2.elements.c[i], &v.error); // @TODO: what do we do on overflow?
         break;
       case UINT:
-        v.elements.u[i] = exp_complement_for_uint(v1.elements.u[i], v2.elements.u[i]);
+        v.elements.ui[i] = exp_complement_for_uint(v1.elements.ui[i], v2.elements.ui[i]);
         break;
     }
   }
@@ -434,8 +430,8 @@ vecN vectors_multiplication_via_dot_product(vecN v1, vecN v2){
       case INT:   { result.elements.i[0] = result.elements.i[0] + var.elements.i[i]; } break;
       case CHAR:  { result.elements.c[0] = result.elements.c[0] + var.elements.c[i]; } break;
       case FLOAT: { result.elements.f[0] = result.elements.f[0] + var.elements.f[i]; } break;
-      case DOUBLE:{ result.elements.d[0] = result.elements.d[0] + var.elements.i[i]; } break;
-      case UINT:  { result.elements.u[0] = result.elements.u[0] + var.elements.i[i]; } break;
+      case DOUBLE:{ result.elements.d[0] = result.elements.d[0] + var.elements.d[i]; } break;
+      case UINT:  { result.elements.ui[0] = result.elements.ui[0] + var.elements.ui[i]; } break;
     }
   }
  return result; 

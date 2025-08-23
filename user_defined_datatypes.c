@@ -76,7 +76,7 @@ typedef union variable_all_types{
 enum vectorErrors {
   ALL_GOOD = 0,
   V_POSITIVE_OVERFLOW,
-  v_NEGATIVE_OVERFLOW,
+  V_NEGATIVE_OVERFLOW,
   V_UNDERFLOW,
   SQUARE_ROOT_OF_NEGATIVE_NUMBER,
   RETURN_INFINITY,
@@ -104,7 +104,7 @@ union POINTERS {
   char* c;
   unsigned char* uc;
   int* i;
-  unsigned int* u;
+  unsigned int* ui;
   fbits* fb;
   float* f;
   dbits* db;
