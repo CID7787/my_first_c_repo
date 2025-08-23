@@ -1,13 +1,34 @@
 // this file contain all datatypes that was created from struct, union and enms
+typedef union variable_all_types{
+  double d;
+  long int li;
+  long unsigned int lui;
+  char c;
+  float f;
+  int i;
+  unsigned int ui;
+} all;
+
+union union_name1{
+  double d;
+  long unsigned int luint;
+} v1;
+union union_name2{
+  double d;
+  struct struct_name{
+      long unsigned int luint1: 63;
+      long unsigned int luint2:  1; 
+  } luint;
+} union_var;
 
 typedef enum error_code{
     NO_ERROR = 0,
-    UNDEFINED_BEHAVIOR,
     POSITIVE_OVERFLOW,
     NEGATIVE_OVERFLOW,
     UNDERFLOW,
     DIVISION_BY_ZERO,
-    ZERO_TO_ZERO// DESCRIPTION: ZERO TO THE POWER ZERO
+    ZERO_TO_ZERO,// DESCRIPTION: ZERO TO THE POWER ZERO
+    UNDEFINED_BEHAVIOR
 }error;
 
 typedef struct long_long_int {
@@ -51,28 +72,6 @@ typedef union float_bits{
   fuint bits;
 } fbits;
 
-union union_name1{
-  double d;
-  long unsigned int luint;
-} v1;
-union union_name2{
-  double d;
-  struct struct_name{
-      long unsigned int luint1: 63;
-      long unsigned int luint2:  1; 
-  } luint;
-} union_var;
-
-typedef union variable_all_types{
-    double d;
-    long int li;
-    long unsigned int lui;
-    char c;
-    float f;
-    int i;
-    unsigned int ui;
-} all;
-
 enum vectorErrors {
   ALL_GOOD = 0,
   V_POSITIVE_OVERFLOW,
@@ -92,11 +91,9 @@ enum DATATYPES { // enumeration
   UCHAR,
   INT,
   UINT,
-  FBITS,
   FLOAT,
   LINT,
   LUINT,
-  DBITS,
   DOUBLE,
 } typedef datatype;
 
@@ -105,9 +102,7 @@ union POINTERS {
   unsigned char* uc;
   int* i;
   unsigned int* ui;
-  fbits* fb;
   float* f;
-  dbits* db;
   double* d;
   long unsigned int* lui;
   long int* li;

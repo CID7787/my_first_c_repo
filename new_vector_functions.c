@@ -18,8 +18,6 @@ unsigned int amount_of_type_bytes(datatype t){
       case LINT: return sizeof(long int); break;
       case LUINT: return sizeof(long unsigned int); break;
       case DOUBLE: return sizeof(double); break;
-      case FBITS: return sizeof(fbits); break;
-      case DBITS: return sizeof(dbits); break;
       default: return sizeof(datatype);
     }
 }
@@ -28,34 +26,47 @@ vecN vector_creation(datatype type, unsigned int n, datapointer elements){
     vecN r = {type, n, malloc(n * amount_of_type_bytes(type))};
     while(n--){
         switch(type){
-            case CHAR:  r.elements.c[n]  = elements.c[n]; break;
-            case UCHAR: r.elements.uc[n] = elements.uc[n]; break;
-            case INT:   r.elements.i[n]  = elements.i[n]; break;
-            case UINT:  r.elements.ui[n]  = elements.ui[n]; break;
-            case FLOAT: r.elements.f[n]  = elements.f[n]; break;
-            case LINT:  r.elements.li[n] = elements.li[n]; break;
-            case LUINT: r.elements.lui[n]= elements.lui[n]; break;
-            case DOUBLE:r.elements.d[n]  = elements.d[n]; break;
-            case FBITS: r.elements.fb[n] = elements.fb[n]; break;
-            case DBITS: r.elements.db[n] = elements.db[n]; break;
+            case CHAR:   r.elements.c[n]  = elements.c[n]; break;
+            case UCHAR:  r.elements.uc[n] = elements.uc[n]; break;
+            case INT:    r.elements.i[n]  = elements.i[n]; break;
+            case UINT:   r.elements.ui[n] = elements.ui[n]; break;
+            case FLOAT:  r.elements.f[n]  = elements.f[n]; break;
+            case LINT:   r.elements.li[n] = elements.li[n]; break;
+            case LUINT:  r.elements.lui[n]= elements.lui[n]; break;
+            case DOUBLE: r.elements.d[n]  = elements.d[n]; break;
         }
     }
     return r;
-}
+}   
 
 vecN vector_negation(vecN a){
     vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type)), a.error};
     while(a.n--){
         switch(r.type){
-            case CHAR: r.error = ternary(a.elements.c[a.n] == MIN_CHAR, POSITIVE_OVERFLOW, a.error); r.elements.c[a.n] = -a.elements.c[a.n]; break;
-            case UCHAR: r.elements.uc[a.n] = a.elements.uc[a.n]; break;
-            case INT: r.error = ternary(a.elements.i[a.n] == MIN_INT, POSITIVE_OVERFLOW, a.error); r.elements.i[a.n] =  -a.elements.i[a.n]; break;
-            case UINT: r.elements.ui[a.n] = a.elements.ui[a.n]; break;
-            case FLOAT: r.elements.f[a.n] = -a.elements.f[a.n]; break;
-            case LINT: r.error = ternary(a.elements.li[a.n] == MIN_LINT, POSITIVE_OVERFLOW, a.error); r.elements.li[a.n] = -a.elements.li[a.n]; break;
-            case DOUBLE: r.elements.d[a.n] = -a.elements.d[a.n]; break;
-            case FBITS: (r.elements.fb[a.n]).f = -(a.elements.fb[a.n]).f; break;
-            case DBITS: (r.elements.db[a.n]).d = -(a.elements.db[a.n]).d; break;
+            case CHAR: 
+                r.error = ternary(a.elements.c[a.n] == MIN_CHAR, POSITIVE_OVERFLOW, r.error); 
+                r.elements.c[a.n] = -a.elements.c[a.n]; 
+            break;
+            case UCHAR: 
+                r.elements.uc[a.n] = a.elements.uc[a.n]; 
+            break;
+            case INT: 
+                r.error = ternary(a.elements.i[a.n] == MIN_INT, POSITIVE_OVERFLOW, r.error); 
+                r.elements.i[a.n] =  -a.elements.i[a.n]; 
+            break;
+            case UINT: 
+                r.elements.ui[a.n] = a.elements.ui[a.n]; 
+            break;
+            case FLOAT: 
+                r.elements.f[a.n] = -a.elements.f[a.n]; 
+            break;
+            case LINT: 
+                r.error = ternary(a.elements.li[a.n] == MIN_LINT, POSITIVE_OVERFLOW, r.error); 
+                r.elements.li[a.n] = -a.elements.li[a.n]; 
+            break;
+            case DOUBLE: 
+                r.elements.d[a.n] = -a.elements.d[a.n]; 
+            break;
         }
     }
     return r;
@@ -63,15 +74,15 @@ vecN vector_negation(vecN a){
 
 vecN vector_addition(vecN a, vecN b){
     vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type)), a.error};
-    unsigned int uint_float_representations = 0x7e7fffff;// (~0 >> 1) ^ (1 << 23)
+    unsigned int uint_float_representations = 0x7e7fffff;
 	float MAX_FLOAT = *( (float*)(&uint_float_representations) );
     uint_float_representations |= 1u << 31;
     float MIN_FLOAT = *( (float*)(&uint_float_representations) );
-    while(a.n--){
+    while(a.n && a.n--){
         switch(a.type){
             case CHAR: // DONE
-                r.error = ternary((a.elements.c[a.n] < 0) & (a.elements.c[a.n] < (long int)MIN_CHAR - (long int)b.elements.c[a.n]), V_NEGATIVE_OVERFLOW, r.error);// check whether or not have negative overflow
-                r.error = ternary((a.elements.c[a.n] > 0) & (a.elements.c[a.n] > (long int)MAX_CHAR - (long int)b.elements.c[a.n]), V_POSITIVE_OVERFLOW, r.error);// check whether or not have positive overflow
+                r.error = ternary((a.elements.c[a.n] < 0) & (a.elements.c[a.n] < (int)MIN_CHAR - (int)b.elements.c[a.n]), V_NEGATIVE_OVERFLOW, r.error);// check whether or not have negative overflow
+                r.error = ternary((a.elements.c[a.n] > 0) & (a.elements.c[a.n] > (int)MAX_CHAR - (int)b.elements.c[a.n]), V_POSITIVE_OVERFLOW, r.error);// check whether or not have positive overflow
                 r.elements.c[a.n] = a.elements.c[a.n] + b.elements.c[a.n];
             break;
             case UCHAR:// DONE
@@ -90,18 +101,17 @@ vecN vector_addition(vecN a, vecN b){
             case FLOAT: // ALMOST DONE
                 r.error = ternary((a.elements.f[a.n] < 0) & (a.elements.f[a.n] < (double)MIN_FLOAT - (double)b.elements.f[a.n]), V_NEGATIVE_OVERFLOW, r.error);// check whether or not have negative overflow
                 r.error = ternary((a.elements.f[a.n] > 0) & (a.elements.f[a.n] > (double)MAX_FLOAT - (double)b.elements.f[a.n]), V_POSITIVE_OVERFLOW, r.error);// check whether or not have positive overflow
+                r.error ;
                 r.elements.f[a.n] = a.elements.f[a.n] + b.elements.f[a.n];
             break;
             case LINT: // TODO
+
             break;
             case LUINT:// DONE
                 r.error = ternary(a.elements.lui[a.n] > (MAX_LUINT - b.elements.lui[a.n]), V_POSITIVE_OVERFLOW, r.error);
                 r.elements.lui[a.n] = a.elements.lui[a.n] + b.elements.lui[a.n];
             break;            
             case DOUBLE:// TODO
-            case FBITS: // TODO
-            case DBITS: // TODO
-                r.elements.db[a.n].d = a.elements.db[a.n].d + b.elements.db[a.n].d;
             break;
             default: 
                 r.elements.i[a.n] = a.elements.i[a.n]; 
@@ -112,11 +122,3 @@ vecN vector_addition(vecN a, vecN b){
     return r;
 }
 
-
-
-int main(){
-    unsigned int array[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    vecN vec1 = vector_creation(UINT, sizeof(array) / sizeof(unsigned int), (datapointer)array);
-    printf("%u", *(vec1.elements.ui + 3));
-    return 0;
-}

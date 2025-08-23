@@ -226,18 +226,18 @@ vecN vector_multiplication(vecN v1, vecN v2){
   unsigned int i = v1.n;
   while(i--) {
     switch (v1.type){
-      case INT:     v.elements.i[i] = v1.elements.i[i] * v2.elements.i[i]; break;
-      case CHAR:    v.elements.c[i] = v1.elements.c[i] * v2.elements.c[i]; break;
-      case FLOAT:   v.elements.f[i] = v1.elements.f[i] * v2.elements.f[i]; break;
-      case DOUBLE:  v.elements.d[i] = v1.elements.d[i] * v2.elements.d[i]; break;
+      case INT:     v.elements.i[i]  =  v1.elements.i[i] * v2.elements.i[i]; break;
+      case CHAR:    v.elements.c[i]  =  v1.elements.c[i] * v2.elements.c[i]; break;
+      case FLOAT:   v.elements.f[i]  =  v1.elements.f[i] * v2.elements.f[i]; break;
+      case DOUBLE:  v.elements.d[i]  =  v1.elements.d[i] * v2.elements.d[i]; break;
       case UINT:    v.elements.ui[i] = v1.elements.ui[i] * v2.elements.ui[i]; break;
     }
   }
-  return v; 
+  return v;
 }
 
 void vector_multiplication_in_place(vecN v1, vecN v2){
-    unsigned int i = v1.n;
+  unsigned int i = v1.n;
   while(i--) {
     switch (v1.type){
       case INT:     v1.elements.i[i] = v1.elements.i[i] * v2.elements.i[i]; break;

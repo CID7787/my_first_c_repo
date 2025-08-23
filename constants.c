@@ -1,7 +1,10 @@
-
 const double PI = 3.141592653589793; // TODO
 const double PI2 = PI * 2;
-const unsigned int uint_max_float_representation = 0x7e7fffff;// (~0 >> 1) ^ (1 << 23)
+unsigned int uint_float_representations = 0x7e7fffff;
+float MAX_FLOAT = *( (float*)&uint_float_representations );
+uint_float_representations |= 1u << 31;
+float MIN_FLOAT = *( (float*)(&uint_float_representations) );// TODO: whether through define or just hardcode value
+
 
 typedef enum all_unsigned_and_signed_constants{
 	MIN_CHAR = 0xff,
@@ -11,7 +14,6 @@ typedef enum all_unsigned_and_signed_constants{
 	MAX_UINT = ~0u,
 	MIN_LINT = 0xffffffffffffffff,
 	MAX_LUINT = ~0ul,
-	MAX_FLOAT = *( (float*)(&uint_max_float_representation) ),
 	MAX_FLOAT_MANTISSA = 0x3fffff,
 	MAX_NORM_FLOAT_EXP = 126, 
 	MAX_DOUBLE_MANTISSA = 0x001fffffffffffff,

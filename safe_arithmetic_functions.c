@@ -90,12 +90,24 @@ double my_fmod_v4(double x, double y){
   
 // FUNCTION: integer_addition(int, error*)
 
-int safe_int_addition(int addend1, int addend2, error* err){
-  if(!err){ return addend1; }
-  *err = ternary((addend1 > 0) && (addend2 > ((long int)MAX_INT - (long int)addend1)), POSITIVE_OVERFLOW, *err);
-  *err = ternary((addend1 < 0) && (addend2 < ((long int)MIN_INT - (long int)addend1)), NEGATIVE_OVERFLOW, *err);
-  return addend1 + addend2;
-  }
+int safe_int_addition(int a, int b, error* err){
+  if(!err){ return a; }
+  *err = ternary((a > 0) && (b > ((long int)MAX_INT - (long int)a)), POSITIVE_OVERFLOW, *err);
+  *err = ternary((a < 0) && (b < ((long int)MIN_INT - (long int)a)), NEGATIVE_OVERFLOW, *err);
+  return a + b;
+}
+
+
+// FUNCTION: long_long_int_addition()
+
+
+// FUNCTION: long_int_addition(long int, long int, eror*)
+
+long int safe_lint_addition(long int a, long int b, error* err){
+  if(!err){ return a; }
+  // *err = ternary()
+  return a + b;
+}
 
 
 // FUNCTION: unsigned_int_addition(unsigned int, error*)
