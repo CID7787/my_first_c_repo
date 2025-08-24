@@ -16,19 +16,26 @@ union union_name1{
 union union_name2{
   double d;
   struct struct_name{
-      long unsigned int luint1: 63;
-      long unsigned int luint2:  1; 
+    long unsigned int luint1: 63;
+    long unsigned int luint2:  1; 
   } luint;
 } union_var;
 
 typedef enum error_code{
-    NO_ERROR = 0,
-    POSITIVE_OVERFLOW,
-    NEGATIVE_OVERFLOW,
-    UNDERFLOW,
-    DIVISION_BY_ZERO,
-    ZERO_TO_ZERO,// DESCRIPTION: ZERO TO THE POWER ZERO
-    UNDEFINED_BEHAVIOR
+  NO_ERROR = 0,
+  POSITIVE_OVERFLOW,
+  NEGATIVE_OVERFLOW,
+  UNDERFLOW,
+  DIVISION_BY_ZERO,
+  ZERO_TO_ZERO,// DESCRIPTION: ZERO TO THE POWER ZERO
+  UNDEFINED_BEHAVIOR,
+  SQUARE_ROOT_OF_NEGATIVE_NUMBER,
+  POSITIVE_INFINITY,
+  NEGATIVE_INFINITY,
+  RETURN_REAL_PART,
+  QNAN,
+  SNAN,
+  ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER
 }error;
 
 typedef struct long_long_int {
@@ -72,19 +79,6 @@ typedef union float_bits{
   fuint bits;
 } fbits;
 
-enum vectorErrors {
-  ALL_GOOD = 0,
-  V_POSITIVE_OVERFLOW,
-  V_NEGATIVE_OVERFLOW,
-  V_UNDERFLOW,
-  SQUARE_ROOT_OF_NEGATIVE_NUMBER,
-  RETURN_INFINITY,
-  ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER,
-  RETURN_REAL_PART,
-  V_UNDEFINED_BEHAVIOR,
-  QNAN,
-  SNAN,
-} typedef vERR;
 
 enum DATATYPES { // enumeration
   CHAR = 0,
@@ -112,7 +106,7 @@ struct vector_n {
   datatype type;
   unsigned int n; // this "n" is amount of elements
   datapointer elements;
-  vERR error;
+  error v_error;
   //  type       n               elements
   //  datatype   unsigned int    int* i
   //                             char* c

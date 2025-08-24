@@ -88,6 +88,23 @@ double my_fmod_v4(double x, double y){
 }
   
   
+// FUNCTION: char_addition(char, error*)
+
+char safe_char_addition(char a, char b, error* err){
+  *err = ternary((a < 0) & (a < (int)MIN_CHAR - (int)b), NEGATIVE_OVERFLOW, *err);
+  *err = ternary((a > 0) & (a > (int)MAX_CHAR - (int)b), POSITIVE_OVERFLOW, *err);
+  return a + b;
+}
+
+
+// FUNCTION: unsigned_char_addition(unsigned char, error*)
+
+unsigned char safe_unsigned_char_addition(unsigned char a, unsigned char b, error* err){
+  *err = ternary(a > MIN_CHAR - b, POSITIVE_OVERFLOW, *err);
+  return a + b; 
+}
+
+
 // FUNCTION: integer_addition(int, error*)
 
 int safe_int_addition(int a, int b, error* err){
@@ -98,14 +115,12 @@ int safe_int_addition(int a, int b, error* err){
 }
 
 
-// FUNCTION: long_long_int_addition()
-
-
 // FUNCTION: long_int_addition(long int, long int, eror*)
 
 long int safe_lint_addition(long int a, long int b, error* err){
   if(!err){ return a; }
-  // *err = ternary()
+  *err = ternary((a > 0) & (a > (MAX_LINT - b)), POSITIVE_OVERFLOW, *err);
+  *err = ternary((a < 0) & (a < (MIN_LINT - b)), NEGATIVE_OVERFLOW, *err);
   return a + b;
 }
 
@@ -151,6 +166,38 @@ long unsigned int safe_luint_multiplication(long unsigned int multiplier, long u
   return product;
 }
   
+
+// FUNCTION: float_addition(fbits, error*)
+
+float safe_float_addition(fbits a, fbits b, error* err){
+//checking for errors
+  if(*err){ return a.f; }
+  if(!err){ return a.f; }// 2 -3
+  if((a.parts.exp > MAX_NORM_FLOAT_EXP) & a.parts.mantissa){ *err = SNAN; return a.f; }
+  if((b.parts.exp > MAX_NORM_FLOAT_EXP) & b.parts.mantissa){ *err = SNAN; return b.f; }
+  if((a.parts.exp > MAX_NORM_FLOAT_EXP) | (b.parts.exp > MAX_NORM_FLOAT_EXP)){ *err = QNAN; return a.f; }
+  unsigned int a_exp, b_exp = a.uint, sign = ternary((a.f < 0) & (b.f < 0), 1, 0);
+  sign = ternary((a.f < 0) & (b.f < 0), 2, sign);
+//moving addend with the biggest absolute value to position of 'a' argument
+  a.uint = ternary(a.f > b.f, a.uint, b.uint);
+  b.uint = ternary(b.f > a.f, b_exp, b.uint);
+  a_exp = a.parts.exp, b_exp = b.parts.exp;
+//added implicit one to mantissa representation
+  a.uint = FLOAT_MANTISSA_IMPLICIT_ONE | a.parts.mantissa;
+  b.uint = FLOAT_MANTISSA_IMPLICIT_ONE | b.parts.mantissa;
+//shifting smalest (b) so that number now represented with the same exponent 
+  b.uint >>= a_exp - b_exp;
+//adding mantissa(a) and mantissa(b) and storing result into b variable
+  b.uint = ternary(sign == 2, a.uint - b.uint, a.uint + b.uint);
+  a.parts.exp = ternary(sign == 2, AMOUNT_FLOAT_MANTISSA_BITS - how_many_bits_until_eldest_1(b.uint), b.uint >> (AMOUNT_FLOAT_MANTISSA_BITS + 1));
+
+  b.uint >>= a.parts.exp;
+  a.parts.mantissa = b.uint;
+  a.parts.exp += a_exp;
+  a.parts.sign = !!sign;
+  return a.f;
+}
+
   
 // FUNCTION: factorial(unsigned int, error*)
 

@@ -166,20 +166,20 @@ vecN vector_addition(vecN v1, vecN v2){
     switch (v1.type){
       case INT:
         v.elements.i[i] = v1.elements.i[i] + v2.elements.i[i];
-        v.error = (v.elements.i[i] < 0) & (v1.elements.i[i] >= 0);
-        v.error = 1 && ( MIN_INT & (v1.elements.i[i] ^ v2.elements.i[i]) );
+        v.v_error = (v.elements.i[i] < 0) & (v1.elements.i[i] >= 0);
+        v.v_error = 1 && ( MIN_INT & (v1.elements.i[i] ^ v2.elements.i[i]) );
         break;
       case CHAR:    
         v.elements.c[i] = v1.elements.c[i] + v2.elements.c[i]; 
-        v.error = (v.elements.c[i] < 0) & (v1.elements.c[i] >= 0);
-        v.error = (v.error + !v.error) && ( MIN_INT & (v1.elements.c[i] ^ v2.elements.c[i]) );                
+        v.v_error = (v.elements.c[i] < 0) & (v1.elements.c[i] >= 0);
+        v.v_error = (v.v_error + !v.v_error) && ( MIN_INT & (v1.elements.c[i] ^ v2.elements.c[i]) );                
         
         break;
       case FLOAT:   
         v1.elements.f[i] = (v1.elements.f[i] < 0) * (-v1.elements.f[i]) + (!(v1.elements.f[i] < 0)) * v1.elements.f[i];// here if evaluation of variable was negative number, then I will set it to positive, otherwise it will be the same  
         v2.elements.f[i] = (v2.elements.f[i] < 0) * (-v2.elements.f[i]) + (!(v2.elements.f[i] < 0)) * v2.elements.f[i];// here if evaluation of variable was negative number, then I will set it to positive, otherwise it will be the same          
         flag = ( (v1.elements.f[i] < 0) && (v2.elements.f[i] < 0) );
-        v.error = ( (v2.elements.f[i] >= 0) && ( v1.elements.f[i] > (float_max - v2.elements.f[i]) ) ) * V_POSITIVE_OVERFLOW;// the result of this string must be either 0(it means ALL_GOOD) or 1(it means we have OVERFLOW) 
+        v.v_error = ( (v2.elements.f[i] >= 0) && ( v1.elements.f[i] > (float_max - v2.elements.f[i]) ) ) * POSITIVE_OVERFLOW;// the result of this string must be either 0(it means ALL_GOOD) or 1(it means we have OVERFLOW) 
         
         v.elements.i[i] = v1.elements.i[i] + v2.elements.i[i]; 
         
@@ -190,7 +190,7 @@ vecN vector_addition(vecN v1, vecN v2){
         v1.elements.d[i] = (v1.elements.d[i] < 0) * (-v1.elements.d[i]) + (!(v1.elements.d[i] < 0)) * v1.elements.d[i];// here if evaluation of variable was negative number, then I will set it to positive, otherwise it will be the same  
         v2.elements.d[i] = (v2.elements.d[i] < 0) * (-v2.elements.d[i]) + (!(v2.elements.d[i] < 0)) * v2.elements.d[i];// here if evaluation of variable was negative number, then I will set it to positive, otherwise it will be the same          
         flag = ( (v1.elements.d[i] < 0) && (v2.elements.d[i] < 0) );
-        v.error = ( (v2.elements.d[i] >= 0) && ( v1.elements.d[i] > (double_max - v2.elements.d[i]) ) ) * V_POSITIVE_OVERFLOW;// the result of this string must be either 0(it means ALL_GOOD) or 1(it means we have OVERFLOW) 
+        v.v_error = ( (v2.elements.d[i] >= 0) && ( v1.elements.d[i] > (double_max - v2.elements.d[i]) ) ) * POSITIVE_OVERFLOW;// the result of this string must be either 0(it means ALL_GOOD) or 1(it means we have OVERFLOW) 
         
         v.elements.i[i] = v1.elements.d[i] + v2.elements.d[i]; 
         
@@ -198,7 +198,7 @@ vecN vector_addition(vecN v1, vecN v2){
         flag = 0; 
         break;
       case UINT:
-        v.error = ( (v2.elements.ui[i] >= 0) && ( v1.elements.ui[i] > (MAX_UINT - v2.elements.ui[i]) ) ) * V_POSITIVE_OVERFLOW;// the result of this string must be either 0(it means ALL_GOOD) or 1(it means we have OVERFLOW) 
+        v.v_error = ( (v2.elements.ui[i] >= 0) && ( v1.elements.ui[i] > (MAX_UINT - v2.elements.ui[i]) ) ) * POSITIVE_OVERFLOW;// the result of this string must be either 0(it means ALL_GOOD) or 1(it means we have OVERFLOW) 
         v.elements.ui[i] = v1.elements.ui[i] + v2.elements.ui[i]; 
         break;
     }
@@ -250,10 +250,10 @@ void vector_multiplication_in_place(vecN v1, vecN v2){
   return ; 
 }
 
-int exp_complement_for_int(int base, int exponent, vERR *error){ //To_Do
+int exp_complement_for_int(int base, int exponent, error* v_error){ //To_Do
   int sign = ((exponent << 1 ) >> 1) ^ exponent; // 0
   if(!exponent){
-    *error = (!base) * UNDEFINED_BEHAVIOR;
+    *v_error = (!base) * UNDEFINED_BEHAVIOR;
     return 1; }
   int result = base;
   exponent = !sign * exponent + !!sign * (-exponent); // condition * result + condition * result + condition * result
@@ -379,9 +379,9 @@ and function will return  1.1
 */
 vecN vector_exponentiation_int(vecN v1, vecN v2){ // here is one case, when function gives double or float type vector type it will give you mistake(1), if you wanna know more about it forward to string № 371
   if ((v2.type == DOUBLE) || (v2.type == FLOAT)) {
-    vecN have_error;
-    have_error.error = ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER;
-    return have_error; // @TODO: fix with proper error types inside a struct
+    vecN have_v_error;
+    have_v_error.v_error = ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER;
+    return have_v_error; // @TODO: fix with proper v_error types inside a struct
   }
   
   int size = amount_of_bytes_in_this_datatype(v1.type);
@@ -389,17 +389,17 @@ vecN vector_exponentiation_int(vecN v1, vecN v2){ // here is one case, when func
     .type = v1.type,
     .n = v1.n,
     .elements = malloc(size * v1.n),
-    .error = ALL_GOOD
+    .v_error = NO_ERROR
   }; 
   unsigned int i = v1.n;
   while(i--) {
     switch (v1.type){
       // @TODO: what if we have different data types?
       case INT:
-        v.elements.i[i] = exp_complement_for_int(v1.elements.i[i], v2.elements.i[i], &v.error);
+        v.elements.i[i] = exp_complement_for_int(v1.elements.i[i], v2.elements.i[i], &v.v_error);
         break;
       case CHAR:
-        v.elements.c[i] = (char)exp_complement_for_int(v1.elements.c[i], v2.elements.c[i], &v.error); // @TODO: what do we do on overflow?
+        v.elements.c[i] = (char)exp_complement_for_int(v1.elements.c[i], v2.elements.c[i], &v.v_error); // @TODO: what do we do on overflow?
         break;
       case UINT:
         v.elements.ui[i] = exp_complement_for_uint(v1.elements.ui[i], v2.elements.ui[i]);
