@@ -9,7 +9,7 @@
 #endif
 
 unsigned int amount_of_type_bytes(datatype t){
-    switch(t) {  
+    switch(t) {
       case CHAR: return sizeof(char); break;
       case UCHAR: return sizeof(unsigned char); break;
       case INT: return sizeof(int); break;
@@ -74,10 +74,6 @@ vecN vector_negation(vecN a){
 
 vecN vector_addition(vecN a, vecN b){
     vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type)), a.v_error};
-    unsigned int uint_float_representations = 0x7e7fffff;
-	float MAX_FLOAT = *( (float*)(&uint_float_representations) );
-    uint_float_representations |= 1u << 31;
-    float MIN_FLOAT = *( (float*)(&uint_float_representations) );
     while(a.n && a.n--){
         switch(a.type){
             case CHAR: 
@@ -113,3 +109,38 @@ vecN vector_addition(vecN a, vecN b){
     return r;
 }
 
+vecN vector_multiplication(vecN a, vecN b){
+    vecN r = {a.type, a.n, malloc(amount_of_type_bytes(a.type) * a.n)};
+    while(a.n && a.n--){
+        switch(a.type){
+            case CHAR: // FINISH
+                r.elements.c[a.n] = safe_char_multiplication(a.elements.c[a.n], b.elements.c[a.n], &r.v_error);
+            break;
+            case UCHAR: // FINISH
+                r.elements.uc[a.n] = safe_unsigned_char_multiplication(a.elements.uc[a.n], b.elements.uc[a.n], &r.v_error); 
+            break;
+            case INT: 
+                r.elements.i[a.n] = safe_int_multiplication(a.elements.i[a.n], b.elements.i[a.n], &r.v_error); 
+            break;
+            case UINT:
+                r.elements.ui[a.n] = safe_uint_multiplication(a.elements.ui[a.n], b.elements.ui[a.n], &r.v_error); 
+            break;
+            case LINT: // FINISH
+            r.elements.li[a.n] = safe_lint_multiplication(a.elements.li[a.n], b.elements.li[a.n], &r.v_error);
+            break;
+            case LUINT: // FINISH
+            r.elements.lui[a.n] = safe_luint_multipication(a.elements.lui[a.n], b.elements.lui[a.n], &r.v_error);
+            break;            
+            case FLOAT: // WRITE
+                r.elements.f[a.n] = safe_float_multiplication((fbits){ .f = a.elements.f[a.n] }, (fbits){ .f = b.elements.f[a.n] }, &r.v_error);
+            break;
+            case DOUBLE:// DONE
+                r.elements.d[a.n] = safe_double_mutltiplication((dbits){ .d = a.elements.d[a.n] }, (dbits){ .d = b.elements.d[a.n]}, &r.v_error);
+            break;
+            default: 
+                r.elements.i[a.n] = a.elements.i[a.n]; 
+            break; 
+        }
+
+    }
+}

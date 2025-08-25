@@ -180,8 +180,8 @@ double double_absolute_value(double value){
   
 float safe_float_addition(fbits a, fbits b, error* err){
   //checking for errors
+    if(!err){ return a.f; }
     if(*err){ return a.f; }
-    if(!err){ return a.f; }// 2 -3
     if((a.parts.exp > MAX_NORM_FLOAT_EXP) & a.parts.mantissa){ *err = SNAN; return a.f; }
     if((b.parts.exp > MAX_NORM_FLOAT_EXP) & b.parts.mantissa){ *err = SNAN; return b.f; }
     if((a.parts.exp > MAX_NORM_FLOAT_EXP) | (b.parts.exp > MAX_NORM_FLOAT_EXP)){ *err = QNAN; return a.f; }
@@ -215,8 +215,8 @@ float safe_float_addition(fbits a, fbits b, error* err){
 
 double safe_double_addition(dbits a, dbits b, error* err){
     //checking for errors
+      if(!err){ return a.d; }
       if(*err){ return a.d; }
-      if(!err){ return a.d; }// 2 -3
       if((a.parts.exp > MAX_NORM_DOUBLE_EXP) & a.parts.mantissa){ *err = SNAN; return a.d; }
       if((b.parts.exp > MAX_NORM_DOUBLE_EXP) & b.parts.mantissa){ *err = SNAN; return b.d; }
       if((a.parts.exp > MAX_NORM_DOUBLE_EXP) | (b.parts.exp > MAX_NORM_FLOAT_EXP)){ *err = QNAN; return a.d; }
