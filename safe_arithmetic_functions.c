@@ -193,19 +193,59 @@ float safe_float_addition(fbits a, fbits b, error* err){
     v3 = FLOAT_MANTISSA_IMPLICIT_ONE | a.parts.mantissa;
     v4 = FLOAT_MANTISSA_IMPLICIT_ONE | b.parts.mantissa;
   //shifting smalest (b) so that number now represented with the same exponent 
-    v4 >>= a.parts.exp - b.parts.exp; //MAYBE HERE IS THE BUG
+    v4 >>= a.parts.exp - b.parts.exp;
   //adding mantissa(a) and mantissa(b) and storing result into v3 variable
     v3 = ternary(a.parts.sign, -v3, v3) + ternary(b.parts.sign, -v4, v4);
     v3 = ternary(v3 < 0, -v3, v3);
     v4 = v3 < FLOAT_MANTISSA_IMPLICIT_ONE;
-    b.parts.exp = ternary(v4, AMOUNT_FLOAT_MANTISSA_BITS - how_many_bits_until_eldest_1(v3), v3 >> (AMOUNT_FLOAT_MANTISSA_BITS + 1));
+    b.parts.exp = ternary(v4, AMOUNT_OF_FLOAT_MANTISSA_BITS - how_many_bits_until_eldest_1(v3), v3 >> (AMOUNT_OF_FLOAT_MANTISSA_BITS + 1));
     v3 = ternary(v4, v3 << b.parts.exp, v3 >> b.parts.exp);
     a.parts.mantissa = v3;
+  //v4 stores oveflow condition 
+    v4 = (a.parts.exp + b.parts.exp) > MAX_NORM_FLOAT_EXP; 
+    *err = ternary(v4 & a.parts.sign & b.parts.sign, NEGATIVE_OVERFLOW, *err);
+    *err = ternary(v4 & !(a.parts.sign & b.parts.sign), POSITIVE_OVERFLOW, *err);
+    *err = ternary(a.parts.exp - b.parts.exp < 0, UNDERFLOW, *err); 
     a.parts.exp = ternary(v4, a.parts.exp - b.parts.exp, a.parts.exp + b.parts.exp);
     return a.f;
-  }
+}
 
-  
+
+// FUNCTION: double_addition(dbits, error*)
+
+double safe_double_addition(dbits a, dbits b, error* err){
+    //checking for errors
+      if(*err){ return a.d; }
+      if(!err){ return a.d; }// 2 -3
+      if((a.parts.exp > MAX_NORM_DOUBLE_EXP) & a.parts.mantissa){ *err = SNAN; return a.d; }
+      if((b.parts.exp > MAX_NORM_DOUBLE_EXP) & b.parts.mantissa){ *err = SNAN; return b.d; }
+      if((a.parts.exp > MAX_NORM_DOUBLE_EXP) | (b.parts.exp > MAX_NORM_FLOAT_EXP)){ *err = QNAN; return a.d; }
+      long int v3, v4 = a.luint;
+    //moving addend with the biggest absolute value to position of 'a' argument
+      a.luint = ternary(double_absolute_value(a.d) > double_absolute_value(b.d), a.luint, b.luint);
+      b.luint = ternary(double_absolute_value(a.d) < double_absolute_value(b.d), *(unsigned int*)&v4, b.luint);
+    //added implicit one to mantissa representation
+      v3 = DOUBLE_MANTISSA_IMPLICIT_ONE | a.parts.mantissa;
+      v4 = DOUBLE_MANTISSA_IMPLICIT_ONE | b.parts.mantissa;
+    //shifting smalest (b) so that number now represented with the same exponent 
+      v4 >>= a.parts.exp - b.parts.exp;
+    //adding mantissa(a) and mantissa(b) and storing result into v3 variable
+      v3 = ternary(a.parts.sign, -v3, v3) + ternary(b.parts.sign, -v4, v4);
+      v3 = ternary(v3 < 0, -v3, v3);
+      v4 = v3 < DOUBLE_MANTISSA_IMPLICIT_ONE;
+      b.parts.exp = ternary(v4, AMOUNT_OF_DOUBLE_MANTISSA_BITS - how_many_bits_until_eldest_1(v3), v3 >> (AMOUNT_OF_DOUBLE_MANTISSA_BITS + 1));
+      v3 = ternary(v4, v3 << b.parts.exp, v3 >> b.parts.exp);
+      a.parts.mantissa = v3;
+    //v4 stores oveflow condition 
+      v4 = (a.parts.exp + b.parts.exp) > MAX_NORM_DOUBLE_EXP; 
+      *err = ternary(v4 & a.parts.sign & b.parts.sign, NEGATIVE_OVERFLOW, *err);
+      *err = ternary(v4 & !(a.parts.sign & b.parts.sign), POSITIVE_OVERFLOW, *err);
+      *err = ternary(a.parts.exp - b.parts.exp < 0, UNDERFLOW, *err); 
+      a.parts.exp = ternary(v4, a.parts.exp - b.parts.exp, a.parts.exp + b.parts.exp);
+      return a.d;
+}
+
+
 // FUNCTION: factorial(unsigned int, error*)
 
 #define factorial_lookup_table_size 11

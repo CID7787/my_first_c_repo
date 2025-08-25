@@ -80,28 +80,29 @@ vecN vector_addition(vecN a, vecN b){
     float MIN_FLOAT = *( (float*)(&uint_float_representations) );
     while(a.n && a.n--){
         switch(a.type){
-            case CHAR: // DONE
+            case CHAR: 
                 r.elements.c[a.n] = safe_char_addition(a.elements.c[a.n], b.elements.c[a.n], &r.v_error);
             break;
-            case UCHAR:// DONE
+            case UCHAR:
                 r.elements.uc[a.n] = safe_unsigned_char_addition(a.elements.uc[a.n], b.elements.uc[a.n], &r.v_error); 
             break;
-            case INT: // DONE
+            case INT: 
                 r.elements.i[a.n] = safe_int_addition(a.elements.i[a.n], b.elements.i[a.n], &r.v_error); 
             break;
-            case UINT:// DONE
+            case UINT:
                 r.elements.ui[a.n] = safe_uint_addition(a.elements.ui[a.n], b.elements.ui[a.n], &r.v_error); 
             break;
-            case LINT: // TODO
+            case LINT: 
             r.elements.li[a.n] = safe_lint_addition(a.elements.li[a.n], b.elements.li[a.n], &r.v_error);
             break;
-            case LUINT:// DONE
+            case LUINT:
             r.elements.lui[a.n] = safe_luint_addition(a.elements.lui[a.n], b.elements.lui[a.n], &r.v_error);
             break;            
-            case FLOAT: // ALMOST DONE
+            case FLOAT: 
                 r.elements.f[a.n] = safe_float_addition((fbits){ .f = a.elements.f[a.n] }, (fbits){ .f = b.elements.f[a.n] }, &r.v_error);
             break;
-            case DOUBLE:// TODO
+            case DOUBLE:
+                r.elements.d[a.n] = safe_double_addition((dbits){ .d = a.elements.d[a.n] }, (dbits){ .d = b.elements.d[a.n]}, &r.v_error);
             break;
             default: 
                 r.elements.i[a.n] = a.elements.i[a.n]; 
