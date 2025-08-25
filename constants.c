@@ -4,8 +4,8 @@ const float MAX_FLOAT = 85070586659632214952926045871129231360.0;
 const float MIN_FLOAT = -85070586659632214952926045871129231360.0;
 
 typedef enum all_unsigned_and_signed_constants{
-	MIN_CHAR = 0xff,
 	MAX_CHAR = 0x7f,
+	MIN_CHAR = ~MAX_CHAR,
 	MAX_INT = 0x7fffffff,
 	MIN_INT = ~MAX_INT,
 	MAX_UINT = ~0u,
@@ -13,7 +13,8 @@ typedef enum all_unsigned_and_signed_constants{
 	MIN_LINT = ~MAX_LINT,
 	MAX_LUINT = ~0ul,
 	MAX_FLOAT_MANTISSA = 0x3fffff,
-	MAX_NORM_FLOAT_EXP = 126, 
+	MAX_NORM_FLOAT_EXP = 254,
+	FLOAT_EXP_BIAS = 127, 
 	AMOUNT_OF_FLOAT_MANTISSA_BITS = 23,
 	FLOAT_MANTISSA_IMPLICIT_ONE = 0x800000,
 	MAX_DOUBLE_MANTISSA = 0x001fffffffffffff,

@@ -97,11 +97,41 @@ char safe_char_addition(char a, char b, error* err){
 }
 
 
+// FUNCTION: char_multiplication(char, error*)
+
+char safe_char_multiplication(char a, char b, error* err){
+  if(!err){ return a; }
+  char sign = (a ^ b) & MIN_CHAR;
+  a &= MAX_CHAR;
+  b &= MAX_CHAR; 
+  char result = 0;
+  while(b--){
+      if(*err){ *err = ternary((*err == POSITIVE_OVERFLOW) && sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW); return a; }
+      result = safe_char_addition(result, a, err);
+  }
+  result |= sign; 
+  return result;
+}
+
+
 // FUNCTION: unsigned_char_addition(unsigned char, error*)
 
 unsigned char safe_unsigned_char_addition(unsigned char a, unsigned char b, error* err){
   *err = ternary(a > MIN_CHAR - b, POSITIVE_OVERFLOW, *err);
   return a + b; 
+}
+
+
+// FUNCTION: unsigned_char_multiplication(unsigned char, error*)
+
+unsigned char safe_unsigned_char_multiplication(unsigned char a, unsigned char b, error* err){
+  if(!err){ return a; }
+  char result = 0;
+  while(b--){
+      if(*err){ return a; }
+      result = safe_unsigned_char_addition(result, a, err);
+  }
+  return result;
 }
 
 
@@ -111,16 +141,6 @@ int safe_int_addition(int a, int b, error* err){
   if(!err){ return a; }
   *err = ternary((a > 0) && (b > ((long int)MAX_INT - (long int)a)), POSITIVE_OVERFLOW, *err);
   *err = ternary((a < 0) && (b < ((long int)MIN_INT - (long int)a)), NEGATIVE_OVERFLOW, *err);
-  return a + b;
-}
-
-
-// FUNCTION: long_int_addition(long int, long int, eror*)
-
-long int safe_lint_addition(long int a, long int b, error* err){
-  if(!err){ return a; }
-  *err = ternary((a > 0) & (a > (MAX_LINT - b)), POSITIVE_OVERFLOW, *err);
-  *err = ternary((a < 0) & (a < (MIN_LINT - b)), NEGATIVE_OVERFLOW, *err);
   return a + b;
 }
 
@@ -141,6 +161,47 @@ unsigned int safe_uint_multiplication(unsigned int arg1, unsigned int arg2, erro
   unsigned int result = 0;
   while((arg2-- > 0) && !(*err)){
     result = safe_uint_addition(result, arg1, err);
+  }
+  return result;
+}
+
+
+// FUNCTION: long_int_addition(long int, long int, eror*)
+
+long int safe_lint_addition(long int a, long int b, error* err){
+  if(!err){ return a; }
+  *err = ternary((a > 0) & (a > (MAX_LINT - b)), POSITIVE_OVERFLOW, *err);
+  *err = ternary((a < 0) & (a < (MIN_LINT - b)), NEGATIVE_OVERFLOW, *err);
+  return a + b;
+}
+
+
+// FUNCTION: long_int_multiplication(long int, error*)
+
+long int safe_lint_multiplication(long int a, long int b, error* err){
+  if(!err){ return a; }
+  long int sign = (a ^ b) & MIN_LINT;
+  a &= MAX_LINT;
+  a &= MAX_LINT;
+  long int result = 0;
+  while(b--){
+      if(*err){ *err = ternary((*err == POSITIVE_OVERFLOW) && sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW); return a; }
+      result = safe_lint_addition(result, a, err);
+  }
+  result |= sign;
+  return result;
+}
+
+
+// FUNCTION: long_unsigned_int_multiplication(long unsigned int, error*)
+
+
+long unsigned int safe_luint_multiplication(long unsigned int a, long unsigned int b, error* err){
+  if(!err){ return a; }
+  long unsigned int result = 0;
+  while(b--){
+      if(*err){ return a; }
+      result = safe_luint_addition(result, a, err);
   }
   return result;
 }
@@ -491,6 +552,39 @@ double safe_double_multiplication_without_rounding(dbits a, dbits b, error* err)
   return result.d;
 }
 
+
+// FUNCTION: float_multiplication_with_rounding(fbits, error*)
+
+fbits safe_float_mantissa_multiplication_with_rounding(fbits a, fbits b){
+  a.uint = FLOAT_MANTISSA_IMPLICIT_ONE | a.parts.mantissa;
+  b.uint = FLOAT_MANTISSA_IMPLICIT_ONE | b.parts.mantissa;
+  error err = NO_ERROR;
+  long unsigned int result = safe_luint_multiplication(a.uint, b.uint, &err);
+  b.parts.exp = result >> 47;
+  a.uint = result >> (23 + b.parts.exp);
+  a.parts.exp = b.parts.exp;
+  return a; 
+}
+
+float safe_float_multiplication_with_rounding(fbits a, fbits b, error* err){
+  // check whether or not one of argument is equal to 0
+  if(!a.f | !b.f){ return 0; } 
+  // check whether or not a is NaN
+  if((a.parts.exp > MAX_NORM_DOUBLE_EXP) && a.parts.mantissa){ return a.f; }
+  // check whether or not b is NaN
+  if((b.parts.exp > MAX_NORM_DOUBLE_EXP) && b.parts.mantissa){ return b.f; }
+  if(!err){ return a.f; }
+  fbits result = safe_float_mantissa_multiplication_with_rounding(a, b);
+  int exponent = a.parts.exp + b.parts.exp + result.parts.exp - FLOAT_EXP_BIAS;
+  result.parts.sign = a.parts.sign ^ b.parts.sign;
+  // check whether or not exponent value bigger than MAX_DOUBLE_EXPONENT
+  *err = ternary(exponent < 0, UNDERFLOW, *err);
+  *err = ternary(exponent > MAX_NORM_FLOAT_EXP, ternary(result.parts.sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err); if(*err){ return result.f; }
+  result.parts.exp = exponent;
+  return result.f;
+}
+
+
 // FUNCTION: double_multiplication_with_rounding(dbits,dbits,error*)
 
 lluint long_mantissa_multiplication(long unsigned int a, long unsigned int b){ 	
@@ -513,25 +607,33 @@ dbits safe_double_mantissa_multiplication_with_rounding(dbits a, dbits b){
   a.luint = DOUBLE_MANTISSA_IMPLICIT_ONE | a.parts.mantissa;
   b.luint = DOUBLE_MANTISSA_IMPLICIT_ONE | b.parts.mantissa;
   lluint result = long_mantissa_multiplication(a.luint, b.luint);
-  unsigned int exp = (result.high & (1ul << 41));
-  a.luint = (result.high << (23 - exp)) | result.low >> (41 + exp);
-  a.luint >>= 12;
-  a.parts.exp = exp;
+  b.parts.exp = (result.high & (1ul << 41));// TODO: OPTIMIZE
+//b.parts.exp = result.high >> 41;// TODO: MAYBE THIS WILL BETTER 
+  a.luint = (result.high << (23 - b.parts.exp)) | result.low >> (41 + b.parts.exp);// TODO: OPTIMIZE
+  a.luint >>= 12;// TODO: I GUESS IT MUST BE SHIFTED 11 TIMES
+  a.parts.exp = b.parts.exp;
   return a;
 }
 
 double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
-  if(!a.d | !b.d){ return 0; } // check whether or not one of argument is equal to 0
-  if((a.parts.exp > MAX_NORM_DOUBLE_EXP) && a.parts.mantissa){ return a.d; }// check whether or not a is NaN
-  if((b.parts.exp > MAX_NORM_DOUBLE_EXP) && b.parts.mantissa){ return b.d; }// check whether or not b is NaN
+  // check whether or not one of argument is equal to 0
+  if(!a.d | !b.d){ return 0; } 
+  // check whether or not a is NaN
+  if((a.parts.exp > MAX_NORM_DOUBLE_EXP) && a.parts.mantissa){ return a.d; }
+  // check whether or not b is NaN
+  if((b.parts.exp > MAX_NORM_DOUBLE_EXP) && b.parts.mantissa){ return b.d; }
   if(!err){ return a.d; }
   dbits result = safe_double_mantissa_multiplication_with_rounding(a, b);
   int exponent = a.parts.exp + b.parts.exp + result.parts.exp - DOUBLE_EXP_BIAS;
-  *err = ternary(exponent > MAX_NORM_DOUBLE_EXP, POSITIVE_OVERFLOW, ternary(exponent < 0, UNDERFLOW, *err)); if(*err){ return result.d; }    // check whether or not exponent value bigger than MAX_DOUBLE_EXPONENT
-  result.parts.exp = exponent;
   result.parts.sign = a.parts.sign ^ b.parts.sign;
+  // check whether or not exponent value bigger than MAX_DOUBLE_EXPONENT
+  *err = ternary(exponent < 0, UNDERFLOW, *err);
+  *err = ternary(exponent > MAX_NORM_DOUBLE_EXP, ternary(result.parts.sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err); if(*err){ return result.d; }
+  result.parts.exp = exponent;
   return result.d;
 }
+
+
 
 // FUNCTION: double_base_to_unsigned_int_power(double, unsigned int, error*)
 
