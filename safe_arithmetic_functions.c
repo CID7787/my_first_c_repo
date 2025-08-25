@@ -165,38 +165,45 @@ long unsigned int safe_luint_multiplication(long unsigned int multiplier, long u
   }
   return product;
 }
-  
 
-// FUNCTION: float_addition(fbits, error*)
 
-float safe_float_addition(fbits a, fbits b, error* err){
-//checking for errors
-  if(*err){ return a.f; }
-  if(!err){ return a.f; }// 2 -3
-  if((a.parts.exp > MAX_NORM_FLOAT_EXP) & a.parts.mantissa){ *err = SNAN; return a.f; }
-  if((b.parts.exp > MAX_NORM_FLOAT_EXP) & b.parts.mantissa){ *err = SNAN; return b.f; }
-  if((a.parts.exp > MAX_NORM_FLOAT_EXP) | (b.parts.exp > MAX_NORM_FLOAT_EXP)){ *err = QNAN; return a.f; }
-  unsigned int a_exp, b_exp = a.uint, sign = ternary((a.f < 0) & (b.f < 0), 1, 0);
-  sign = ternary((a.f < 0) & (b.f < 0), 2, sign);
-//moving addend with the biggest absolute value to position of 'a' argument
-  a.uint = ternary(a.f > b.f, a.uint, b.uint);
-  b.uint = ternary(b.f > a.f, b_exp, b.uint);
-  a_exp = a.parts.exp, b_exp = b.parts.exp;
-//added implicit one to mantissa representation
-  a.uint = FLOAT_MANTISSA_IMPLICIT_ONE | a.parts.mantissa;
-  b.uint = FLOAT_MANTISSA_IMPLICIT_ONE | b.parts.mantissa;
-//shifting smalest (b) so that number now represented with the same exponent 
-  b.uint >>= a_exp - b_exp;
-//adding mantissa(a) and mantissa(b) and storing result into b variable
-  b.uint = ternary(sign == 2, a.uint - b.uint, a.uint + b.uint);
-  a.parts.exp = ternary(sign == 2, AMOUNT_FLOAT_MANTISSA_BITS - how_many_bits_until_eldest_1(b.uint), b.uint >> (AMOUNT_FLOAT_MANTISSA_BITS + 1));
+// FUNCTION: double_absolute_value(double)
 
-  b.uint >>= a.parts.exp;
-  a.parts.mantissa = b.uint;
-  a.parts.exp += a_exp;
-  a.parts.sign = !!sign;
-  return a.f;
+double double_absolute_value(double value){
+  dbits d_dbits = (dbits){ .d = value };
+  d_dbits.luint = ternary(d_dbits.d < 0, d_dbits.luint ^ MIN_LINT, d_dbits.luint);
+  return d_dbits.d;
 }
+   
+  
+// FUNCTION: float_addition(fbits, error*)
+  
+float safe_float_addition(fbits a, fbits b, error* err){
+  //checking for errors
+    if(*err){ return a.f; }
+    if(!err){ return a.f; }// 2 -3
+    if((a.parts.exp > MAX_NORM_FLOAT_EXP) & a.parts.mantissa){ *err = SNAN; return a.f; }
+    if((b.parts.exp > MAX_NORM_FLOAT_EXP) & b.parts.mantissa){ *err = SNAN; return b.f; }
+    if((a.parts.exp > MAX_NORM_FLOAT_EXP) | (b.parts.exp > MAX_NORM_FLOAT_EXP)){ *err = QNAN; return a.f; }
+    int v3, v4 = a.uint;
+  //moving addend with the biggest absolute value to position of 'a' argument
+    a.uint = ternary(double_absolute_value(a.f) > double_absolute_value(b.f), a.uint, b.uint);
+    b.uint = ternary(double_absolute_value(a.f) < double_absolute_value(b.f), *(unsigned int*)&v4, b.uint);
+  //added implicit one to mantissa representation
+    v3 = FLOAT_MANTISSA_IMPLICIT_ONE | a.parts.mantissa;
+    v4 = FLOAT_MANTISSA_IMPLICIT_ONE | b.parts.mantissa;
+  //shifting smalest (b) so that number now represented with the same exponent 
+    v4 >>= a.parts.exp - b.parts.exp; //MAYBE HERE IS THE BUG
+  //adding mantissa(a) and mantissa(b) and storing result into v3 variable
+    v3 = ternary(a.parts.sign, -v3, v3) + ternary(b.parts.sign, -v4, v4);
+    v3 = ternary(v3 < 0, -v3, v3);
+    v4 = v3 < FLOAT_MANTISSA_IMPLICIT_ONE;
+    b.parts.exp = ternary(v4, AMOUNT_FLOAT_MANTISSA_BITS - how_many_bits_until_eldest_1(v3), v3 >> (AMOUNT_FLOAT_MANTISSA_BITS + 1));
+    v3 = ternary(v4, v3 << b.parts.exp, v3 >> b.parts.exp);
+    a.parts.mantissa = v3;
+    a.parts.exp = ternary(v4, a.parts.exp - b.parts.exp, a.parts.exp + b.parts.exp);
+    return a.f;
+  }
 
   
 // FUNCTION: factorial(unsigned int, error*)
