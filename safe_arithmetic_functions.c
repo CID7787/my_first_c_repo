@@ -105,10 +105,10 @@ char safe_char_multiplication(char a, char b, error* err){
   a &= MAX_CHAR;
   b &= MAX_CHAR; 
   char result = 0;
-  while(b--){
-      if(*err){ *err = ternary((*err == POSITIVE_OVERFLOW) && sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW); return a; }
-      result = safe_char_addition(result, a, err);
+  while(b-- && !(*err)){
+    result = safe_char_addition(result, a, err);
   }
+  *err = ternary((*err == POSITIVE_OVERFLOW) && sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW);
   result |= sign; 
   return result;
 }
@@ -127,8 +127,7 @@ unsigned char safe_unsigned_char_addition(unsigned char a, unsigned char b, erro
 unsigned char safe_unsigned_char_multiplication(unsigned char a, unsigned char b, error* err){
   if(!err){ return a; }
   char result = 0;
-  while(b--){
-      if(*err){ return a; }
+  while(b-- && !(*err)){
       result = safe_unsigned_char_addition(result, a, err);
   }
   return result;
@@ -142,6 +141,22 @@ int safe_int_addition(int a, int b, error* err){
   *err = ternary((a > 0) && (b > ((long int)MAX_INT - (long int)a)), POSITIVE_OVERFLOW, *err);
   *err = ternary((a < 0) && (b < ((long int)MIN_INT - (long int)a)), NEGATIVE_OVERFLOW, *err);
   return a + b;
+}
+
+
+// FUNCTION: integer_multiplication(int, error*)
+
+int safe_int_multiplication(int a, int b, error* err){
+  if(!err){ return a; }
+  int result = 0, sign = (a ^ b) & MIN_INT;
+  a &= MAX_INT;
+  b &= MAX_INT; 
+  while(b-- && !(*err)){
+    result = safe_int_addition(result, a, err);
+  }
+  *err = ternary((*err == POSITIVE_OVERFLOW) && sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW);
+  result |= sign; 
+  return result;
 }
 
 
@@ -159,7 +174,7 @@ unsigned int safe_uint_addition(unsigned int arg1, unsigned int arg2, error* err
 unsigned int safe_uint_multiplication(unsigned int arg1, unsigned int arg2, error* err){
   if(!err){ return arg1; }
   unsigned int result = 0;
-  while((arg2-- > 0) && !(*err)){
+  while(arg2-- && !(*err)){
     result = safe_uint_addition(result, arg1, err);
   }
   return result;
@@ -639,17 +654,13 @@ double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
 
 double exp_double2uint(double base, unsigned int power, error* err){// DESCRIPTION: base of type 'double' to power of type 'unsigned int'
   if(!err){ return base; }
-  if (*err != NO_ERROR) { return 1.0; }
-  if(!power){ 
-    if(base == 0.0){ *err = ZERO_TO_ZERO; }// OPTIMIZE
-    return 1.0;
-  }
+  if (*err) { return 1.0; }
+  *err = else0(!base && !base, ZERO_TO_ZERO);   
   double result = 1.0;
   dbits result_dbits = (dbits){ .d = result};
   dbits base_dbits = (dbits){ .d = base};
-  while(power-- > 0){
-    if(*err){ return result; }
-    result = safe_double_multiplication_with_rounding_v1(result_dbits, base_dbits, err);
+  while(power-- && !(*err)){
+    result = safe_double_multiplication_with_rounding(result_dbits, base_dbits, err);
   }
   return result;
 }

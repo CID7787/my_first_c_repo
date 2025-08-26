@@ -281,7 +281,7 @@ int convert_from_offsetB_to_twosCml(int arg){
 double n_power_exponentiation(double var, unsigned int exp){
   double result = 1.0;
   while(exp--){
-    result = result * var; 
+    result = (double)result * var; 
   }
   return result;
 }
@@ -409,13 +409,8 @@ vecN vector_exponentiation_int(vecN v1, vecN v2){ // here is one case, when func
   return v; 
 }
 
-
-
-void vector_exponentiation_in_place(vecN v1, vecN v2){
-  
-}
-
 vecN vectors_multiplication_via_dot_product(vecN v1, vecN v2){
+  if(v1.type != v2.type){ return v1; }
   vecN var = vector_multiplication(v1, v2);
   // free(var.elements);
   // var.elements = malloc(...);
@@ -423,15 +418,13 @@ vecN vectors_multiplication_via_dot_product(vecN v1, vecN v2){
   // long unsigned int *ptr = &var1;
   vecN result;
   result.type = v1.type;
-  
-  unsigned int i = var.n;
-  while(i--){
+  while(v1.n --){
     switch(var.type){
-      case INT:   { result.elements.i[0] = result.elements.i[0] + var.elements.i[i]; } break;
-      case CHAR:  { result.elements.c[0] = result.elements.c[0] + var.elements.c[i]; } break;
-      case FLOAT: { result.elements.f[0] = result.elements.f[0] + var.elements.f[i]; } break;
-      case DOUBLE:{ result.elements.d[0] = result.elements.d[0] + var.elements.d[i]; } break;
-      case UINT:  { result.elements.ui[0] = result.elements.ui[0] + var.elements.ui[i]; } break;
+      case INT:   { result.elements.i[0]  = safe_int_addition(result.elements.i[0] , result.elements.i[v1.n] , &result.v_error); } break;
+      case CHAR:  { result.elements.c[0]  = safe_char_addition(result.elements.c[0] , result.elements.c[v1.n] , &result.v_error); } break;
+      case FLOAT: { result.elements.f[0]  = safe_float_addition((fbits){ .f = result.elements.f[0] } , (fbits){ .f = result.elements.f[v1.n] } , &result.v_error); } break;
+      case DOUBLE:{ result.elements.d[0]  = safe_double_addition((dbits){ .d = result.elements.d[0] }, (dbits){ .d = result.elements.d[v1.n] }, &result.v_error); } break;
+      case UINT:  { result.elements.ui[0] = safe_uint_addition(result.elements.ui[0], result.elements.ui[v1.n], &result.v_error); } break;
     }
   }
  return result; 

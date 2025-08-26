@@ -73,8 +73,9 @@ vecN vector_negation(vecN a){
 }
 
 vecN vector_addition(vecN a, vecN b){
-    vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type)), a.v_error};
-    while(a.n && a.n--){
+    if(a.type != b.type){ return a; }
+    vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type)), NO_ERROR};
+    while(a.n--){
         switch(a.type){
             case CHAR: 
                 r.elements.c[a.n] = safe_char_addition(a.elements.c[a.n], b.elements.c[a.n], &r.v_error);
@@ -113,8 +114,9 @@ vecN vector_addition(vecN a, vecN b){
 
 
 vecN vector_multiplication(vecN a, vecN b){
-    vecN r = {a.type, a.n, malloc(amount_of_type_bytes(a.type) * a.n)};
-    while(a.n && a.n--){
+    if(a.type != b.type){ return a; }
+    vecN r = {a.type, a.n, malloc(amount_of_type_bytes(a.type) * a.n), NO_ERROR};
+    while(a.n--){
         switch(a.type){
             case CHAR: 
                 r.elements.c[a.n] = safe_char_multiplication(a.elements.c[a.n], b.elements.c[a.n], &r.v_error);
@@ -148,3 +150,137 @@ vecN vector_multiplication(vecN a, vecN b){
     }
 }
 
+vecN vectors_multiplication_via_dot_product(vecN v1, vecN v2){
+    if(v1.type != v2.type){ return v1; }
+    vecN var = vector_multiplication(v1, v2);
+    // free(var.elements);
+    // var.elements = malloc(...);
+    // long unsigned int var1 = 0;
+    // long unsigned int *ptr = &var1;
+    vecN result;
+    result.type = v1.type;
+    while(v1.n--){
+      switch(var.type){
+        case CHAR:  { result.elements.c[0]  = safe_char_addition(result.elements.c[0] , result.elements.c[v1.n] , &result.v_error); } break;
+        case UCHAR: { result.elements.uc[0] = safe_char_addition(result.elements.uc[0] , result.elements.uc[v1.n] , &result.v_error); } break;
+        case INT:   { result.elements.i[0]  = safe_int_addition( result.elements.i[0] , result.elements.i[v1.n] , &result.v_error); } break;
+        case UINT:  { result.elements.ui[0] = safe_uint_addition(result.elements.ui[0], result.elements.ui[v1.n], &result.v_error); } break;
+        case LINT:  { result.elements.li[0] = safe_uint_addition(result.elements.li[0], result.elements.li[v1.n], &result.v_error); } break;
+        case LUINT: { result.elements.lui[0]= safe_uint_addition(result.elements.lui[0], result.elements.lui[v1.n], &result.v_error); } break;
+        case FLOAT: { result.elements.f[0]  = safe_float_addition( (fbits){ .f = result.elements.f[0] } , (fbits){ .f = result.elements.f[v1.n] } , &result.v_error); } break;
+        case DOUBLE:{ result.elements.d[0]  = safe_double_addition((dbits){ .d = result.elements.d[0] }, (dbits){ .d = result.elements.d[v1.n] }, &result.v_error); } break;
+      }
+    }
+   return result; 
+}
+
+char exp_char2char(char a, char b, error* err){
+    if(!err){ return a; }
+    char result = 1;
+    *err = else0(b < 0, UNDERFLOW);
+    while(b-- && !(*err)){
+        result = safe_char_multiplication(result, a, err);
+    }
+    return result;
+}
+
+unsigned char exp_uchar2uchar(unsigned char a, unsigned char b, error* err){
+    if(!err){ return a; }
+    unsigned char result = 1;
+    while(b-- && !(*err)){
+        result = safe_unsigned_char_multiplication(result, a, err);
+    }
+    return result;
+}
+
+int exp_int2int(int a, int b, error* err){
+    if(!err){ return a; }
+    int result = 1;
+    *err = else0(b < 0, UNDERFLOW);
+    while(b-- && !(*err)){ 
+        result = safe_int_multiplication(result, a, err);
+    }
+    return result;
+}
+
+unsigned int exp_uint2uint(unsigned int a, unsigned int b, error* err){
+    if(!err){ return a; }
+    unsigned int result = 1;
+    while(b-- && !(*err)){
+        result = safe_uint_multiplication(result, a, err);
+    }
+    return result;
+}
+
+long unsigned int exp_luint2luint(long unsigned int a, long unsigned int b, error* err){
+    if(!err){ return a; }
+    long unsigned int result = 1;
+    while(b-- && !(*err)){
+        result = safe_luint_multiplication(result, a, err);
+    }
+    return result;
+}
+
+long int exp_int2int(long int a, long int b, error* err){
+    if(!err){ return a; }
+    long int result = 1;
+    *err = else0(b < 0, UNDERFLOW);
+    while(b-- && !(*err)){ 
+        result = safe_lint_multiplication(result, a, err);
+    }
+    return result;
+}
+
+float exp_float2float(fbits a, fbits b, error* err){
+    if(!err){ return a.f; }
+    float result = 1; 
+    long int c = b.f;
+    fbits result_fbits = (fbits){ .f = result}; 
+    *err = else0(b.f - (float)c, ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER); 
+    while(b.f-- && !(*err)){
+        result = safe_float_multiplication_with_rounding(result_fbits, a, err);
+    }
+    return result;
+}
+
+
+vecN vector_exponentiation(vecN a, vecN b){
+    if(a.type != b.type){ return a; }
+    vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type)), NO_ERROR};
+    while(a.n--){
+        switch(a.type){
+            case CHAR: 
+                r.elements.c[a.n] = exp_char2char(a.elements.c[a.n], b.elements.c[a.n], &r.v_error); 
+            break;
+            case UCHAR:
+                r.elements.uc[a.n] = exp_uchar2uchar(a.elements.uc[a.n], b.elements.uc[a.n], &r.v_error);
+            break;
+            case INT:   
+                r.elements.i[a.n] = exp_int2int(a.elements.i[a.n], b.elements.i[a.n], &r.v_error);
+            break;
+            case UINT: 
+                r.elements.ui[a.n] = exp_uint2uint(a.elements.ui[a.n], b.elements.ui[a.n], &r.v_error);
+            break;
+            case LINT:  
+                r.elements.li[a.n] = exp_lint2lint(a.elements.li[a.n], b.elements.li[a.n], &r.v_error);
+            break;
+            case LUINT: 
+                r.elements.lui[a.n] = exp_luint2luint(a.elements.lui[a.n], b.elements.lui[a.n], &r.v_error);
+            break;
+            case FLOAT: 
+                r.elements.f[a.n] = exp_float2float((fbits){ .f = a.elements.f[a.n] }, (fbits){ .f = b.elements.f[a.n] }, &r.v_error);
+            break;
+            case DOUBLE:
+                r.elements.d[a.n] = exp_double2double((dbits){ .d = a.elements.d[a.n] }, (dbits){ .d = b.elements.d[a.n] }, &r.v_error);
+            break; 
+        }
+
+    }
+    return r;
+}
+
+vecN vector_exponentiation_dif_types(vecN a, vecN b){
+    vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type))};
+
+    return r;
+}
