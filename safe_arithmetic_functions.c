@@ -250,12 +250,15 @@ long unsigned int safe_luint_multiplication(long unsigned int multiplier, long u
 
 // FUNCTION: double_absolute_value(double)
 
-double double_absolute_value(double value){
-  dbits d_dbits = (dbits){ .d = value };
-  d_dbits.luint = ternary(d_dbits.d < 0, d_dbits.luint ^ MIN_LINT, d_dbits.luint);
-  return d_dbits.d;
+double double_absolute_value_v1(double value){
+  long unsigned int luint_v = *((long unsigned int*)&value) & (long unsigned int)MAX_LINT;
+  return *(double*)&luint_v;
 }
-   
+
+double double_absolute_value(dbits value){
+  value.bits.sign = 0;
+  return value.d;
+}
   
 // FUNCTION: float_addition(fbits, error*)
   
@@ -266,32 +269,28 @@ float safe_float_addition(fbits a, fbits b, error* err){
     if((a.parts.exp > MAX_NORM_FLOAT_EXP) & a.parts.mantissa){ *err = SNAN; return a.f; }
     if((b.parts.exp > MAX_NORM_FLOAT_EXP) & b.parts.mantissa){ *err = SNAN; return b.f; }
     if((a.parts.exp > MAX_NORM_FLOAT_EXP) | (b.parts.exp > MAX_NORM_FLOAT_EXP)){ *err = QNAN; return a.f; }
-    long int v3, v4 = -(double_absolute_value(a.f) < double_absolute_value(b.f));
+    long int v3, v4 = -(double_absolute_value((dbits){ .d = a.f}) < double_absolute_value((dbits){ .d = b.f}));
   //moivng addend with the biggest absolute value to position of 'a' argument
     a.uint ^= b.uint & v4; 
     b.uint ^= a.uint & v4; 
     a.uint ^= b.uint & v4; 
-  //added implicit one to mantissa representation
-    v4 = FLOAT_MANTISSA_IMPLICIT_ONE | b.parts.mantissa;
   //shifting smalest (b) so that number now represented with the same exponent 
-    v4 >>= a.parts.exp - b.parts.exp; if ((a.parts.exp - b.parts.exp) > (1 + AMOUNT_OF_FLOAT_MANTISSA_BITS)) { *err = UNDERFLOW; return a.f;}
-    v3 = ((FLOAT_MANTISSA_IMPLICIT_ONE | a.parts.mantissa) ^ -a.parts.sign) + a.parts.sign
-       + ((v4) ^ -b.parts.sign) + b.parts.sign;
-    v4 = *(unsigned int*)&v3 >> ((sizeof(float) << 3) - 1);// sizeof(float) << 3 + 1 <==> AMOUNT_OF_FLOAT_MANTISSA_BITS + AMOUNT_OF_FLOAT_EXP_BITS 
+    v4 = a.parts.exp - b.parts.exp; if (v4 > (1 + AMOUNT_OF_FLOAT_MANTISSA_BITS)) { *err = UNDERFLOW; return a.f; }
+    v3 = (( FLOAT_MANTISSA_IMPLICIT_ONE | a.parts.mantissa       ) ^ -a.parts.sign) + a.parts.sign
+       + (((FLOAT_MANTISSA_IMPLICIT_ONE | a.parts.mantissa) >> v4) ^ -b.parts.sign) + b.parts.sign;
+    v4 = *(long unsigned int*)&v3 >> ((sizeof(double) << 3) - 1);// sizeof(double) << 3 + 1 <==> AMOUNT_OF_DOUBLE_MANTISSA_BITS + AMOUNT_OF_DOUBLE_EXP_BITS 
     v3 = (v3 ^ -v4) + v4;
     v4 = v3 & FLOAT_MANTISSA_IMPLICIT_ONE;
     b.parts.exp = ternary(v4, v3 >> (AMOUNT_OF_FLOAT_MANTISSA_BITS + 1), AMOUNT_OF_FLOAT_MANTISSA_BITS - how_many_bits_until_eldest_1(v3));
     v3 = ternary(v4, v3 << b.parts.exp, v3 >> b.parts.exp);
-    // v4 = a.luint
+    // v4 = a.luint;
     a.parts.mantissa = v3;
   //v4 stores oveflow condition 
-    v3 = (a.parts.exp + b.parts.exp) > MAX_NORM_FLOAT_EXP; 
+    v3 = (a.parts.exp + b.parts.exp) > MAX_NORM_DOUBLE_EXP; 
     *err = ternary(v3 & a.parts.sign & b.parts.sign, NEGATIVE_OVERFLOW, *err);
     *err = ternary(v3 & !(a.parts.sign & b.parts.sign), POSITIVE_OVERFLOW, *err);
     *err = ternary(a.parts.exp - b.parts.exp < 0, UNDERFLOW, *err); 
-    a.parts.exp = ternary(v4, a.parts.exp + b.parts.exp, a.parts.exp - b.parts.exp);
-    // b.luint = v4;
-    // *err = ternary(a.d != b.d, UNDERFLOW, *err);
+    a.parts.exp = ternary(v4, a.parts.exp + b.parts.exp, a.parts.exp - b.parts.exp);    
     return a.f;
 }
 
@@ -305,17 +304,15 @@ double safe_double_addition(dbits a, dbits b, error* err){
     if((a.parts.exp > MAX_NORM_DOUBLE_EXP) & a.parts.mantissa){ *err = SNAN; return a.d; }
     if((b.parts.exp > MAX_NORM_DOUBLE_EXP) & b.parts.mantissa){ *err = SNAN; return b.d; }
     if((a.parts.exp > MAX_NORM_DOUBLE_EXP) | (b.parts.exp > MAX_NORM_DOUBLE_EXP)){ *err = QNAN; return a.d; }
-    long int v3, v4 = -(double_absolute_value(a.d) < double_absolute_value(b.d));
+    long int v3, v4 = -(double_absolute_value(a) < double_absolute_value(b));
   //moving addend with the biggest absolute value to position of 'a' argument
     a.luint ^= b.luint & v4; 
     b.luint ^= a.luint & v4; 
     a.luint ^= b.luint & v4; 
-  //added implicit one to mantissa representation
-    v4 = DOUBLE_MANTISSA_IMPLICIT_ONE | b.parts.mantissa;
   //shifting smalest (b) so that number now represented with the same exponent 
-    v4 >>= a.parts.exp - b.parts.exp; if ((a.parts.exp - b.parts.exp) > (1 + AMOUNT_OF_DOUBLE_MANTISSA_BITS)) { *err = UNDERFLOW; return a.d;}
-    v3 = ((DOUBLE_MANTISSA_IMPLICIT_ONE | a.parts.mantissa) ^ -a.parts.sign) + a.parts.sign
-       + ((v4) ^ -b.parts.sign) + b.parts.sign;
+    v4 = a.parts.exp - b.parts.exp; if (v4 > (1 + AMOUNT_OF_DOUBLE_MANTISSA_BITS)) { *err = UNDERFLOW; return a.d;}
+    v3 = (( DOUBLE_MANTISSA_IMPLICIT_ONE | a.parts.mantissa       ) ^ -a.parts.sign) + a.parts.sign
+       + (((DOUBLE_MANTISSA_IMPLICIT_ONE | a.parts.mantissa) >> v4) ^ -b.parts.sign) + b.parts.sign;
     v4 = *(long unsigned int*)&v3 >> ((sizeof(double) << 3) - 1);// sizeof(double) << 3 + 1 <==> AMOUNT_OF_DOUBLE_MANTISSA_BITS + AMOUNT_OF_DOUBLE_EXP_BITS 
     v3 = (v3 ^ -v4) + v4;
     v4 = v3 & DOUBLE_MANTISSA_IMPLICIT_ONE;
@@ -328,9 +325,7 @@ double safe_double_addition(dbits a, dbits b, error* err){
     *err = ternary(v3 & a.parts.sign & b.parts.sign, NEGATIVE_OVERFLOW, *err);
     *err = ternary(v3 & !(a.parts.sign & b.parts.sign), POSITIVE_OVERFLOW, *err);
     *err = ternary(a.parts.exp - b.parts.exp < 0, UNDERFLOW, *err); 
-    a.parts.exp = ternary(v4, a.parts.exp + b.parts.exp, a.parts.exp - b.parts.exp);
-    // b.luint = v4;
-    // *err = ternary(a.d != b.d, UNDERFLOW, *err);
+    a.parts.exp = ternary(v4, a.parts.exp + b.parts.exp, a.parts.exp - b.parts.exp);    
     return a.d;
 }
 

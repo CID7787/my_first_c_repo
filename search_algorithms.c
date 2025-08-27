@@ -77,7 +77,7 @@ double newton_method(double (*function)(double, error*), double (*derivative)(do
       if(*err != NO_ERROR){ return x; }
       double dx0 = (*derivative)(x0, err); if(*err != NO_ERROR) { return x; }
       double f0 = (*function)(x0, err); if (*err) { return x; }
-      x = x0 - safe_double_division(f0, derivative, err); // OVERFLOW, UNDERFLOW, DIVISION BY ZERO
+      x = x0 - safe_double_division(f0, dx0, err); // OVERFLOW, UNDERFLOW, DIVISION BY ZERO
       if(*err != NO_ERROR){ return x; }
   }
   return x;
