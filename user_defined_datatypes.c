@@ -35,6 +35,7 @@ typedef enum error_code{
   RETURN_REAL_PART,
   QNAN,
   SNAN,
+  INCOMPATIBLE,
   ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER
 }error;
 

@@ -5,6 +5,11 @@
   #include "bitwise_functions.c"
 #endif
 
+// FUNCTION: long int negation(long int)
+
+long int lint_negation(long int a){
+  return ~a + 1;
+}
 
 
 // FUNCTION: f_mod(double and dbits)
@@ -261,28 +266,32 @@ float safe_float_addition(fbits a, fbits b, error* err){
     if((a.parts.exp > MAX_NORM_FLOAT_EXP) & a.parts.mantissa){ *err = SNAN; return a.f; }
     if((b.parts.exp > MAX_NORM_FLOAT_EXP) & b.parts.mantissa){ *err = SNAN; return b.f; }
     if((a.parts.exp > MAX_NORM_FLOAT_EXP) | (b.parts.exp > MAX_NORM_FLOAT_EXP)){ *err = QNAN; return a.f; }
-    int v3, v4 = a.uint;
-  //moving addend with the biggest absolute value to position of 'a' argument
-    a.uint = ternary(double_absolute_value(a.f) > double_absolute_value(b.f), a.uint, b.uint);
-    b.uint = ternary(double_absolute_value(a.f) < double_absolute_value(b.f), *(unsigned int*)&v4, b.uint);
+    long int v3, v4 = -(double_absolute_value(a.f) < double_absolute_value(b.f));
+  //moivng addend with the biggest absolute value to position of 'a' argument
+    a.uint ^= b.uint & v4; 
+    b.uint ^= a.uint & v4; 
+    a.uint ^= b.uint & v4; 
   //added implicit one to mantissa representation
-    v3 = FLOAT_MANTISSA_IMPLICIT_ONE | a.parts.mantissa;
     v4 = FLOAT_MANTISSA_IMPLICIT_ONE | b.parts.mantissa;
   //shifting smalest (b) so that number now represented with the same exponent 
-    v4 >>= a.parts.exp - b.parts.exp;
-  //adding mantissa(a) and mantissa(b) and storing result into v3 variable
-    v3 = ternary(a.parts.sign, -v3, v3) + ternary(b.parts.sign, -v4, v4);
-    v3 = ternary(v3 < 0, -v3, v3);
-    v4 = v3 < FLOAT_MANTISSA_IMPLICIT_ONE;
-    b.parts.exp = ternary(v4, AMOUNT_OF_FLOAT_MANTISSA_BITS - how_many_bits_until_eldest_1(v3), v3 >> (AMOUNT_OF_FLOAT_MANTISSA_BITS + 1));
+    v4 >>= a.parts.exp - b.parts.exp; if ((a.parts.exp - b.parts.exp) > (1 + AMOUNT_OF_FLOAT_MANTISSA_BITS)) { *err = UNDERFLOW; return a.f;}
+    v3 = ((FLOAT_MANTISSA_IMPLICIT_ONE | a.parts.mantissa) ^ -a.parts.sign) + a.parts.sign
+       + ((v4) ^ -b.parts.sign) + b.parts.sign;
+    v4 = *(unsigned int*)&v3 >> ((sizeof(float) << 3) - 1);// sizeof(float) << 3 + 1 <==> AMOUNT_OF_FLOAT_MANTISSA_BITS + AMOUNT_OF_FLOAT_EXP_BITS 
+    v3 = (v3 ^ -v4) + v4;
+    v4 = v3 & FLOAT_MANTISSA_IMPLICIT_ONE;
+    b.parts.exp = ternary(v4, v3 >> (AMOUNT_OF_FLOAT_MANTISSA_BITS + 1), AMOUNT_OF_FLOAT_MANTISSA_BITS - how_many_bits_until_eldest_1(v3));
     v3 = ternary(v4, v3 << b.parts.exp, v3 >> b.parts.exp);
+    // v4 = a.luint
     a.parts.mantissa = v3;
   //v4 stores oveflow condition 
-    v4 = (a.parts.exp + b.parts.exp) > MAX_NORM_FLOAT_EXP; 
-    *err = ternary(v4 & a.parts.sign & b.parts.sign, NEGATIVE_OVERFLOW, *err);
-    *err = ternary(v4 & !(a.parts.sign & b.parts.sign), POSITIVE_OVERFLOW, *err);
+    v3 = (a.parts.exp + b.parts.exp) > MAX_NORM_FLOAT_EXP; 
+    *err = ternary(v3 & a.parts.sign & b.parts.sign, NEGATIVE_OVERFLOW, *err);
+    *err = ternary(v3 & !(a.parts.sign & b.parts.sign), POSITIVE_OVERFLOW, *err);
     *err = ternary(a.parts.exp - b.parts.exp < 0, UNDERFLOW, *err); 
-    a.parts.exp = ternary(v4, a.parts.exp - b.parts.exp, a.parts.exp + b.parts.exp);
+    a.parts.exp = ternary(v4, a.parts.exp + b.parts.exp, a.parts.exp - b.parts.exp);
+    // b.luint = v4;
+    // *err = ternary(a.d != b.d, UNDERFLOW, *err);
     return a.f;
 }
 
@@ -290,35 +299,39 @@ float safe_float_addition(fbits a, fbits b, error* err){
 // FUNCTION: double_addition(dbits, error*)
 
 double safe_double_addition(dbits a, dbits b, error* err){
-    //checking for errors
-      if(!err){ return a.d; }
-      if(*err){ return a.d; }
-      if((a.parts.exp > MAX_NORM_DOUBLE_EXP) & a.parts.mantissa){ *err = SNAN; return a.d; }
-      if((b.parts.exp > MAX_NORM_DOUBLE_EXP) & b.parts.mantissa){ *err = SNAN; return b.d; }
-      if((a.parts.exp > MAX_NORM_DOUBLE_EXP) | (b.parts.exp > MAX_NORM_FLOAT_EXP)){ *err = QNAN; return a.d; }
-      long int v3, v4 = a.luint;
-    //moving addend with the biggest absolute value to position of 'a' argument
-      a.luint = ternary(double_absolute_value(a.d) > double_absolute_value(b.d), a.luint, b.luint);
-      b.luint = ternary(double_absolute_value(a.d) < double_absolute_value(b.d), *(unsigned int*)&v4, b.luint);
-    //added implicit one to mantissa representation
-      v3 = DOUBLE_MANTISSA_IMPLICIT_ONE | a.parts.mantissa;
-      v4 = DOUBLE_MANTISSA_IMPLICIT_ONE | b.parts.mantissa;
-    //shifting smalest (b) so that number now represented with the same exponent 
-      v4 >>= a.parts.exp - b.parts.exp;
-    //adding mantissa(a) and mantissa(b) and storing result into v3 variable
-      v3 = ternary(a.parts.sign, -v3, v3) + ternary(b.parts.sign, -v4, v4);
-      v3 = ternary(v3 < 0, -v3, v3);
-      v4 = v3 < DOUBLE_MANTISSA_IMPLICIT_ONE;
-      b.parts.exp = ternary(v4, AMOUNT_OF_DOUBLE_MANTISSA_BITS - how_many_bits_until_eldest_1(v3), v3 >> (AMOUNT_OF_DOUBLE_MANTISSA_BITS + 1));
-      v3 = ternary(v4, v3 << b.parts.exp, v3 >> b.parts.exp);
-      a.parts.mantissa = v3;
-    //v4 stores oveflow condition 
-      v4 = (a.parts.exp + b.parts.exp) > MAX_NORM_DOUBLE_EXP; 
-      *err = ternary(v4 & a.parts.sign & b.parts.sign, NEGATIVE_OVERFLOW, *err);
-      *err = ternary(v4 & !(a.parts.sign & b.parts.sign), POSITIVE_OVERFLOW, *err);
-      *err = ternary(a.parts.exp - b.parts.exp < 0, UNDERFLOW, *err); 
-      a.parts.exp = ternary(v4, a.parts.exp - b.parts.exp, a.parts.exp + b.parts.exp);
-      return a.d;
+  //checking for errors
+    if(!err){ return a.d; }
+    if(*err){ return a.d; }
+    if((a.parts.exp > MAX_NORM_DOUBLE_EXP) & a.parts.mantissa){ *err = SNAN; return a.d; }
+    if((b.parts.exp > MAX_NORM_DOUBLE_EXP) & b.parts.mantissa){ *err = SNAN; return b.d; }
+    if((a.parts.exp > MAX_NORM_DOUBLE_EXP) | (b.parts.exp > MAX_NORM_DOUBLE_EXP)){ *err = QNAN; return a.d; }
+    long int v3, v4 = -(double_absolute_value(a.d) < double_absolute_value(b.d));
+  //moving addend with the biggest absolute value to position of 'a' argument
+    a.luint ^= b.luint & v4; 
+    b.luint ^= a.luint & v4; 
+    a.luint ^= b.luint & v4; 
+  //added implicit one to mantissa representation
+    v4 = DOUBLE_MANTISSA_IMPLICIT_ONE | b.parts.mantissa;
+  //shifting smalest (b) so that number now represented with the same exponent 
+    v4 >>= a.parts.exp - b.parts.exp; if ((a.parts.exp - b.parts.exp) > (1 + AMOUNT_OF_DOUBLE_MANTISSA_BITS)) { *err = UNDERFLOW; return a.d;}
+    v3 = ((DOUBLE_MANTISSA_IMPLICIT_ONE | a.parts.mantissa) ^ -a.parts.sign) + a.parts.sign
+       + ((v4) ^ -b.parts.sign) + b.parts.sign;
+    v4 = *(long unsigned int*)&v3 >> ((sizeof(double) << 3) - 1);// sizeof(double) << 3 + 1 <==> AMOUNT_OF_DOUBLE_MANTISSA_BITS + AMOUNT_OF_DOUBLE_EXP_BITS 
+    v3 = (v3 ^ -v4) + v4;
+    v4 = v3 & DOUBLE_MANTISSA_IMPLICIT_ONE;
+    b.parts.exp = ternary(v4, v3 >> (AMOUNT_OF_DOUBLE_MANTISSA_BITS + 1), AMOUNT_OF_DOUBLE_MANTISSA_BITS - how_many_bits_until_eldest_1(v3));
+    v3 = ternary(v4, v3 << b.parts.exp, v3 >> b.parts.exp);
+    // v4 = a.luint;
+    a.parts.mantissa = v3;
+  //v4 stores oveflow condition 
+    v3 = (a.parts.exp + b.parts.exp) > MAX_NORM_DOUBLE_EXP; 
+    *err = ternary(v3 & a.parts.sign & b.parts.sign, NEGATIVE_OVERFLOW, *err);
+    *err = ternary(v3 & !(a.parts.sign & b.parts.sign), POSITIVE_OVERFLOW, *err);
+    *err = ternary(a.parts.exp - b.parts.exp < 0, UNDERFLOW, *err); 
+    a.parts.exp = ternary(v4, a.parts.exp + b.parts.exp, a.parts.exp - b.parts.exp);
+    // b.luint = v4;
+    // *err = ternary(a.d != b.d, UNDERFLOW, *err);
+    return a.d;
 }
 
 
@@ -661,6 +674,109 @@ double exp_double2uint(double base, unsigned int power, error* err){// DESCRIPTI
   dbits base_dbits = (dbits){ .d = base};
   while(power-- && !(*err)){
     result = safe_double_multiplication_with_rounding(result_dbits, base_dbits, err);
+  }
+  return result;
+}
+
+
+// exponentiation of char_to_char(char, error*)
+
+char exp_char2char(char a, char b, error* err){
+  if(!err){ return a; }
+  char result = 1;
+  *err = else0(b < 0, UNDERFLOW);
+  while(b-- && !(*err)){
+      result = safe_char_multiplication(result, a, err);
+  }
+  return result;
+}
+
+
+// exponentiation of int_to_int(int, error*)
+
+int exp_int2int(int a, int b, error* err){
+  if(!err){ return a; }
+  int result = 1;
+  *err = else0(b < 0, UNDERFLOW);
+  while(b-- && !(*err)){ 
+      result = safe_int_multiplication(result, a, err);
+  }
+  return result;
+}
+
+// exponentiation of unsigned_int_to_unsigned_int(unsigned int, error*)
+
+unsigned int exp_uint2uint(unsigned int a, unsigned int b, error* err){
+  if(!err){ return a; }
+  unsigned int result = 1;
+  while(b-- && !(*err)){
+      result = safe_uint_multiplication(result, a, err);
+  }
+  return result;
+}
+
+
+// exponentiation of unsigned_char_to_unsigned_char(unsigned char, error*)
+
+unsigned char exp_uchar2uchar(unsigned char a, unsigned char b, error* err){
+  if(!err){ return a; }
+  unsigned char result = 1;
+  while(b-- && !(*err)){
+      result = safe_unsigned_char_multiplication(result, a, err);
+  }
+  return result;
+}
+
+
+// exponentiation of long_int_to_long_int(long int, error*)
+
+long int exp_lint2lint(long int a, long int b, error* err){
+  if(!err){ return a; }
+  long int result = 1;
+  *err = else0(b < 0, UNDERFLOW);
+  while(b-- && !(*err)){ 
+      result = safe_lint_multiplication(result, a, err);
+  }
+  return result;
+}
+
+// exponentiation of long_unsigned_int_to_long_unsigned_int(long unsigned int, error*)
+
+long unsigned int exp_luint2luint(long unsigned int a, long unsigned int b, error* err){
+  if(!err){ return a; }
+  long unsigned int result = 1;
+  while(b-- && !(*err)){
+      result = safe_luint_multiplication(result, a, err);
+  }
+  return result;
+}
+
+
+// exponentiation of float_to_float(float, error*)
+
+float exp_float2float(fbits a, fbits b, error* err){
+  if(!err){ return a.f; }
+  float result = 1; 
+  long int c = b.f;
+  fbits result_fbits = (fbits){ .f = result}; 
+  *err = else0(b.f - (float)c, ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER); 
+  while(b.f-- && !(*err)){
+      result = safe_float_multiplication_with_rounding(result_fbits, a, err);
+  }
+  return result;
+}
+
+
+// exponentiation of double_to_double(double, error*)
+
+double exp_double2double(dbits a, dbits b, error* err){
+  if(!err){ return a.d; }
+  double result = 1; 
+  long int c = b.d;
+  dbits result_dbits = (dbits){ .d = result}; 
+  *err = else0(b.d - (double)c, ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER); 
+  while(b.d-- && !(*err)){
+      result = safe_double_multiplication_with_rounding(result_dbits, a, err);
   }
   return result;
 }
