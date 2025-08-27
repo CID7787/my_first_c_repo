@@ -665,15 +665,14 @@ double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
 
 // FUNCTION: double_base_to_unsigned_int_power(double, unsigned int, error*)
 
-double exp_double2uint(double base, unsigned int power, error* err){// DESCRIPTION: base of type 'double' to power of type 'unsigned int'
-  if(!err){ return base; }
+double exp_double2uint(dbits base, unsigned int power, error* err){// DESCRIPTION: base of type 'double' to power of type 'unsigned int'
+  if(!err){ return base.d; }
   if (*err) { return 1.0; }
-  *err = else0(!base && !base, ZERO_TO_ZERO);   
+  *err = else0(!(base.d) && !(base.d), ZERO_TO_ZERO);   
   double result = 1.0;
   dbits result_dbits = (dbits){ .d = result};
-  dbits base_dbits = (dbits){ .d = base};
   while(power-- && !(*err)){
-    result = safe_double_multiplication_with_rounding(result_dbits, base_dbits, err);
+    result = safe_double_multiplication_with_rounding(result_dbits, base, err);
   }
   return result;
 }
