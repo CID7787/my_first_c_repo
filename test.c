@@ -10,7 +10,7 @@ void d_add_test(void){
         a.luint  = ((long unsigned int)rand() << sizeof_int_in_bits) | rand();
         b.luint  = ((long unsigned int)rand() << sizeof_int_in_bits) | rand();
         result.d = safe_double_addition(a, b, &err);
-        printf("%d::: %f   * \t %f = \t %f\n %064lb * %064lb = ", i, a.d, b.d , result.d, a.d, b.d);
+        printf("%d::: %g   + \t %g = \t %g\n %064lb * %064lb = ", i, a.d, b.d , result.d, a.d, b.d);
         printf("%064lb \nerror: %u\n", result.luint, err);
         
         err = NO_ERROR;  
@@ -22,12 +22,12 @@ void f_add_test(void){
     error err = NO_ERROR;
     srand(899);
     unsigned int sizeof_int_in_bits = sizeof(int) << 3;
-    for(int i = 0; i < 1000; ++i){
+    for(int i = 0; i < 100; ++i){
         a.uint  = ((long unsigned int)rand() << sizeof_int_in_bits) | rand();
         b.uint  = ((long unsigned int)rand() << sizeof_int_in_bits) | rand();
         result.f = safe_float_addition(a, b, &err);
-        printf("%d::: %f   * \t %f = \t %f\n %064lb * %064lb = ", i, a.f, b.f , result.f, a.f, b.f);
-        printf("%064lb \nerror: %u\n", result.luint, err);
+        printf("%d::: %f   + \t %f = \t %f\n", i, a.f, b.f , result.f);
+        printf("error: %u\n", err);
         
         err = NO_ERROR;  
     }

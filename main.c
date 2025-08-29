@@ -14,7 +14,7 @@
 
 int main(){ 
 
-    d_add_test();
+    f_add_test();
 
     return 0;
 }
