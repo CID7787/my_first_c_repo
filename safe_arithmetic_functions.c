@@ -256,28 +256,27 @@ float safe_float_addition(fbits a, fbits b, error* err){
     if((a.parts.exp > MAX_NORM_FLOAT_EXP) & a.parts.mantissa){ *err = SNAN; return a.f; }
     if((b.parts.exp > MAX_NORM_FLOAT_EXP) & b.parts.mantissa){ *err = SNAN; return b.f; }
     if((a.parts.exp > MAX_NORM_FLOAT_EXP) | (b.parts.exp > MAX_NORM_FLOAT_EXP)){ *err = QNAN; return a.f; }
-    long int v3, v4 = -(double_absolute_value((dbits){ .d = a.f}) < double_absolute_value((dbits){ .d = b.f}));
-  //moivng addend with the biggest absolute value to position of 'a' argument
+    unsigned int v3, v4 = -(double_absolute_value((dbits){ .d = a.f}) < double_absolute_value((dbits){ .d = a.f}));
+  //moving addend with the biggest absolute value to position of 'a' argument
     a.uint ^= b.uint & v4; 
     b.uint ^= a.uint & v4; 
     a.uint ^= b.uint & v4; 
   //shifting smalest (b) so that number now represented with the same exponent 
-    v4 = a.parts.exp - b.parts.exp; if (v4 > (1 + AMOUNT_OF_FLOAT_MANTISSA_BITS)) { *err = UNDERFLOW; return a.f; }
-    v3 = (( FLOAT_MANTISSA_IMPLICIT_ONE | a.parts.mantissa       ) ^ -a.parts.sign) + a.parts.sign
-       + (((FLOAT_MANTISSA_IMPLICIT_ONE | b.parts.mantissa) >> v4) ^ -b.parts.sign) + b.parts.sign;
-    v4 = *(long unsigned int*)&v3 >> ((sizeof(double) << 3) - 1);// sizeof(double) << 3 + 1 <==> AMOUNT_OF_DOUBLE_MANTISSA_BITS + AMOUNT_OF_DOUBLE_EXP_BITS 
-    v3 = (v3 ^ -v4) + v4;
-    v4 = v3 & FLOAT_MANTISSA_IMPLICIT_ONE;
-    b.parts.exp = ternary(v4, v3 >> (AMOUNT_OF_FLOAT_MANTISSA_BITS + 1), AMOUNT_OF_FLOAT_MANTISSA_BITS - how_many_bits_until_eldest_1(v3));
-    v3 = ternary(v4, v3 << b.parts.exp, v3 >> b.parts.exp);
-    // v4 = a.luint;
+    b.parts.exp = a.parts.exp - b.parts.exp; if (b.parts.exp > (1 + AMOUNT_OF_FLOAT_MANTISSA_BITS)) { *err = UNDERFLOW; return a.f; }
+    b.parts.sign ^= a.parts.sign; // if a.sign != b.sign
+    v3 =    (FLOAT_MANTISSA_IMPLICIT_ONE | a.parts.mantissa)
+       + ( ((FLOAT_MANTISSA_IMPLICIT_ONE | b.parts.mantissa) >> b.parts.exp) ^ -b.parts.sign) + b.parts.sign;
+    b.parts.exp = -!!(v3 & (FLOAT_MANTISSA_IMPLICIT_ONE << 1)); // 1 if the result of the sum overflows the normalized mantissa value, else 0
+    v3 >>= -b.parts.exp; // renormalization from bigger than normal number
+    while(!(v3 & FLOAT_SIGN_AND_EXP_MASK)){ // v3 < FLOAT_MANTISSA_IMPLICIT_ONE
+        v3 <<= 1; ++b.parts.exp;  // renormalization from smaller than normal number
+    }
     a.parts.mantissa = v3;
-  //v4 stores oveflow condition 
-    v3 = (a.parts.exp + b.parts.exp) > MAX_NORM_DOUBLE_EXP; 
-    *err = ternary(v3 & a.parts.sign & b.parts.sign, NEGATIVE_OVERFLOW, *err);
-    *err = ternary(v3 & !(a.parts.sign & b.parts.sign), POSITIVE_OVERFLOW, *err);
+    a.parts.exp -= b.parts.exp;
+    v4 = (a.parts.exp + b.parts.exp) > MAX_NORM_FLOAT_EXP; 
+    *err = ternary(v4 & a.parts.sign & b.parts.sign, NEGATIVE_OVERFLOW, *err);
+    *err = ternary(v4 & !(a.parts.sign & b.parts.sign), POSITIVE_OVERFLOW, *err);
     *err = ternary(a.parts.exp - b.parts.exp < 0, UNDERFLOW, *err); 
-    a.parts.exp = ternary(v4, a.parts.exp + b.parts.exp, a.parts.exp - b.parts.exp);    
     return a.f;
 }
 
@@ -291,27 +290,23 @@ double safe_double_addition(dbits a, dbits b, error* err){
     if((a.parts.exp > MAX_NORM_DOUBLE_EXP) & a.parts.mantissa){ *err = SNAN; return a.d; }
     if((b.parts.exp > MAX_NORM_DOUBLE_EXP) & b.parts.mantissa){ *err = SNAN; return b.d; }
     if((a.parts.exp > MAX_NORM_DOUBLE_EXP) | (b.parts.exp > MAX_NORM_DOUBLE_EXP)){ *err = QNAN; return a.d; }
-    long int v3, v4 = -(double_absolute_value(a) < double_absolute_value(b));
+    long unsigned int v3, v4 = -(double_absolute_value(a) < double_absolute_value(b));
   //moving addend with the biggest absolute value to position of 'a' argument
     a.luint ^= b.luint & v4; 
     b.luint ^= a.luint & v4; 
     a.luint ^= b.luint & v4; 
   //shifting smalest (b) so that number now represented with the same exponent 
-    v4 = a.parts.exp - b.parts.exp; if (v4 > (1 + AMOUNT_OF_DOUBLE_MANTISSA_BITS)) { *err = UNDERFLOW; return a.d;}
-    v3   =    DOUBLE_MANTISSA_IMPLICIT_ONE | a.parts.mantissa;
-    v3 += ( ((DOUBLE_MANTISSA_IMPLICIT_ONE | b.parts.mantissa) >> v4) ^ -(b.parts.sign & !a.parts.sign) ) + (b.parts.sign & !a.parts.sign);
-    b.parts.exp = 0;
-    v4 = !(v3 & ~(DOUBLE_MANTISSA_IMPLICIT_ONE - 1)); // v3 < DOUBLE_MANTISSA_IMPLICIT_ONE
-    while(!(DOUBLE_MANTISSA_IMPLICIT_ONE & v3) & v4){ 
-        v3 <<= 1; b.parts.exp += 1; 
+    b.parts.exp = a.parts.exp - b.parts.exp; if (b.parts.exp > (1 + AMOUNT_OF_DOUBLE_MANTISSA_BITS)) { *err = UNDERFLOW; return a.d;}
+    b.parts.sign ^= a.parts.sign; // if a.sign != b.sign
+    v3 =    (DOUBLE_MANTISSA_IMPLICIT_ONE | a.parts.mantissa)
+       + ( ((DOUBLE_MANTISSA_IMPLICIT_ONE | b.parts.mantissa) >> b.parts.exp) ^ -b.parts.sign) + b.parts.sign;
+    b.parts.exp = -!!(v3 & (DOUBLE_MANTISSA_IMPLICIT_ONE << 1)); // 1 if the result of the sum overflows the normalized mantissa value, else 0
+    v3 >>= -b.parts.exp; // renormalization from bigger than normal number
+    while(!(v3 & DOUBLE_SIGN_AND_EXP_MASK)){ // v3 < DOUBLE_MANTISSA_IMPLICIT_ONE
+        v3 <<= 1; ++b.parts.exp;  // renormalization from smaller than normal number
     }
-    v4 = !v4;
-    b.parts.exp = (v3 >> (AMOUNT_OF_DOUBLE_MANTISSA_BITS + 1)) & -v4; 
-    v3 >>= b.parts.exp & -v4; 
-    // b.parts.exp = ternary(v4, v3 >> (AMOUNT_OF_DOUBLE_MANTISSA_BITS + 1), AMOUNT_OF_DOUBLE_MANTISSA_BITS - how_many_bits_until_eldest_1(v3));
-    // v3 = ternary(v4, v3 << b.parts.exp, v3 >> b.parts.exp);
     a.parts.mantissa = v3;
-    a.parts.exp = ternary(v4, a.parts.exp + b.parts.exp, a.parts.exp - b.parts.exp);
+    a.parts.exp -= b.parts.exp;
     v4 = (a.parts.exp + b.parts.exp) > MAX_NORM_DOUBLE_EXP; 
     *err = ternary(v4 & a.parts.sign & b.parts.sign, NEGATIVE_OVERFLOW, *err);
     *err = ternary(v4 & !(a.parts.sign & b.parts.sign), POSITIVE_OVERFLOW, *err);
@@ -469,7 +464,7 @@ float floating_division_by_2(float b) { // TODO: function works incorrect
   int a = *((int*)&b);
   int exp = a & mask1;
   int number_without_exp = a & (~mask1);
-  if (eldest_bit_is_1(number_without_exp)){ // this eldest_bit_is_1 should be -> eldest_bit_is_0
+  if (!eldest_bit_is_1(number_without_exp)){
     if (last_bit_is_1(number_without_exp)){
       number_without_exp = uint_multiplication(number_without_exp, 5);
       exp = ((exp >> 23) - 1) << 23;
@@ -627,25 +622,45 @@ dbits safe_double_mantissa_multiplication_with_rounding(dbits a, dbits b){
   a.parts.exp = b.parts.exp;
   return a;
 }
+/* COMMENTS TO PROCESS OF BUILDING long_mantissa_multiplication FUNCTION
+We are shifting the number by 27 to the left so that it becomes smaller
+There COULD be any number, but there SHOULD only be 1 number.
+Why 32?
+Because any number larger than 32 will not fit into long unsigned int when we multiply 2 of them together.
+N_sign_bits + N_exp_bits - 1
+seeeeeee eeeemmmm mmmmmmmm mmmmmmmm  mmmmmmmm mmmmmmmm mmmmmmmm mmmmmmmm
+00000000 00011111 11111111 11111111  11111111 11111111 11111111 11111111 (a)
+=
+00000000 00000000 00000000 00000000  11111111 11111111 11111111 11111111 (right)
++
+00000000 00000001 11111111 11111111  00000000 00000000 00000000 00000000 (left)
+
+00000000 00000001 11111111 11111111
+right * right = x < 64
+right_result = right * right == (a & mask) * (b & mask)
+left = 00000000 00000001 11111111 11111111 << 32
+left * left = 00000000 00000001 11111111 11111111 * 00000000 00000001 11111111 11111111 << 64
+result_left = (left >> 32) * (left >> 32) == (a >> 32) * (b >> 32)
+a * b = (a_left + a_right) * (b_left + b_right) = a_left * (b_left + b_right) + a_right * (b_left + b_right) == (a_left * b_left) + (a_left * b_right + a_right * b_left) + (a_right * b_right)
+a * b = left_result right_result + (a_left * b_right + a_right * b_left)
+a_left * b_right = (00000000 0000000a aaaaaaaa aaaaaaaa * bbbbbbbb bbbbbbbb bbbbbbbb bbbbbbbb) << 32
+a_right * b_left = (aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa * 00000000 0000000b bbbbbbbb bbbbbbbb) << 32
+*/
 
 double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
-  // check whether or not one of argument is equal to 0
-  if(!a.d | !b.d){ return 0; } 
-  // check whether or not a is NaN
-  if((a.parts.exp > MAX_NORM_DOUBLE_EXP) && a.parts.mantissa){ return a.d; }
-  // check whether or not b is NaN
-  if((b.parts.exp > MAX_NORM_DOUBLE_EXP) && b.parts.mantissa){ return b.d; }
+  if(!a.d | !b.d){ return 0; }// check whether or not one of argument is equal to 0
+  if((a.parts.exp > MAX_NORM_DOUBLE_EXP) && a.parts.mantissa){ return a.d; }// check whether or not a is NaN
+  if((b.parts.exp > MAX_NORM_DOUBLE_EXP) && b.parts.mantissa){ return b.d; }// check whether or not b is NaN
   if(!err){ return a.d; }
   dbits result = safe_double_mantissa_multiplication_with_rounding(a, b);
   int exponent = a.parts.exp + b.parts.exp + result.parts.exp - DOUBLE_EXP_BIAS;
   result.parts.sign = a.parts.sign ^ b.parts.sign;
   // check whether or not exponent value bigger than MAX_DOUBLE_EXPONENT
   *err = ternary(exponent < 0, UNDERFLOW, *err);
-  *err = ternary(exponent > MAX_NORM_DOUBLE_EXP, ternary(result.parts.sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err); if(*err){ return result.d; }
+  *err = ternary(exponent > MAX_NORM_DOUBLE_EXP, ternary(result.parts.sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err);
   result.parts.exp = exponent;
   return result.d;
 }
-
 
 
 // FUNCTION: double_base_to_unsigned_int_power(double, unsigned int, error*)

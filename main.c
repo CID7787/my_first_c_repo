@@ -9,9 +9,12 @@
 #include "logical_functions_of_decision.c"
 #include "bitwise_functions.c"
 #include "safe_arithmetic_functions.c"
+#include "additional_functions.c"
+#include "test.c"
 
 int main(){ 
-    error err = NO_ERROR;
-    printf("%f", safe_double_addition((dbits){ .d = 4.76}, (dbits){ .d = -39.23}, &err));
+
+    d_add_test();
+
     return 0;
 }

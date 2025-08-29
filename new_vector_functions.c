@@ -173,3 +173,110 @@ vecN vectors_multiplication_via_dot_product(vecN v1, vecN v2){
     }
    return result; 
 }
+
+vecN vector_exponentiation(vecN a, vecN b){
+    vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type)), NO_ERROR};
+    while(a.n--){
+        switch(a.type){
+            case CHAR: { 
+                switch(b.type){
+                    case CHAR:   r.elements.c[a.n] = exp_char2char(a.elements.c[a.n], b.elements.c[a.n], &r.v_error); break;
+                    case UCHAR:  r.elements.c[a.n] = exp_char2uchar(a.elements.c[a.n], b.elements.uc[a.n], &r.v_error); break;// TODO
+                    case INT:    r.elements.c[a.n] = exp_char2int(a.elements.c[a.n], b.elements.i[a.n], &r.v_error); break;// TODO
+                    case UINT:   r.elements.c[a.n] = exp_char2uint(a.elements.c[a.n], b.elements.ui[a.n], &r.v_error); break;// TODO
+                    case LINT:   r.elements.c[a.n] = exp_char2lint(a.elements.c[a.n], b.elements.li[a.n], &r.v_error); break;// TODO
+                    case LUINT:  r.elements.c[a.n] = exp_char2luint(a.elements.c[a.n], b.elements.lui[a.n], &r.v_error); break;// TODO;
+                    case FLOAT:  r.elements.c[a.n] = exp_char2float(a.elements.c[a.n], b.elements.f[a.n], &r.v_error); break;// TODO
+                    case DOUBLE: r.elements.c[a.n] = exp_char2double(a.elements.c[a.n], b.elements.d[a.n], &r.v_error); break;// TODO
+                }
+            break; }
+            case UCHAR:
+                switch(b.type){
+                    case CHAR:   r.elements.uc[a.n] = exp_uchar2char(a.elements.uc[a.n], b.elements.c[a.n], &r.v_error); break; // TODO
+                    case UCHAR:  r.elements.uc[a.n] = exp_uchar2uchar(a.elements.uc[a.n], b.elements.uc[a.n], &r.v_error); break;
+                    case INT:    r.elements.uc[a.n] = exp_uchar2int(a.elements.uc[a.n], b.elements.i[a.n], &r.v_error); break;// TODO
+                    case UINT:   r.elements.uc[a.n] = exp_uchar2uint(a.elements.uc[a.n], b.elements.ui[a.n], &r.v_error); break;// TODO
+                    case LINT:   r.elements.uc[a.n] = exp_uchar2lint(a.elements.uc[a.n], b.elements.li[a.n], &r.v_error); break;// TODO
+                    case LUINT:  r.elements.uc[a.n] = exp_uchar2luint(a.elements.uc[a.n], b.elements.lui[a.n], &r.v_error); break;// TODO
+                    case FLOAT:  r.elements.uc[a.n] = exp_uchar2float(a.elements.uc[a.n], b.elements.f[a.n], &r.v_error); break;// TODO
+                    case DOUBLE: r.elements.uc[a.n] = exp_uchar2double(a.elements.uc[a.n], b.elements.d[a.n], &r.v_error); break;// TODO
+                }
+
+            break;
+            case INT:   
+                switch(b.type){
+                    case CHAR:   r.elements.i[a.n] = exp_int2char(a.elements.i[a.n], b.elements.c[a.n], &r.v_error); break; // TODO
+                    case UCHAR:  r.elements.i[a.n] = exp_int2uchar(a.elements.i[a.n], b.elements.uc[a.n], &r.v_error); break; // TODO
+                    case INT:    r.elements.i[a.n] = exp_int2int(a.elements.i[a.n], b.elements.i[a.n], &r.v_error); break; 
+                    case UINT:   r.elements.i[a.n] = exp_int2uint(a.elements.i[a.n], b.elements.ui[a.n], &r.v_error); break; // TODO
+                    case LINT:   r.elements.i[a.n] = exp_int2lint(a.elements.i[a.n], b.elements.li[a.n], &r.v_error); break; // TODO
+                    case LUINT:  r.elements.i[a.n] = exp_int2luint(a.elements.i[a.n], b.elements.lui[a.n], &r.v_error); break; // TODO
+                    case FLOAT:  r.elements.i[a.n] = exp_int2float(a.elements.i[a.n], b.elements.f[a.n], &r.v_error); break; // TODO
+                    case DOUBLE: r.elements.i[a.n] = exp_int2double(a.elements.i[a.n], b.elements.d[a.n], &r.v_error); break; // TODO
+                }
+            break;
+            case UINT: 
+                switch(b.type){ 
+                    case CHAR:   r.elements.ui[a.n] = exp_uint2char(a.elements.ui[a.n], b.elements.c[a.n], &r.v_error); break;// TODO
+                    case UCHAR:  r.elements.ui[a.n] = exp_uint2uchar(a.elements.ui[a.n], b.elements.uc[a.n], &r.v_error); break;// TODO
+                    case INT:    r.elements.ui[a.n] = exp_uint2int(a.elements.ui[a.n], b.elements.i[a.n], &r.v_error); break;// TODO
+                    case UINT:   r.elements.ui[a.n] = exp_uint2uint(a.elements.ui[a.n], b.elements.ui[a.n], &r.v_error); break;
+                    case LINT:   r.elements.ui[a.n] = exp_uint2lint(a.elements.ui[a.n], b.elements.li[a.n], &r.v_error); break;// TODO
+                    case LUINT:  r.elements.ui[a.n] = exp_uint2luint(a.elements.ui[a.n], b.elements.lui[a.n], &r.v_error); break;// TODO
+                    case FLOAT:  r.elements.ui[a.n] = exp_uint2float(a.elements.ui[a.n], b.elements.f[a.n], &r.v_error); break;// TODO
+                    case DOUBLE: r.elements.ui[a.n] = exp_uint2double(a.elements.ui[a.n], b.elements.d[a.n], &r.v_error); break;// TODO
+                }
+            break;
+            case LINT: 
+                switch(b.type){
+                    case CHAR:   r.elements.li[a.n] = exp_lint2char(a.elements.li[a.n], b.elements.c[a.n], &r.v_error); break;// TODO
+                    case UCHAR:  r.elements.li[a.n] = exp_lint2uchar(a.elements.li[a.n], b.elements.uc[a.n], &r.v_error); break;// TODO
+                    case INT:    r.elements.li[a.n] = exp_lint2int(a.elements.li[a.n], b.elements.i[a.n], &r.v_error); break;// TODO
+                    case UINT:   r.elements.li[a.n] = exp_lint2uint(a.elements.li[a.n], b.elements.ui[a.n], &r.v_error); break;// TODO
+                    case LINT:   r.elements.li[a.n] = exp_lint2lint(a.elements.li[a.n], b.elements.li[a.n], &r.v_error); break;
+                    case LUINT:  r.elements.li[a.n] = exp_lint2luint(a.elements.li[a.n], b.elements.lui[a.n], &r.v_error); break;// TODO
+                    case FLOAT:  r.elements.li[a.n] = exp_lint2float(a.elements.li[a.n], b.elements.f[a.n], &r.v_error); break;// TODO
+                    case DOUBLE: r.elements.li[a.n] = exp_lint2double(a.elements.li[a.n], b.elements.d[a.n], &r.v_error); break;// TODO
+                }
+            break;
+            case LUINT: 
+                switch(b.type){
+                    case CHAR:   r.elements.lui[a.n] = exp_luint2char(a.elements.lui[a.n], b.elements.c[a.n], &r.v_error); break;// TODO
+                    case UCHAR:  r.elements.lui[a.n] = exp_luint2uchar(a.elements.lui[a.n], b.elements.uc[a.n], &r.v_error); break;// TODO
+                    case INT:    r.elements.lui[a.n] = exp_luint2int(a.elements.lui[a.n], b.elements.i[a.n], &r.v_error); break;// TODO
+                    case UINT:   r.elements.lui[a.n] = exp_luint2uint(a.elements.lui[a.n], b.elements.ui[a.n], &r.v_error); break;// TODO
+                    case LINT:   r.elements.lui[a.n] = exp_luint2lint(a.elements.lui[a.n], b.elements.li[a.n], &r.v_error); break;// TODO
+                    case LUINT:  r.elements.lui[a.n] = exp_luint2luint(a.elements.lui[a.n], b.elements.lui[a.n], &r.v_error); break;
+                    case FLOAT:  r.elements.lui[a.n] = exp_luint2float(a.elements.lui[a.n], b.elements.f[a.n], &r.v_error); break;// TODO
+                    case DOUBLE: r.elements.lui[a.n] = exp_luint2double(a.elements.lui[a.n], b.elements.d[a.n], &r.v_error); break;// TODO
+                }
+            break;
+            case FLOAT: 
+                switch(b.type){
+                    case CHAR:   r.elements.f[a.n] = exp_float2char((fbits){ .f = a.elements.f[a.n] }, b.elements.c[a.n], &r.v_error); break;// TOODO
+                    case UCHAR:  r.elements.f[a.n] = exp_float2uchar((fbits){ .f = a.elements.f[a.n] }, b.elements.uc[a.n], &r.v_error); break;// TOODO
+                    case INT:    r.elements.f[a.n] = exp_float2int((fbits){ .f = a.elements.f[a.n] }, b.elements.i[a.n], &r.v_error); break;// TOODO
+                    case UINT:   r.elements.f[a.n] = exp_float2uint((fbits){ .f = a.elements.f[a.n] }, b.elements.ui[a.n], &r.v_error); break;// TOODO
+                    case LINT:   r.elements.f[a.n] = exp_float2lint((fbits){ .f = a.elements.f[a.n] }, b.elements.li[a.n], &r.v_error); break;// TOODO
+                    case LUINT:  r.elements.f[a.n] = exp_float2luint((fbits){ .f = a.elements.f[a.n] }, b.elements.lui[a.n], &r.v_error); break;// TOODO
+                    case FLOAT:  r.elements.f[a.n] = exp_float2float((fbits){ .f = a.elements.f[a.n] }, (fbits){ .f = b.elements.f[a.n] }, &r.v_error); break;
+                    case DOUBLE: r.elements.f[a.n] = exp_float2double((fbits){ .f = a.elements.f[a.n] }, b.elements.d[a.n], &r.v_error); break;// TOODO
+                }
+            break;
+            case DOUBLE:
+                switch(b.type){
+                    case CHAR:   r.elements.d[a.n] = exp_double2char((dbits){ .d = a.elements.d[a.n] }, b.elements.c[a.n], &r.v_error); break;// TODO
+                    case UCHAR:  r.elements.d[a.n] = exp_double2uchar((dbits){ .d = a.elements.d[a.n] }, b.elements.uc[a.n], &r.v_error); break;// TODO
+                    case INT:    r.elements.d[a.n] = exp_double2int((dbits){ .d = a.elements.d[a.n] }, b.elements.i[a.n], &r.v_error); break;// TODO
+                    case UINT:   r.elements.d[a.n] = exp_double2uint((dbits){ .d = a.elements.d[a.n] }, b.elements.ui[a.n], &r.v_error); break;// TODO
+                    case LINT:   r.elements.d[a.n] = exp_double2lint((dbits){ .d = a.elements.d[a.n] }, b.elements.li[a.n], &r.v_error); break;// TODO
+                    case LUINT:  r.elements.d[a.n] = exp_double2luint((dbits){ .d = a.elements.d[a.n] }, b.elements.lui[a.n], &r.v_error); break;// TODO
+                    case FLOAT:  r.elements.d[a.n] = exp_double2float((dbits){ .d = a.elements.d[a.n] }, b.elements.f[a.n], &r.v_error); break;// TODO
+                    case DOUBLE: r.elements.d[a.n] = exp_double2double((dbits){ .d = a.elements.d[a.n] }, (dbits){ .d = b.elements.d[a.n] }, &r.v_error); break;
+                }
+            break; 
+        }
+
+    }
+    return r;
+}
