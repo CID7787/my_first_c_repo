@@ -33,18 +33,13 @@ void* conditional_operator(int cond, void* (*true_cond_func)(), void* (*false_co
   // return result;
 }
   
-int absolute_value(int condition){ 
-    int the_original_value = condition;
-    condition = *((unsigned int*)&condition) >> ((sizeof(int) << 3) - 1);// condition if last bit of arg is 1(if number is negative) 
-    return (1 - (condition << 1)) * the_original_value;
-}
   
 typedef enum function_state{
  NO_PROBLEM = 0,
  ROUNDING,
  F_OVERFLOW,
  F_UNDERFLOW,
-}error;
+}f_error;
     
 
 unsigned int dist_uint(unsigned int a, unsigned int b){
@@ -57,7 +52,7 @@ unsigned int dist_uint(unsigned int a, unsigned int b){
 }
   
 
-int integer_binary_search_v2(int num, int (*func)(int, error*), int left, int right, int precision, error* err) { 
+int integer_binary_search_v2(int num, int (*func)(int, f_error*), int left, int right, int precision, f_error* err) { 
   if(!err){ return num; }
   if(left > right) { swap_in_place(&left, &right); }
   int sum, middle, var;
@@ -84,7 +79,7 @@ int integer_binary_search_v2(int num, int (*func)(int, error*), int left, int ri
   return middle;
 }
 
-int integer_binary_search(int num, int (*func)(int, error*), int start, unsigned int size, unsigned int precision, error* err){
+int integer_binary_search(int num, int (*func)(int, f_error*), int start, unsigned int size, unsigned int precision, f_error* err){
   if(!err){ return num; }
   int middle, func_of_middle, func_of_start, dis_num_to_func_of_start, func_of_end, dis_num_to_func_of_end;
   while(1){

@@ -33,6 +33,7 @@ typedef enum error_code{
   POSITIVE_INFINITY,
   NEGATIVE_INFINITY,
   RETURN_REAL_PART,
+  NULL_POINTER,
   QNAN,
   SNAN,
   INCOMPATIBLE,
@@ -106,6 +107,7 @@ union POINTERS {
 struct vector_n {
   datatype type;
   unsigned int n; // this "n" is amount of elements
+  unsigned int element_size;  
   datapointer elements;
   error v_error;
   //  type       n               elements

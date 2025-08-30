@@ -1,39 +1,103 @@
+#ifndef headerfile
+    #include <stdint.h>
+    #include <stdlib.h>
+    #include "user_defined_datatypes.c"
+    #include "constants.c"
+    #include "logical_functions_of_decision.c"
+    #include "bitwise_functions.c"
+    #include "safe_arithmetic_functions.c"
+#endif
 
 
 
-void d_add_test(void){
-    dbits a, b, result;
-    error err = NO_ERROR;
-    srand(899);
-    unsigned int sizeof_int_in_bits = sizeof(int) << 3;
-    for(int i = 0; i < 1000; ++i){
-        a.luint  = ((long unsigned int)rand() << sizeof_int_in_bits) | rand();
-        b.luint  = ((long unsigned int)rand() << sizeof_int_in_bits) | rand();
-        result.d = safe_double_addition(a, b, &err);
-        printf("%d::: %g   + \t %g = \t %g\n %064lb * %064lb = ", i, a.d, b.d , result.d, a.d, b.d);
-        printf("%064lb \nerror: %u\n", result.luint, err);
-        
-        err = NO_ERROR;  
-    }
-}
+// 1. You want to preserve type
+// 2. You want to preserve value
 
-void f_add_test(void){
-    fbits a, b, result;
-    error err = NO_ERROR;
-    srand(899);
-    unsigned int sizeof_int_in_bits = sizeof(int) << 3;
-    for(int i = 0; i < 100; ++i){
-        a.uint  = ((long unsigned int)rand() << sizeof_int_in_bits) | rand();
-        b.uint  = ((long unsigned int)rand() << sizeof_int_in_bits) | rand();
-        result.f = safe_float_addition(a, b, &err);
-        printf("%d::: %f   + \t %f = \t %f\n", i, a.f, b.f , result.f);
-        printf("error: %u\n", err);
-        
-        err = NO_ERROR;  
-    }
-}
-
+// 1. You want to bring both to a smaller one 
+// 2. You want to bring both to a larger one
 /*
- nan   *         3.32825e-294 =          9.22337e+18
- 0 00000001111 11111111000101010110010010001011000011010001110111111001100 * 10101011110111001110110101100100101000010001000 = 11111110011011100100111001000001001000000111100
+
+if (a.type != DOUBLE
+&& a.type != FLOAT
+&& b.type != DOUBLE
+&& b.type != FLOAT) {
+    r.element_size = max(a.element_size, b.element_size);
+    if (r.element_size == a.element_size) { recast(b, a.type); }
+    if (r.element_size == b.element_size) { recast(a, b.type); }
+    }
 */
+
+union one_byte_all_types{
+    int8_t i;
+    uint8_t ui;
+};
+union four_byte_all_types{
+    int32_t i;
+    uint32_t ui;
+    float f;
+};
+union eight_byte_all_types{
+    int64_t i;
+    uint64_t ui;
+    double d;
+};
+typedef union variable_all_types{
+    union one_byte_all_types b1;
+    union four_byte_all_types b4;
+    union eight_byte_all_types b8;
+    double d;
+    long int li;
+    long unsigned int lui;
+    char c;
+    float f;
+    int i;
+    unsigned int ui;
+} all;
+
+union POINTERS_TO_ALL_DATA_TYPES {
+    union one_byte_all_types* b1;
+    union four_byte_all* b4;
+    union eight_byte_all* b8;
+} typedef alldatapointer;
+
+
+struct vector_n {
+    datatype type;
+    unsigned int n;
+    unsigned int element_size;
+    all* elements;
+    error v_error;
+} typedef vecN;
+
+vecN vector_exponentiation(vecN a, vecN b){
+    vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type)), NO_ERROR};
+    while(a.n-- && !r.v_error){
+        switch(a.type){
+            case DOUBLE:
+                switch(b.type){
+                    case DOUBLE: break;
+                    case FLOAT: break;
+                    default: break;
+                }
+            case FLOAT:
+                switch(b.type){
+                    case DOUBLE: break;
+                    case FLOAT: break;
+                    default: break;
+                }
+                default:
+                switch(b.type){
+                    case DOUBLE: break;
+                    case FLOAT: break;
+                    default:
+                    // integer types
+                        r.element_size = max(a.element_size, b.element_size);
+                        if (r.element_size == a.element_size) { recast(b, a.type); }
+                        if (r.element_size == b.element_size) { recast(a, b.type); }
+                        break;
+                }
+        }  
+        
+    }
+}
+
