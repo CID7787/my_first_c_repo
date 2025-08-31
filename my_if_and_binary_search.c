@@ -27,10 +27,10 @@ void* conditional_operator(int cond, void* (*true_cond_func)(), void* (*false_co
   void* f = false_cond_func;
   int big = cond << (sizeof(int) << 1); // 0/0010000....
   int r = (~0) >> big; // 00000000... | 11111111......
-  // void* result = (r & t) | (r & f); // leave only one data pointer according to IF/OR logic, based on cond value
-  // void* (*resulting_function)() = (void* (*)())result; // convert back to the function pointer
+  void* result = (r & t) | (r & f); // leave only one data pointer according to IF/OR logic, based on cond value
+  void* (*resulting_function)() = (void* (*)())result; // convert back to the function pointer
   resulting_function(); // call a function
-  // return result;
+  return result;
 }
   
   

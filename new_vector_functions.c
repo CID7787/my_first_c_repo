@@ -1,6 +1,7 @@
 #ifndef headerfile
     #include <stdio.h>
     #include <stdlib.h>
+    #include <stdint.h>
     #include "user_defined_datatypes.c"
     #include "constants.c"
     #include "logical_functions_of_decision.c"
@@ -10,20 +11,21 @@
 
 unsigned int amount_of_type_bytes(datatype t){
     switch(t) {
-      case CHAR: return sizeof(char); break;
-      case UCHAR: return sizeof(unsigned char); break;
-      case INT: return sizeof(int); break;
-      case UINT: return sizeof(unsigned int); break;
+      case CHAR: return sizeof(int8_t); break;
+      case UCHAR: return sizeof(int8_t); break;
+      case INT: return sizeof(int32_t); break;
+      case UINT: return sizeof(int32_t); break;
       case FLOAT: return sizeof(float); break;
-      case LINT: return sizeof(long int); break;
-      case LUINT: return sizeof(long unsigned int); break;
+      case LINT: return sizeof(int64_t); break;
+      case LUINT: return sizeof(int64_t); break;
       case DOUBLE: return sizeof(double); break;
       default: return sizeof(datatype);
     }
 }
 
 vecN vector_creation(datatype type, unsigned int n, datapointer elements){
-    vecN r = {type, n, malloc(n * amount_of_type_bytes(type))};
+    unsigned int r_element_size = amount_of_type_bytes(type);
+    vecN r = {type, n, malloc(n * r_element_size), NO_ERROR};
     while(n--){
         switch(type){
             case CHAR:   r.elements.c[n]  = elements.c[n]; break;
@@ -40,14 +42,14 @@ vecN vector_creation(datatype type, unsigned int n, datapointer elements){
 }   
 
 vecN vector_negation(vecN a){
-    vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type)), a.v_error};
-    while(a.n--){
+    vecN r = {a.type, a.n, malloc(a.n * a.element_size), NO_ERROR};
+    while(a.n-- ){
         switch(r.type){
             case CHAR: 
                 r.v_error = ternary(a.elements.c[a.n] == MIN_CHAR, POSITIVE_OVERFLOW, r.v_error); 
-                r.elements.c[a.n] = -a.elements.c[a.n]; 
+                r.elements.c[a.n] = -a.elements.c[a.n];
             break;
-            case UCHAR: 
+            case UCHAR:
                 r.elements.uc[a.n] = a.elements.uc[a.n]; 
             break;
             case INT: 
