@@ -24,75 +24,6 @@ double my_fmod(dbits x, dbits y){ // @TODO: add error handling, maybe in v6 or a
     return x.d;
 }
 
-double my_fmod_v1(double x, double y){
-    long unsigned int n = 1;
-    long unsigned int mask = (~n) >> 1;// 011111.....111111
-    long unsigned int temp = (*(long unsigned int*)&y) & mask;
-    y = *(double*)&temp;
-    temp = ~mask & (*(long unsigned int*)&x);
-    long unsigned int positive_luint_x = (*(long unsigned int*)&x) & mask;
-    x = *(double*)&positive_luint_x;
-    while((y * (double)n) <= x){ ++n; }
-    x -= ((double)(--n))*y;
-    n = (*(long unsigned int*)&x) | temp;
-    return *(double*)&n;
-}
-
-
-double my_fmod_v2(double x, double y){
-    long unsigned int n = 1;
-    long unsigned int mask = (~n) >> 1;
-    v1.d = y;
-    v1.luint &= mask;
-    y = v1.d;
-    v1.d = x;
-
-    n = v1.luint | ~mask;
-    v1.luint &= mask;
-    mask = n;
-    n = 1;
-    while((y * (double)n) <= v1.d){ ++n; }
-    v1.d -= (double)(--n) * y;
-    v1.luint |= mask;
-    return v1.d;
-}
-
-double my_fmod_v3(double x, double y){
-    long unsigned int n;
-    union_var.d = y;
-    union_var.luint.luint2 = 0;
-    y = union_var.d;
-    union_var.d = x;
-    n = union_var.luint.luint2;
-    union_var.luint.luint2 = 0;
-    x = union_var.d;
-    union_var.luint.luint2 = n;
-    union_var.luint.luint1 = 0;
-    n = 1;
-    while((y * (double)n) < x){ ++n; }
-    x -= y * (double)(--n);
-    n = union_var.luint.luint2;
-    union_var.d = x;
-    union_var.luint.luint2 = n;
-    return union_var.d;
-}
-
-double my_fmod_v4(double x, double y){
-  long unsigned int n = 1;
-  dbits temp;
-  temp.d = y;
-  temp.bits.sign = 0;
-  y = temp.d;
-  temp.d = x;
-  x = temp.bits.sign;
-  temp.parts.sign = 0;
-  while((y * (double)n) < temp.d){ ++n; }
-  temp.d = temp.d - y *(double)(--n);
-  temp.bits.sign = (long unsigned int)x;
-  return temp.d;
-}
-  
-  
 // FUNCTION: char_addition(char, error*)
 
 char safe_char_addition(char a, char b, error* err){
@@ -237,16 +168,12 @@ long unsigned int safe_luint_multiplication(long unsigned int a, long unsigned i
 
 // FUNCTION: double_absolute_value(double)
 
-double double_absolute_value_v1(double value){
-  long unsigned int luint_v = *((long unsigned int*)&value) & (long unsigned int)MAX_LINT;
-  return *(double*)&luint_v;
-}
-
 double double_absolute_value(dbits value){
   value.bits.sign = 0;
   return value.d;
 }
   
+
 // FUNCTION: float_addition(fbits, error*)
   
 float safe_float_addition(fbits a, fbits b, error* err){
@@ -281,6 +208,38 @@ float safe_float_addition(fbits a, fbits b, error* err){
 }
 
 
+// FUNCTION: float_multiplication_with_rounding(fbits, error*)
+
+fbits safe_float_mantissa_multiplication_with_rounding(fbits a, fbits b){
+  a.uint = FLOAT_MANTISSA_IMPLICIT_ONE | a.parts.mantissa;
+  b.uint = FLOAT_MANTISSA_IMPLICIT_ONE | b.parts.mantissa;
+  error err = NO_ERROR;
+  long unsigned int result = safe_luint_multiplication(a.uint, b.uint, &err);
+  b.parts.exp = result >> 47;
+  a.uint = result >> (23 + b.parts.exp);
+  a.parts.exp = b.parts.exp;
+  return a; 
+}  
+
+float safe_float_multiplication_with_rounding(fbits a, fbits b, error* err){
+  // check whether or not one of argument is equal to 0
+  if(!a.f | !b.f){ return 0; } 
+  // check whether or not a is NaN
+  if((a.parts.exp > MAX_NORM_DOUBLE_EXP) && a.parts.mantissa){ return a.f; }
+  // check whether or not b is NaN
+  if((b.parts.exp > MAX_NORM_DOUBLE_EXP) && b.parts.mantissa){ return b.f; }
+  if(!err){ return a.f; }
+  fbits result = safe_float_mantissa_multiplication_with_rounding(a, b);
+  int exponent = a.parts.exp + b.parts.exp + result.parts.exp - FLOAT_EXP_BIAS;
+  result.parts.sign = a.parts.sign ^ b.parts.sign;
+  // check whether or not exponent value bigger than MAX_DOUBLE_EXPONENT
+  *err = ternary(exponent < 0, UNDERFLOW, *err);
+  *err = ternary(exponent > MAX_NORM_FLOAT_EXP, ternary(result.parts.sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err); if(*err){ return result.f; }
+  result.parts.exp = exponent;
+  return result.f;
+}  
+
+
 // FUNCTION: double_addition(dbits, error*)
 
 double safe_double_addition(dbits a, dbits b, error* err){
@@ -291,20 +250,20 @@ double safe_double_addition(dbits a, dbits b, error* err){
     if((b.parts.exp > MAX_NORM_DOUBLE_EXP) & b.parts.mantissa){ *err = SNAN; return b.d; }
     if((a.parts.exp > MAX_NORM_DOUBLE_EXP) | (b.parts.exp > MAX_NORM_DOUBLE_EXP)){ *err = QNAN; return a.d; }
     long unsigned int v3, v4 = -(double_absolute_value(a) < double_absolute_value(b));
-  //moving addend with the biggest absolute value to position of 'a' argument
+  //moving addend with the biggest absolute value to position of 'a' argument  
     a.luint ^= b.luint & v4; 
     b.luint ^= a.luint & v4; 
     a.luint ^= b.luint & v4; 
-  //shifting smalest (b) so that number now represented with the same exponent 
+  //shifting smalest (b) so that number now represented with the same exponent   
     b.parts.exp = a.parts.exp - b.parts.exp; if (b.parts.exp > (1 + AMOUNT_OF_DOUBLE_MANTISSA_BITS)) { *err = UNDERFLOW; return a.d;}
     b.parts.sign ^= a.parts.sign; // if a.sign != b.sign
     v3 =    (DOUBLE_MANTISSA_IMPLICIT_ONE | a.parts.mantissa)
        + ( ((DOUBLE_MANTISSA_IMPLICIT_ONE | b.parts.mantissa) >> b.parts.exp) ^ -b.parts.sign) + b.parts.sign;
-    b.parts.exp = -!!(v3 & (DOUBLE_MANTISSA_IMPLICIT_ONE << 1)); // 1 if the result of the sum overflows the normalized mantissa value, else 0
+    b.parts.exp = -!!(v3 & (DOUBLE_MANTISSA_IMPLICIT_ONE << 1)); // 1 if the result of the sum overflows the normalized mantissa value, else 0   
     v3 >>= -b.parts.exp; // renormalization from bigger than normal number
     while(!(v3 & DOUBLE_SIGN_AND_EXP_MASK)){ // v3 < DOUBLE_MANTISSA_IMPLICIT_ONE
         v3 <<= 1; ++b.parts.exp;  // renormalization from smaller than normal number
-    }
+    }    
     a.parts.mantissa = v3;
     a.parts.exp -= b.parts.exp;
     v4 = (a.parts.exp + b.parts.exp) > MAX_NORM_DOUBLE_EXP; 
@@ -312,215 +271,7 @@ double safe_double_addition(dbits a, dbits b, error* err){
     *err = ternary(v4 & !(a.parts.sign & b.parts.sign), POSITIVE_OVERFLOW, *err);
     *err = ternary(a.parts.exp - b.parts.exp < 0, UNDERFLOW, *err); 
     return a.d;
-}
-
-
-// FUNCTION: factorial(unsigned int, error*)
-
-#define factorial_lookup_table_size 11
-const unsigned int factorial_lookup_table[factorial_lookup_table_size] = {1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800};  // DESCRIPTION: factorial values list of numbers from 0 to 10
-
-unsigned int factorial(unsigned int a, error* err){
-  if(!err){ return a; }
-  if(a < factorial_lookup_table_size){ return factorial_lookup_table[a]; }
-  unsigned int result = a;
-  while(a-- > 1){
-    result = safe_uint_multiplication(result, a, err);
-    if(*err){ return result; }
-  }
-  return result;
-}
-
-// FUNCTION: increment(unsigned int*)
-
-unsigned int increment_error(unsigned int * x){// TODO: how to distinguish case when argument is 0 and when it is ~0
-  if(!x){ return 0; }
-  int a = (*x);
-  if (compare(a, ~0)) { return 1; } // special case 111111...111111
-  unsigned int c = 1;
-  while(a & c){ 
-    a = a ^ c;
-    c = lshift(c, 1);
-  }
-  (*x) = a | c;
-  return 0;
-}
-
-unsigned int increment(unsigned int* x){
-  if(!x){ return 0; }
-  unsigned int a = (*x); // a = 0
-  
-  unsigned int c = 1; // c = 1
-  while(a & c){  // a & c = 0
-     a = a ^ c;
-     c = lshift(c, 1);
-  }
-  (*x) = a | c; // i = 1;
-    
-  return (a | c); // return 1;
-}
-
-
-// FUNCTION: addition(unsigned int, unsigned int)
-
-unsigned int int_addition_v1(unsigned int a, unsigned int b){
-  // implement addition using increment and loops -- реализовать сложение используя инкремент и циклы
-  unsigned int x = 0;
-  while ( x < b ) { increment(&x); increment(&a); }
-  // printf ("The sum of these numbers equal to:%u\n",a);
-  return a;
-}
-
-
-// FUNCTION: multiplication(unsigned int, unsigned int)
-
-unsigned int uint_multiplication(unsigned int a, unsigned int b){
-  // implement multiplication using addition and loops -- реализовать умножение используя сложение и циклы
-  int c = 0;
-  int d = 0;
-  while ( c < b ) { increment(&c); d = int_addition_v1(d, a); }
-  // printf ("\n c:%d a:%d d:%d b:%d", c, a, d, b);
-  return d;
-}
-
-
-// FUNCTION: exponentiation(unsigned int, unsigned int)
-
-unsigned int uint_to_uint_exponentiation(unsigned int a, unsigned int b){ // 2 , 0
-  // implement exponentiation using multiplication and loops -- реализовать возведение в степень используя умножение и циклы
-  int c = 0;
-  int d = 1;
-  while ( c < b) { increment(&c); d = uint_multiplication(d, a); }
-  // printf ("\n c:%d a:%d d:%d b:%d", c, a, d, b);
-  return d;
-}
-
-
-// FUNCTION: unsigned_int_division_by_2
-
-unsigned int unsigned_integer_division_by_2(unsigned int a){ // 4, 5, 8, 10
-  return a >> 1;
-}
-
-
-// FUNCTION: decrement(unsigned int*)
-
-unsigned int decrement(unsigned int* x){ // TODO: function works incorrect, fix it
-  if(!x){ return ~0; }
-  unsigned int a = (*x);
-  if(compare(a, 0)){ return ~0u; }
-  unsigned int b = 1;
-  while (!(a & b)){
-    a = a | b;
-    b = lshift(b, 1);
-  }
-  (*x) = a | (b ^ (~0));
-  return 0;
-}
-
-
-// FUNCTION: integer_division(unsigned int, unsigned int, unsigned int* isNull)
-
-unsigned int integer_division(unsigned int a, unsigned int b, unsigned int* isNull){
-  if(!isNull){ return a; }
-  if (!b)  { (*isNull) = 2; return -1; }// TODO: how to distinguish division of any number by 0 and division of ~0 by 1
-  if (!a)  { return 0; }
-  
-  unsigned int c = 0;
-  unsigned int d = 0;
-  
-  while (d <= (a - b)) {// TODO: what if: a - b = 1 - 3 ---> ? fix it
-    a -= b;
-    ++c;
-  }
-  (*isNull) = 1;
-  return c;    
-}
-
-
-// FUNCTION: square_root(float, float)
-
-float square_root(float value, float precision) {// TODO: negative argument handling
-  unsigned int i = ~0; //  100,  0.001    50, 25, [6.25, 12.5], 6.25 + 3.125 
-  float start = 0;
-  float size = value;
-  float center = size / 2;
-  while (--i) {
-    if ((center*center) > (value + precision)) { size = center; }
-    if ((center*center) < (value - precision)) { start = center; }
-    center = start + (start + size) / 2;
-    if ( ((center*center) < (value + precision)) 
-    || ((center*center) > (value - precision)) ) { return center; }
-  }
-  return center;
-}
-
-
-// FUNCTION: floating_division_by_2
-
-float floating_division_by_2(float b) { // TODO: function works incorrect
-  int mask1 = ((((~0) << 1) >> 1) >> 23) << 23;
-  int max_int = (~0) >> 1;
-  int a = *((int*)&b);
-  int exp = a & mask1;
-  int number_without_exp = a & (~mask1);
-  if (!eldest_bit_is_1(number_without_exp)){
-    if (last_bit_is_1(number_without_exp)){
-      number_without_exp = uint_multiplication(number_without_exp, 5);
-      exp = ((exp >> 23) - 1) << 23;
-    } else {
-      int just_1 = 1;
-      number_without_exp = (number_without_exp >> 1); // 0 00000000 mmmmmmmm...mmmm0 >> 1
-    }
-  } else {
-    int mantissa = convert_to_sign_and_magnitude(number_without_exp);
-    if (last_bit_is_1(mantissa)) {
-      mantissa = uint_multiplication(mantissa, 5);
-      exp = ((exp >> 23) - 1) << 23;
-    } else {
-      mantissa = mantissa >> 1;
-    }
-    number_without_exp = convert_from_sign_and_magnitude(mantissa);
-  }
-  number_without_exp = number_without_exp | exp;
-  float result = *((float*)&number_without_exp);
-  return result; //
-}
-
-
-// FUNCTION: float_division(float)
-
-float float_division(float result, float m1, float precision){ // a = 9, b = 3 c = 1
-  if (!result) {return -3.0f;}
-  if (!m1) {return -1.0f;}
-  int m0 = (~(0b0) >> 1) & (~(0b1 << 23));
-  float max = *((float*)&m0); // ~(0b100000001 << 23)
-  unsigned int iterations = 0;
-  float min = 0;
-  int sign1 = ((*((int*)&result)) ^ (*((int*)&m1))) >> 31;// (result * m1) < 0
-  result *= !(result < 0) - (result < 0);
-  int array[2] = {1, -1};
-  int sign2 = array[sign1];
-  m1 *= ((!(m1 < 0)) - (m1 < 0));
-  float m2 = max / 2;
-  while (1){
-    if (m1 >= 1) { // [0 ; result]
-      max = result;
-    }
-    if ((m1 < 1) && (m1 > 0)) { // [result; +inf]
-      min = result;
-    }
-    if ((m1 * m2) > (result + precision)) {max = m2;}
-    if ((m1 * m2) < (result - precision)) {min = m2;}
-    
-    m2 = min + ((max - min)/2);
-    ++iterations; 
-    
-    if (((m1 * m2) > (result - precision)) 
-    || ((m1 * m2) < (result + precision))) {printf ("How many iterations:%d", iterations); return m2 * (float)sign2;}
-  }
-  return -2.0f;
-}
+}    
 
 
 // FUNCTION: double_multiplication_without_rounding(dbits, dbits, error*)
@@ -542,7 +293,7 @@ dbits safe_double_mantissa_multiplication_without_rouding(dbits a, dbits b, erro
   b.luint <<= safe_int_addition(AMOUNT_OF_DOUBLE_MANTISSA_BITS, -how_many_bits_until_eldest_1(b.luint), err); if(*err){ return b; }
   b.parts.exp = bin_point_shift;
   return b;
-}
+}  
 
 double safe_double_multiplication_without_rounding(dbits a, dbits b, error* err){
   if(!err){ return a.d; }
@@ -558,39 +309,7 @@ double safe_double_multiplication_without_rounding(dbits a, dbits b, error* err)
   result.parts.exp = exponent;
   result.parts.sign = a.parts.sign ^ b.parts.sign;
   return result.d;
-}
-
-
-// FUNCTION: float_multiplication_with_rounding(fbits, error*)
-
-fbits safe_float_mantissa_multiplication_with_rounding(fbits a, fbits b){
-  a.uint = FLOAT_MANTISSA_IMPLICIT_ONE | a.parts.mantissa;
-  b.uint = FLOAT_MANTISSA_IMPLICIT_ONE | b.parts.mantissa;
-  error err = NO_ERROR;
-  long unsigned int result = safe_luint_multiplication(a.uint, b.uint, &err);
-  b.parts.exp = result >> 47;
-  a.uint = result >> (23 + b.parts.exp);
-  a.parts.exp = b.parts.exp;
-  return a; 
-}
-
-float safe_float_multiplication_with_rounding(fbits a, fbits b, error* err){
-  // check whether or not one of argument is equal to 0
-  if(!a.f | !b.f){ return 0; } 
-  // check whether or not a is NaN
-  if((a.parts.exp > MAX_NORM_DOUBLE_EXP) && a.parts.mantissa){ return a.f; }
-  // check whether or not b is NaN
-  if((b.parts.exp > MAX_NORM_DOUBLE_EXP) && b.parts.mantissa){ return b.f; }
-  if(!err){ return a.f; }
-  fbits result = safe_float_mantissa_multiplication_with_rounding(a, b);
-  int exponent = a.parts.exp + b.parts.exp + result.parts.exp - FLOAT_EXP_BIAS;
-  result.parts.sign = a.parts.sign ^ b.parts.sign;
-  // check whether or not exponent value bigger than MAX_DOUBLE_EXPONENT
-  *err = ternary(exponent < 0, UNDERFLOW, *err);
-  *err = ternary(exponent > MAX_NORM_FLOAT_EXP, ternary(result.parts.sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err); if(*err){ return result.f; }
-  result.parts.exp = exponent;
-  return result.f;
-}
+}  
 
 
 // FUNCTION: double_multiplication_with_rounding(dbits,dbits,error*)
@@ -604,24 +323,24 @@ lluint long_mantissa_multiplication(long unsigned int a, long unsigned int b){
                     b_l = b >> sizeof_half_arg_type,
                     a_r = a & mask_r,
                     b_r = b & mask_r;
-  long unsigned int middle = (a_l * b_r) + (a_r * b_l);
+  long unsigned int middle = (a_l * b_r) + (a_r * b_l);                  
   lluint result = {.high = (a_l * b_l) + (middle >> sizeof_half_arg_type),
                    .low  = safe_luint_addition(a_r * b_r, middle << sizeof_half_arg_type, &err) };
-  result.high += else0(err, 1);
+  result.high += else0(err, 1);                 
   return result;
-}
+}  
 
 dbits safe_double_mantissa_multiplication_with_rounding(dbits a, dbits b){
   a.luint = DOUBLE_MANTISSA_IMPLICIT_ONE | a.parts.mantissa;
   b.luint = DOUBLE_MANTISSA_IMPLICIT_ONE | b.parts.mantissa;
   lluint result = long_mantissa_multiplication(a.luint, b.luint);
   b.parts.exp = (result.high & (1ul << 41));// TODO: OPTIMIZE
-//b.parts.exp = result.high >> 41;// TODO: MAYBE THIS WILL BETTER 
+//b.parts.exp = result.high >> 41;// TODO: MAYBE THIS WILL BETTER   
   a.luint = (result.high << (23 - b.parts.exp)) | result.low >> (41 + b.parts.exp);// TODO: OPTIMIZE
   a.luint >>= 12;// TODO: I GUESS IT MUST BE SHIFTED 11 TIMES
   a.parts.exp = b.parts.exp;
   return a;
-}
+}  
 /* COMMENTS TO PROCESS OF BUILDING long_mantissa_multiplication FUNCTION
 We are shifting the number by 27 to the left so that it becomes smaller
 There COULD be any number, but there SHOULD only be 1 number.
@@ -660,7 +379,215 @@ double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
   *err = ternary(exponent > MAX_NORM_DOUBLE_EXP, ternary(result.parts.sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err);
   result.parts.exp = exponent;
   return result.d;
-}
+}  
+
+
+// FUNCTION: factorial(unsigned int, error*)
+
+#define factorial_lookup_table_size 11
+const unsigned int factorial_lookup_table[factorial_lookup_table_size] = {1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800};  // DESCRIPTION: factorial values list of numbers from 0 to 10
+
+unsigned int factorial(unsigned int a, error* err){
+  if(!err){ return a; }
+  if(a < factorial_lookup_table_size){ return factorial_lookup_table[a]; }
+  unsigned int result = a;
+  while(a-- > 1){
+    result = safe_uint_multiplication(result, a, err);
+    if(*err){ return result; }
+  }    
+  return result;
+}    
+
+// FUNCTION: increment(unsigned int*)
+
+unsigned int increment_error(unsigned int * x){// TODO: how to distinguish case when argument is 0 and when it is ~0
+  if(!x){ return 0; }
+  unsigned int a = (*x);
+  if (compare(a, ~0u)) { return 1; } // special case 111111...111111
+  unsigned int c = 1;
+  while(a & c){ 
+    a = a ^ c;
+    c = lshift(c, 1);
+  }    
+  (*x) = a | c;
+  return 0;
+}    
+
+unsigned int increment(unsigned int* x){
+  if(!x){ return 0; }
+  unsigned int a = (*x); // a = 0
+  
+  unsigned int c = 1; // c = 1
+  while(a & c){  // a & c = 0
+     a = a ^ c;
+     c = lshift(c, 1);
+  }      
+  (*x) = a | c; // i = 1;
+    
+  return (a | c); // return 1;
+}    
+
+
+// FUNCTION: addition(unsigned int, unsigned int)
+
+unsigned int int_addition_v1(unsigned int a, unsigned int b){
+  // implement addition using increment and loops -- реализовать сложение используя инкремент и циклы
+  unsigned int x = 0;
+  while ( x < b ) { increment(&x); increment(&a); }
+  // printf ("The sum of these numbers equal to:%u\n",a);
+  return a;
+}    
+
+
+// FUNCTION: multiplication(unsigned int, unsigned int)
+
+unsigned int uint_multiplication(unsigned int a, unsigned int b){
+  // implement multiplication using addition and loops -- реализовать умножение используя сложение и циклы
+  int c = 0;
+  int d = 0;
+  while ( c < b ) { increment(&c); d = int_addition_v1(d, a); }
+  // printf ("\n c:%d a:%d d:%d b:%d", c, a, d, b);
+  return d;
+}    
+
+
+// FUNCTION: exponentiation(unsigned int, unsigned int)
+
+unsigned int uint_to_uint_exponentiation(unsigned int a, unsigned int b){ // 2 , 0
+  // implement exponentiation using multiplication and loops -- реализовать возведение в степень используя умножение и циклы
+  int c = 0;
+  int d = 1;
+  while ( c < b) { increment(&c); d = uint_multiplication(d, a); }
+  // printf ("\n c:%d a:%d d:%d b:%d", c, a, d, b);
+  return d;
+}    
+
+
+// FUNCTION: unsigned_int_division_by_2
+
+unsigned int unsigned_integer_division_by_2(unsigned int a){ // 4, 5, 8, 10
+  return a >> 1;
+}    
+
+
+// FUNCTION: decrement(unsigned int*)
+
+unsigned int decrement(unsigned int* x){ // TODO: function works incorrect, fix it
+  if(!x){ return ~0; }
+  unsigned int a = (*x);
+  if(compare(a, 0)){ return ~0u; }
+  unsigned int b = 1;
+  while (!(a & b)){
+    a = a | b;
+    b = lshift(b, 1);
+  }    
+  (*x) = a | (b ^ (~0));
+  return 0;
+}    
+
+
+// FUNCTION: integer_division(unsigned int, unsigned int, unsigned int* isNull)
+
+unsigned int integer_division(unsigned int a, unsigned int b, unsigned int* isNull){
+  if(!isNull){ return a; }
+  if (!b)  { (*isNull) = 2; return -1; }// TODO: how to distinguish division of any number by 0 and division of ~0 by 1
+  if (!a)  { return 0; }
+  
+  unsigned int c = 0;
+  unsigned int d = 0;
+  
+  while (d <= (a - b)) {// TODO: what if: a - b = 1 - 3 ---> ? fix it
+    a -= b;
+    ++c;
+  }    
+  (*isNull) = 1;
+  return c;    
+}    
+
+
+// FUNCTION: square_root(float, float)
+
+float square_root(float value, float precision) {// TODO: negative argument handling
+  unsigned int i = ~0; //  100,  0.001    50, 25, [6.25, 12.5], 6.25 + 3.125 
+  float start = 0;
+  float size = value;
+  float center = size / 2;
+  while (--i) {
+    if ((center*center) > (value + precision)) { size = center; }
+    if ((center*center) < (value - precision)) { start = center; }
+    center = start + (start + size) / 2;
+    if ( ((center*center) < (value + precision)) 
+    || ((center*center) > (value - precision)) ) { return center; }
+  }    
+  return center;
+}    
+
+
+// FUNCTION: floating_division_by_2
+
+float floating_division_by_2(float b) { // TODO: function works incorrect
+  int mask1 = ((((~0) << 1) >> 1) >> 23) << 23;
+  int max_int = (~0) >> 1;
+  int a = *((int*)&b);
+  int exp = a & mask1;
+  int number_without_exp = a & (~mask1);
+  if (!eldest_bit_is_1(number_without_exp)){
+    if (last_bit_is_1(number_without_exp)){
+      number_without_exp = uint_multiplication(number_without_exp, 5);
+      exp = ((exp >> 23) - 1) << 23;
+    } else {
+      int just_1 = 1;
+      number_without_exp = (number_without_exp >> 1); // 0 00000000 mmmmmmmm...mmmm0 >> 1
+    }    
+  } else {
+    int mantissa = convert_to_sign_and_magnitude(number_without_exp);
+    if (last_bit_is_1(mantissa)) {
+      mantissa = uint_multiplication(mantissa, 5);
+      exp = ((exp >> 23) - 1) << 23;
+    } else {
+      mantissa = mantissa >> 1;
+    }    
+    number_without_exp = convert_from_sign_and_magnitude(mantissa);
+  }    
+  number_without_exp = number_without_exp | exp;
+  float result = *((float*)&number_without_exp);
+  return result; //
+}    
+
+
+// FUNCTION: float_division(float)
+
+float float_division(float result, float m1, float precision){ // a = 9, b = 3 c = 1
+  if (!result) {return 0.0f;}
+  if (!m1) {return -1.0f;}
+  int m0 = (~(0b0) >> 1) & (~(0b1 << 23));
+  float max = *((float*)&m0); // ~(0b100000001 << 23)
+  unsigned int iterations = 0;
+  float min = 0;
+  int sign1 = ((*((int*)&result)) ^ (*((int*)&m1))) >> 31;// (result * m1) < 0
+  result *= !(result < 0) - (result < 0);
+  int array[2] = {1, -1};
+  int sign2 = array[sign1];
+  m1 *= ((!(m1 < 0)) - (m1 < 0));
+  float m2 = max / 2;
+  while (1){
+    if (m1 >= 1) { // [0 ; result]
+      max = result;
+    }    
+    if ((m1 < 1) && (m1 > 0)) { // [result; +inf]
+      min = result;
+    }    
+    if ((m1 * m2) > (result + precision)) {max = m2;}
+    if ((m1 * m2) < (result - precision)) {min = m2;}
+    
+    m2 = min + ((max - min)/2);
+    ++iterations; 
+    
+    if (((m1 * m2) > (result - precision)) 
+    || ((m1 * m2) < (result + precision))) {printf ("How many iterations:%d", iterations); return m2 * (float)sign2;}
+  }    
+  return -2.0f;
+}    
 
 
 // FUNCTION: double_base_to_unsigned_int_power(double, unsigned int, error*)
@@ -755,14 +682,19 @@ long unsigned int exp_luint2luint(long unsigned int a, long unsigned int b, erro
 
 float exp_float2float(fbits a, fbits b, error* err){
   if(!err){ return a.f; }
-  float result = 1; 
-  long int c = b.f;
-  fbits result_fbits = (fbits){ .f = result}; 
-  *err = else0(b.f - (float)c, ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER); 
-  while(b.f-- && !(*err)){
-      result = safe_float_multiplication_with_rounding(result_fbits, a, err);
+  fbits result = (fbits){ .f = 1}; 
+  *err = else0(b.f - (int)b.f, ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER); 
+  if(b.f < 0){
+    while(b.f++ && !(*err)){
+      result.f = safe_float_division_with_rounding(result, a, err);
+    }
   }
-  return result;
+  else{
+      while(b.f-- && !(*err)){
+      result.f = safe_float_multiplication_with_rounding(result, a, err);
+      }
+  }
+  return result.f;
 }
 
 
@@ -770,14 +702,19 @@ float exp_float2float(fbits a, fbits b, error* err){
 
 double exp_double2double(dbits a, dbits b, error* err){
   if(!err){ return a.d; }
-  double result = 1; 
-  long int c = b.d;
-  dbits result_dbits = (dbits){ .d = result}; 
-  *err = else0(b.d - (double)c, ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER); 
-  while(b.d-- && !(*err)){
-      result = safe_double_multiplication_with_rounding(result_dbits, a, err);
+  dbits result = (dbits){ .d = 1}; 
+  *err = else0(b.d - (long int)b.d, ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER); 
+  if(b.d < 0){ 
+    while(b.d++ && !(*err)){  
+      result.d = safe_double_division_with_rounding(result, a, err);
+    }
   }
-  return result;
+  else{\
+    while(b.d-- && !(*err)){  
+      result.d = safe_double_multiplication_with_rounding(result, a, err);
+    }
+  }
+  return result.d;
 }
 
 

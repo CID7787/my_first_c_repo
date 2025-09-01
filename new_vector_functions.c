@@ -31,8 +31,10 @@ unsigned int amount_of_type_bytes(datatype t){
 vecN vector_creation(datatype type, unsigned int n, alldatapointer elements){
     unsigned int r_element_size = amount_of_type_bytes(type);
     vecN r = {type, n, malloc(n * r_element_size), NO_ERROR};
+    int* ptr = ternary(r_element_size < sizeof(int32_t), elements.b1, elements.b4);
+    ptr = ternary(r_element_size > sizeof(int32_t), elements.b8, ptr);
     while(n--){
-        if(!elements){ 
+        if(!ptr){ 
             switch(r_element_size){
                 case 1:   r.elements.b1[n].i = 0; break;
                 case 4:   r.elements.b4[n].i = 0; break;
