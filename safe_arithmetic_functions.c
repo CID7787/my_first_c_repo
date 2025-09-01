@@ -222,13 +222,13 @@ fbits safe_float_mantissa_multiplication_with_rounding(fbits a, fbits b){
 }  
 
 float safe_float_multiplication_with_rounding(fbits a, fbits b, error* err){
-  // check whether or not one of argument is equal to 0
-  if(!a.f | !b.f){ return 0; } 
-  // check whether or not a is NaN
-  if((a.parts.exp > MAX_NORM_DOUBLE_EXP) && a.parts.mantissa){ return a.f; }
-  // check whether or not b is NaN
-  if((b.parts.exp > MAX_NORM_DOUBLE_EXP) && b.parts.mantissa){ return b.f; }
-  if(!err){ return a.f; }
+  if(!err){ return a.f; }//check for NULL pointer
+  unsigned char a_overfl_cond = a.parts.exp > MAX_NORM_FLOAT_EXP, b_overfl_cond = b.parts.exp > MAX_NORM_FLOAT_EXP;
+  *err = ternary(a_overfl_cond, ternary(a.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), *err);// check for infinity value
+  *err = ternary(b_overfl_cond, ternary(b.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), *err);// check for infinity value
+  *err = ternary(a_overfl_cond && a.parts.mantissa, QNAN, *err);// check for NaN
+  *err = ternary(b_overfl_cond && b.parts.mantissa, QNAN, *err);// check for NaN
+  if(!a.f | !b.f){ return 0; } // check whether or not one of argument is equal to 0
   fbits result = safe_float_mantissa_multiplication_with_rounding(a, b);
   int exponent = a.parts.exp + b.parts.exp + result.parts.exp - FLOAT_EXP_BIAS;
   result.parts.sign = a.parts.sign ^ b.parts.sign;
@@ -297,8 +297,12 @@ dbits safe_double_mantissa_multiplication_without_rouding(dbits a, dbits b, erro
 
 double safe_double_multiplication_without_rounding(dbits a, dbits b, error* err){
   if(!err){ return a.d; }
-  // check whether or not one of arguments equal to 0
-  if(!a.d | !b.d){ return 0; }
+  unsigned char a_overfl_cond = a.parts.exp > MAX_NORM_DOUBLE_EXP, b_overfl_cond = b.parts.exp > MAX_NORM_DOUBLE_EXP;
+  *err = ternary(a_overfl_cond, ternary(a.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), *err);// check for infinity value
+  *err = ternary(b_overfl_cond, ternary(b.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), *err);// check for infinity value
+  *err = ternary(a_overfl_cond && a.parts.mantissa, QNAN, *err);// check for NaN
+  *err = ternary(b_overfl_cond && b.parts.mantissa, QNAN, *err);// check for NaN
+  if(!a.d | !b.d){ return 0; } // check whether or not one of arguments equal to 0
   dbits result = b;
   result = safe_double_mantissa_multiplication_without_rouding(a, b, err); if(*err){ return result.d; }
   unsigned int exponent = safe_uint_addition(a.parts.exp, b.parts.exp, err); if(*err){ return result.d; }
@@ -367,10 +371,13 @@ a_right * b_left = (aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa * 00000000 0000000b bbbb
 */
 
 double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
+  if(!err){ return a.d; }// check whether or not is NULL pointer
+  unsigned char a_overfl_cond = a.parts.exp > MAX_NORM_DOUBLE_EXP, b_overfl_cond = b.parts.exp > MAX_NORM_DOUBLE_EXP;
+  *err = ternary(a_overfl_cond, ternary(a.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), *err);// check for infinity value
+  *err = ternary(b_overfl_cond, ternary(b.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), *err);// check for infinity value
+  *err = ternary(a_overfl_cond && a.parts.mantissa, QNAN, *err);// check for NaN
+  *err = ternary(b_overfl_cond && b.parts.mantissa, QNAN, *err);// check for NaN
   if(!a.d | !b.d){ return 0; }// check whether or not one of argument is equal to 0
-  if((a.parts.exp > MAX_NORM_DOUBLE_EXP) && a.parts.mantissa){ return a.d; }// check whether or not a is NaN
-  if((b.parts.exp > MAX_NORM_DOUBLE_EXP) && b.parts.mantissa){ return b.d; }// check whether or not b is NaN
-  if(!err){ return a.d; }
   dbits result = safe_double_mantissa_multiplication_with_rounding(a, b);
   int exponent = a.parts.exp + b.parts.exp + result.parts.exp - DOUBLE_EXP_BIAS;
   result.parts.sign = a.parts.sign ^ b.parts.sign;
@@ -590,18 +597,16 @@ float float_division(float result, float m1, float precision){ // a = 9, b = 3 c
 }    
 
 
-// FUNCTION: double_base_to_unsigned_int_power(double, unsigned int, error*)
+// FUNCTION: double_base_to_long_unsigned_int_power(double, unsigned int, error*)
 
-double exp_double2uint(dbits base, unsigned int power, error* err){// DESCRIPTION: base of type 'double' to power of type 'unsigned int'
-  if(!err){ return base.d; }
-  if (*err) { return 1.0; }
-  *err = else0(!(base.d) && !(base.d), ZERO_TO_ZERO);   
-  double result = 1.0;
-  dbits result_dbits = (dbits){ .d = result};
-  while(power-- && !(*err)){
-    result = safe_double_multiplication_with_rounding(result_dbits, base, err);
+double exp_double2luint(dbits a, long unsigned int b, error* err){
+  if(!err){ return a.d; }
+  *err = ternary(!(a.d) && !b, ZERO_TO_ZERO, *err);
+  dbits r = (dbits){ .d = 1.0 };
+  while(b-- && !(*err)){
+      r.d = safe_double_multiplication_with_rounding(r, a, err);
   }
-  return result;
+  return r.d;
 }
 
 
@@ -709,7 +714,7 @@ double exp_double2double(dbits a, dbits b, error* err){
       result.d = safe_double_division_with_rounding(result, a, err);
     }
   }
-  else{\
+  else{
     while(b.d-- && !(*err)){  
       result.d = safe_double_multiplication_with_rounding(result, a, err);
     }
