@@ -5,9 +5,7 @@ unsigned int binary_search_array_element_index(int *array, unsigned int size, in
   if(!array){ return 0; }
   if (value > array[size - 1]){return -1;}
   
-  unsigned int f = 0;
-  
-  unsigned int start = 0;
+  unsigned int f = 0, start = 0;
   if (value < array[start]){return -2;}
   
   unsigned int center = start + integer_division_by_2(size - start); //  center = 0 + (2 - 0) / 2 = 0 + 2/2 = 1
@@ -23,7 +21,7 @@ unsigned int binary_search_array_element_index(int *array, unsigned int size, in
     if (array[center] == value) { break; }
     if ((start + 1) >= size) {
       if (array[start] == value) { return start; }
-      if (array[size] == value) { return size; } // TODO: possible error
+      if (array[size] == value) { return size; } // TODO: potential error, but don't know which one
       return -1;
     }
     ++f;

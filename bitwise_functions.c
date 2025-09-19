@@ -144,7 +144,7 @@ int convert_from_sign_and_magnitude(unsigned int a){
 }
 
 void swap_in_place_xor(int* a, int* b){// through xor operator
-  if((long int)a & (long int)b){ return; }// TODO: THINK OVER TO WHAT TYPE NEED CAST
+  if(!(long int)a | !(long int)b){ return; }// TODO: THINK OVER TO WHAT TYPE NEED CAST
   (*a) = (*a) ^ (*b);// xor of couple numbers like this 0101 and 0110 equal to 0011
   (*b) = (*a) ^ (*b);// then xor of result with any of these two numbers will result to another number, ex_1:0011 ^ 0101 = 0110
   (*a) = (*a) ^ (*b);// ex_2: 0011 ^ 0110 = 0101

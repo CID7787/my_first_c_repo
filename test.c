@@ -191,6 +191,7 @@ float exp_float2lint(fbits a, long int b, error* err){
 }
 
 float exp_float2luint(fbits a, long unsigned int b, error* err){
+    
     if(!err){ return a.f; }
     *err = ternary(!(a.f) && !b, ZERO_TO_ZERO, *err);
     fbits result = (fbits){ .f = 1.0 };
@@ -220,14 +221,15 @@ vecN vector_exponentiation(vecN a, vecN b){
                 }
             case FLOAT:
                 switch(b.type){
-                    case DOUBLE: r.type = DOUBLE; r.elements.b8[a.n].d = exp_float2double_with_result_double((fbits){ .f= a.elements.b4[a.n].f}, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break;// DONE
+                    case DOUBLE: r.type = DOUBLE; 
+                                 r.elements.b8[a.n].d = exp_float2double_with_result_double((fbits){ .f= a.elements.b4[a.n].f}, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break;// DONE
                     case FLOAT:  r.elements.b4[a.n].f = exp_float2float((fbits){ .f = a.elements.b4[a.n].f}, (fbits){ .f = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
-                    case CHAR:   r.elements.b4[a.n].f = exp_float2lint( (fbits){ .f = a.elements.b4[a.n].f}, b.elements.b1[a.n].i, &r.v_error);    break; // DONE
-                    case UCHAR:  r.elements.b4[a.n].f = exp_float2luint((fbits){ .f = a.elements.b4[a.n].f}, b.elements.b1[a.n].ui, &r.v_error);   break; // DONE
-                    case INT:    r.elements.b4[a.n].f = exp_float2lint( (fbits){ .f = a.elements.b4[a.n].f}, b.elements.b4[a.n].i, &r.v_error);    break; // DONE
-                    case UINT:   r.elements.b4[a.n].f = exp_float2luint((fbits){ .f = a.elements.b4[a.n].f}, b.elements.b4[a.n].ui, &r.v_error);   break; // DONE
-                    case LINT:   r.elements.b8[a.n].d = exp_float2lint( (fbits){ .f = a.elements.b4[a.n].f}, b.elements.b8[a.n].i, &r.v_error);    break; // DONE
-                    case LUINT:  r.elements.b8[a.n].d = exp_float2luint((fbits){ .f = a.elements.b4[a.n].f}, b.elements.b8[a.n].ui, &r.v_error);   break; // DONE
+                    case CHAR:   r.elements.b4[a.n].f = exp_float2lint( (fbits){ .f = a.elements.b4[a.n].f},               b.elements.b1[a.n].i, &r.v_error);    break; // DONE
+                    case UCHAR:  r.elements.b4[a.n].f = exp_float2luint((fbits){ .f = a.elements.b4[a.n].f},               b.elements.b1[a.n].ui, &r.v_error);   break; // DONE
+                    case INT:    r.elements.b4[a.n].f = exp_float2lint( (fbits){ .f = a.elements.b4[a.n].f},               b.elements.b4[a.n].i, &r.v_error);    break; // DONE
+                    case UINT:   r.elements.b4[a.n].f = exp_float2luint((fbits){ .f = a.elements.b4[a.n].f},               b.elements.b4[a.n].ui, &r.v_error);   break; // DONE
+                    case LINT:   r.elements.b8[a.n].d = exp_float2lint( (fbits){ .f = a.elements.b4[a.n].f},               b.elements.b8[a.n].i, &r.v_error);    break; // DONE
+                    case LUINT:  r.elements.b8[a.n].d = exp_float2luint((fbits){ .f = a.elements.b4[a.n].f},               b.elements.b8[a.n].ui, &r.v_error);   break; // DONE
                 }
             default:
                 switch(b.type){

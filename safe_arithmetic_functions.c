@@ -5,20 +5,21 @@
   #include "bitwise_functions.c"
 #endif
 
-// FUNCTION: long int negation(long int)
-
-long int lint_negation(long int a){
-  return ~a + 1;
-}
-
 
 // FUNCTION: f_mod(double and dbits)
 
-double my_fmod(dbits x, dbits y){ // @TODO: add error handling, maybe in v6 or another version
+double my_fmod(dbits x, dbits y, error* err){
+    if(!err){ return x.d; }
+    unsigned char x_overfl_cond = x.parts.exp > MAX_NORM_DOUBLE_EXP, y_overfl_cond = y.parts.exp > MAX_NORM_DOUBLE_EXP;
+    *err = ternary(x_overfl_cond, ternary(x.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), *err);// check for infinity value
+    *err = ternary(y_overfl_cond, ternary(y.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), *err);// check for infinity value
+    *err = ternary(x_overfl_cond && x.parts.mantissa, QNAN, *err);// check for NaN
+    *err = ternary(y_overfl_cond && y.parts.mantissa, QNAN, *err);// check for NaN
+    *err = ternary(!y.d, DIVISION_BY_ZERO, *err);
     y.bits.sign = 0; // we set the sign bit of y to 0
     dbits ux = x, uy = y; // we copy x and y to new variables, which will become unsigned
     ux.bits.sign = 0; // we set ux sign to 0, and uy already has its sign set to 0
-    while(uy.d <= ux.d){ uy.d += y.d; } // we are exiting as soon as uy > ux.  (uy - ux) shows us how much we overflow 
+    while((uy.d <= ux.d) && !(*err)){ uy.d += y.d; } // we are exiting as soon as uy > ux.  (uy - ux) shows us how much we overflow 
     y.d -= uy.d - ux.d; // we subtract (uy - ux) from y to find a remainder
     x.bits.positive = y.bits.positive; // here we set only positive x, so that we preserve the sign of x
     return x.d;
@@ -148,10 +149,18 @@ long int safe_lint_multiplication(long int a, long int b, error* err){
 
 long unsigned int safe_luint_addition(long unsigned int addend1, long unsigned int addend2, error* err){
   if(!err){ return addend1; }
-  *err = ternary(addend2 > (MAX_LUINT - addend1), POSITIVE_OVERFLOW, *err);
+  char overflow_cond = -( -(addend2 > (MAX_LUINT - addend1) ) );
+  *err = (overflow_cond & POSITIVE_OVERFLOW) | (overflow_cond & *err);
   return addend1 + addend2;
 }
 
+long unsigned int safe_luint_addition_optim_v_prot(long unsigned int addend1, long unsigned int addend2, error* err){
+  if(!err){ return addend1; }
+  unsigned int r_leftmost8b;
+
+
+  return addend1 + addend2;
+}
 
 // FUNCTION: long_unsigned_int_multiplication(long unsigned int, error*)
 
@@ -164,6 +173,15 @@ long unsigned int safe_luint_multiplication(long unsigned int a, long unsigned i
   }
   return result;
 }
+
+
+long unsigned int safe_luint_multiplication_optim_v_prot(long unsigned int a, long unsigned int b, error* err){
+  if(!err){ return a; }
+  long unsigned int result;
+  
+
+  return result;
+}u
 
 
 // FUNCTION: double_absolute_value(double)
@@ -691,7 +709,7 @@ float exp_float2float(fbits a, fbits b, error* err){
   *err = else0(b.f - (int)b.f, ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER); 
   if(b.f < 0){
     while(b.f++ && !(*err)){
-      result.f = safe_float_division_with_rounding(result, a, err);
+    //  result.f = safe_float_division_with_rounding(result, a, err);
     }
   }
   else{
@@ -711,7 +729,7 @@ double exp_double2double(dbits a, dbits b, error* err){
   *err = else0(b.d - (long int)b.d, ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER); 
   if(b.d < 0){ 
     while(b.d++ && !(*err)){  
-      result.d = safe_double_division_with_rounding(result, a, err);
+      // result.d = safe_double_division_with_rounding(result, a, err);
     }
   }
   else{

@@ -7,7 +7,7 @@
     #include "safe_arithmetic_functions.c"
 #endif
 
-double sine(double radian, error* err){// TODO safe_double_multiplication and safe_double_division
+double sine(double radian, error* err){// TODO safe_double_division
     if(!err){ return radian; }
     dbits radian_var = (dbits){.d = radian};
     dbits PI2_var = (dbits){.d = PI2};
@@ -16,7 +16,7 @@ double sine(double radian, error* err){// TODO safe_double_multiplication and sa
     return radian;
 }
 
-double cosine(double radian, error* err){// TODO safe_double_multiplication and safe_double_division
+double cosine(double radian, error* err){// TODO safe_double_division
     if(*err){ return radian; }
     dbits radian_var = (dbits){.d = radian};
     dbits PI2_var = (dbits){.d = PI2};
