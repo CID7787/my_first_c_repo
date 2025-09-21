@@ -14,25 +14,11 @@
 // #include "my_test.c"
 
 int main(){ 
-
-    error err = NO_ERROR;
-    unsigned int uint_fnan = 0b01111111100000000000000000000000;
-    
-    dbits a = (dbits){ .d = *(float*)&uint_fnan}, b = (dbits){ .d = 1.5};
-    printf("multiplication result: %f\n", safe_double_multiplication_with_rounding(a, b, &err));
-    printf("multiplication error: %u\n", err);
-    printf("a: %f\n", a);
-    // printf("\ntest function: product of multiplication a: %f\t and b:%f\t equal to %f\n", a.d, b.d, safe_double_multiplication_with_rounding_test_v(a, b, &err));
-    // printf("\ntested function: product of multiplication a: %f\t and b:%f\t equal to %f\n", a.d, b.d, safe_double_multiplication_with_rounding(a, b, &err));
+    unsigned int uint_fmax = 0b01111111011111111111111111111111;
+    float fmax = *(float*)&uint_fmax;
+    // uint_fmax = (unsigned int)fmax;
+    printf("\nfmax: %f\n", fmax);
+    printf("to uint casted fmax: %u\n", (unsigned int)fmax);
     return 0;
 }
 
-
-/*
-
-1.1 * 2^0
-1.1 * 2^0
- 11
-11
-10.01
-*/

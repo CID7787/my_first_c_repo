@@ -13,3 +13,9 @@ long unsigned int ternary(unsigned char condition, long unsigned int true_value,
     long unsigned int array[2] = {true_value, false_value};
     return array[!condition];
 }
+
+int have_frac_part(dbits a){
+    int norm_exp = a.parts.exp - DOUBLE_EXP_BIAS;
+    int result = -(norm_exp <= 53) & norm_exp; // MAX_DOUBLE_MANTISSA '1' bits amount
+    return !!(a.parts.mantissa & (MAX_DOUBLE_MANTISSA >> result));
+}

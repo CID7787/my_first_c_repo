@@ -53,7 +53,7 @@ char safe_char_multiplication(char a, char b, error* err){
 
 // FUNCTION: unsigned_char_addition(unsigned char, error*)
 
-unsigned char safe_unsigned_char_addition(unsigned char a, unsigned char b, error* err){
+unsigned char safe_uchar_addition(unsigned char a, unsigned char b, error* err){
   *err = ternary(a > MIN_CHAR - b, POSITIVE_OVERFLOW, *err);
   return a + b; 
 }
@@ -61,11 +61,11 @@ unsigned char safe_unsigned_char_addition(unsigned char a, unsigned char b, erro
 
 // FUNCTION: unsigned_char_multiplication(unsigned char, error*)
 
-unsigned char safe_unsigned_char_multiplication(unsigned char a, unsigned char b, error* err){
+unsigned char safe_uchar_multiplication(unsigned char a, unsigned char b, error* err){
   if(!err){ return a; }
   char result = 0;
   while(b-- && !(*err)){
-      result = safe_unsigned_char_addition(result, a, err);
+      result = safe_uchar_addition(result, a, err);
   }
   return result;
 }
@@ -671,7 +671,7 @@ unsigned char exp_uchar2uchar(unsigned char a, unsigned char b, error* err){
   if(!err){ return a; }
   unsigned char result = 1;
   while(b-- && !(*err)){
-      result = safe_unsigned_char_multiplication(result, a, err);
+      result = safe_uchar_multiplication(result, a, err);
   }
   return result;
 }

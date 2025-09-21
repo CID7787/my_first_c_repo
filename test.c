@@ -70,7 +70,7 @@ struct vector_n{
 double exp_double2double(dbits a, dbits b, error* err){
   if(!err){ return a.d; }
   dbits result = (dbits){ .d = 1}; 
-  *err = ternary(b.d - (long int)b.d, ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER, *err); 
+  *err = ternary(have_frac_part(b), ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER, *err); 
   *err = ternary(!(a.d) && !(b.d), ZERO_TO_ZERO, *err);
   if(b.d < 0){ 
     while(b.d++ && !(*err)){  
@@ -134,26 +134,6 @@ double exp_double2luint(dbits a, long unsigned int b, error* err){
     return r.d;
 }
 
-double exp_float2double_with_result_double(fbits a, dbits b, error* err){
-    if(!err){ return a.f; }
-    unsigned char a_overfl_cond = a.parts.exp > MAX_NORM_FLOAT_EXP;
-    *err = ternary(a_overfl_cond, ternary(a.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), *err);// check for infinity value
-    *err = ternary(a_overfl_cond && a.parts.mantissa, QNAN, *err);// check for NaN
-    *err = ternary(b.d - (long int)b.d, ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER, *err);
-    *err = ternary(!(a.f) && !(b.d), ZERO_TO_ZERO, *err); 
-    dbits result = (dbits){ .d = 1}, a_dbits = (dbits){ .d = (double)a.f}; 
-    if(b.d < 0){ 
-      while(b.d++ && !(*err)){  
-        result.d = safe_double_division_with_rounding(result, a_dbits, err);
-      }
-    }
-    else{
-      while(b.d-- && !(*err)){  
-        result.d = safe_double_multiplication_with_rounding(result, a_dbits, err);
-      }
-    }
-    return result.d;
-}
 
 float exp_float2float(fbits a, fbits b, error* err){
   if(!err){ return a.f; }
@@ -222,14 +202,14 @@ vecN vector_exponentiation(vecN a, vecN b){
             case FLOAT:
                 switch(b.type){
                     case DOUBLE: r.type = DOUBLE; 
-                                 r.elements.b8[a.n].d = exp_float2double_with_result_double((fbits){ .f= a.elements.b4[a.n].f}, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break;// DONE
-                    case FLOAT:  r.elements.b4[a.n].f = exp_float2float((fbits){ .f = a.elements.b4[a.n].f}, (fbits){ .f = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
-                    case CHAR:   r.elements.b4[a.n].f = exp_float2lint( (fbits){ .f = a.elements.b4[a.n].f},               b.elements.b1[a.n].i, &r.v_error);    break; // DONE
-                    case UCHAR:  r.elements.b4[a.n].f = exp_float2luint((fbits){ .f = a.elements.b4[a.n].f},               b.elements.b1[a.n].ui, &r.v_error);   break; // DONE
-                    case INT:    r.elements.b4[a.n].f = exp_float2lint( (fbits){ .f = a.elements.b4[a.n].f},               b.elements.b4[a.n].i, &r.v_error);    break; // DONE
-                    case UINT:   r.elements.b4[a.n].f = exp_float2luint((fbits){ .f = a.elements.b4[a.n].f},               b.elements.b4[a.n].ui, &r.v_error);   break; // DONE
-                    case LINT:   r.elements.b8[a.n].d = exp_float2lint( (fbits){ .f = a.elements.b4[a.n].f},               b.elements.b8[a.n].i, &r.v_error);    break; // DONE
-                    case LUINT:  r.elements.b8[a.n].d = exp_float2luint((fbits){ .f = a.elements.b4[a.n].f},               b.elements.b8[a.n].ui, &r.v_error);   break; // DONE
+                                 r.elements.b8[a.n].d = exp_double2double((dbits){ .d = a.elements.b4[a.n].f}, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break;// DONE
+                    case FLOAT:  r.elements.b4[a.n].f = exp_float2float((fbits){ .f = a.elements.b4[a.n].f},   (fbits){ .f = b.elements.b4[a.n].f}, &r.v_error); break;// DONE
+                    case CHAR:   r.elements.b4[a.n].f = exp_float2lint( (fbits){ .f = a.elements.b4[a.n].f},               b.elements.b1[a.n].i, &r.v_error);    break;// DONE
+                    case UCHAR:  r.elements.b4[a.n].f = exp_float2luint((fbits){ .f = a.elements.b4[a.n].f},               b.elements.b1[a.n].ui, &r.v_error);   break;// DONE
+                    case INT:    r.elements.b4[a.n].f = exp_float2lint( (fbits){ .f = a.elements.b4[a.n].f},               b.elements.b4[a.n].i, &r.v_error);    break;// DONE
+                    case UINT:   r.elements.b4[a.n].f = exp_float2luint((fbits){ .f = a.elements.b4[a.n].f},               b.elements.b4[a.n].ui, &r.v_error);   break;// DONE
+                    case LINT:   r.elements.b8[a.n].d = exp_float2lint( (fbits){ .f = a.elements.b4[a.n].f},               b.elements.b8[a.n].i, &r.v_error);    break;// DONE
+                    case LUINT:  r.elements.b8[a.n].d = exp_float2luint((fbits){ .f = a.elements.b4[a.n].f},               b.elements.b8[a.n].ui, &r.v_error);   break;// DONE
                 }
             default:
                 switch(b.type){

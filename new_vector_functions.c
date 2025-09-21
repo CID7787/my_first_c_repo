@@ -139,7 +139,7 @@ vecN vector_multiplication(vecN a, vecN b){
                 r.elements.b1[a.n].i = safe_char_multiplication(a.elements.b1[a.n].i, b.elements.b1[a.n].i, &r.v_error);
             break;
             case UCHAR: 
-                r.elements.b1[a.n].ui = safe_unsigned_char_multiplication(a.elements.b1[a.n].ui, b.elements.b1[a.n].ui, &r.v_error); 
+                r.elements.b1[a.n].ui = safe_uchar_multiplication(a.elements.b1[a.n].ui, b.elements.b1[a.n].ui, &r.v_error); 
             break;
             case INT: 
                 r.elements.b4[a.n].i = safe_int_multiplication(a.elements.b4[a.n].i, b.elements.b4[a.n].i, &r.v_error); 
@@ -165,28 +165,187 @@ vecN vector_multiplication(vecN a, vecN b){
         }
 
     }
+    return r;
 }
 
-vecN vectors_multiplication_via_dot_product(vecN v1, vecN v2){
-    if(v1.type != v2.type){ return v1; }
-    vecN var = vector_multiplication(v1, v2);
-    // free(var.elements);
-    // var.elements = malloc(...);
-    // long unsigned int var1 = 0;
-    // long unsigned int *ptr = &var1;
-    vecN result;
-    result.type = v1.type;
-    while(v1.n--){
-      switch(var.type){
-        case CHAR:  { result.elements.b1[0].i  = safe_char_addition(result.elements.b1[0].i , result.elements.b1[v1.n].i , &result.v_error); } break;
-        case UCHAR: { result.elements.b1[0].ui = safe_char_addition(result.elements.b1[0].ui , result.elements.b1[v1.n].ui , &result.v_error); } break;
-        case INT:   { result.elements.b4[0].i  = safe_int_addition(result.elements.b4[0].i , result.elements.b4[v1.n].i , &result.v_error); } break;
-        case UINT:  { result.elements.b4[0].ui = safe_uint_addition(result.elements.b4[0].ui, result.elements.b4[v1.n].ui, &result.v_error); } break;
-        case LINT:  { result.elements.b8[0].i  = safe_uint_addition(result.elements.b8[0].i, result.elements.b8[v1.n].i, &result.v_error); } break;
-        case LUINT: { result.elements.b8[0].ui = safe_uint_addition(result.elements.b8[0].ui, result.elements.b8[v1.n].ui, &result.v_error); } break;
-        case FLOAT: { result.elements.b4[0].f  = safe_float_addition( (fbits){ .f = result.elements.b4[0].f } , (fbits){ .f = result.elements.b4[v1.n].f } , &result.v_error); } break;
-        case DOUBLE:{ result.elements.b8[0].d  = safe_double_addition((dbits){ .d = result.elements.b8[0].d }, (dbits){ .d = result.elements.b8[v1.n].d }, &result.v_error); } break;
+
+double exp_double2double(dbits a, dbits b, error* err){
+    if(!err){ return a.d; }
+    dbits result = (dbits){ .d = 1}; 
+    *err = ternary(have_frac_part(b), ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER, *err); 
+    *err = ternary(!(a.d) && !(b.d), ZERO_TO_ZERO, *err);
+    if(b.d < 0){ 
+      while(b.d++ && !(*err)){  
+        result.d = safe_double_division_with_rounding(result, a, err);
       }
     }
-   return result; 
-}
+    else{
+      while(b.d-- && !(*err)){  
+        result.d = safe_double_multiplication_with_rounding(result, a, err);
+      }
+    }
+    return result.d;
+  }
+  
+  double exp_double2float(dbits a, fbits b, error* err){
+      if(!err){ return a.d; }
+      unsigned char b_overfl_cond = b.parts.exp > MAX_NORM_FLOAT_EXP;
+      *err = ternary(b_overfl_cond, ternary(b.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), *err);// check for infinity value
+      *err = ternary(b_overfl_cond && b.parts.mantissa, QNAN, *err);// check for NaN
+      *err = ternary(have_frac_part((dbits){ .d = b.f}), ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER, *err); 
+      *err = ternary(!(a.d) && !(b.f), ZERO_TO_ZERO, *err);
+      dbits result = (dbits){ .d = 1}; 
+      if(b.f < 0){ 
+          while(b.f++ && !(*err)){  
+            result.d = safe_double_division_with_rounding(result, a, err);
+          }
+      }
+      else{
+          while(b.f-- && !(*err)){  
+            result.d = safe_double_multiplication_with_rounding(result, a, err);
+          }
+      }
+      return result.d;
+  }
+  
+  
+  double exp_double2lint(dbits a, long int b, error* err){
+      if(!err){ return a.d; }
+      dbits r = (dbits){ .d = 1.0 };
+      *err = ternary(!(a.d) && !b, ZERO_TO_ZERO, *err);
+      if(b < 0){ 
+          while(b++ && !(*err)){
+              r.d = safe_double_division_with_rounding(r, a, err);
+          }    
+      }
+      else{ 
+          while(b-- && !(*err)){
+              r.d = safe_double_multiplication_with_rounding(r, a, err);
+          }
+      }
+      return r.d;
+  }
+  
+  double exp_double2luint(dbits a, long unsigned int b, error* err){
+      if(!err){ return a.d; }
+      *err = ternary(!(a.d) && !b, ZERO_TO_ZERO, *err);
+      dbits r = (dbits){ .d = 1.0 };
+      while(b-- && !(*err)){
+          r.d = safe_double_multiplication_with_rounding(r, a, err);
+      }
+      return r.d;
+  }
+  
+  
+  float exp_float2float(fbits a, fbits b, error* err){
+    if(!err){ return a.f; }
+    fbits result = (fbits){ .f = 1}; 
+    *err = ternary(have_frac_part((dbits){ .d = b.f}), ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER, *err); 
+    *err = ternary(!(a.f) && !(b.f), ZERO_TO_ZERO, *err);
+    if(b.f < 0){
+      while(b.f++ && !(*err)){
+        result.f = safe_float_division_with_rounding(result, a, err);
+      }
+    }
+    else{
+        while(b.f-- && !(*err)){
+        result.f = safe_float_multiplication_with_rounding(result, a, err);
+        }
+    }
+    return result.f;
+  }
+  
+  float exp_float2lint(fbits a, long int b, error* err){
+      if(!err){ return a.f; }
+      *err = ternary(!(a.f) && !b, ZERO_TO_ZERO, *err);
+      fbits result = (fbits){ .f = 1.0 };
+      if(b < 0){ 
+          while(b++ && !(*err)){
+              a.f = safe_float_division_with_rounding(result, a, err);
+          }
+      }
+      else{
+          while(b-- && !(*err)){
+              a.f = safe_float_multiplication_with_rounding(result, a, err);
+          }
+      }
+      return result.f; 
+  }
+  
+  float exp_float2luint(fbits a, long unsigned int b, error* err){
+      
+      if(!err){ return a.f; }
+      *err = ternary(!(a.f) && !b, ZERO_TO_ZERO, *err);
+      fbits result = (fbits){ .f = 1.0 };
+      while(b-- && !(*err)){
+          a.f = safe_float_multiplication_with_rounding(result, a, err);
+      }
+       return result.f; 
+  }
+  
+  
+  vecN vector_exponentiation(vecN a, vecN b){
+      unsigned char a_elem_size = amount_of_type_bytes(a.type), b_elem_size = amount_of_type_bytes(b.type), r_element_size;
+      r_element_size = ternary(a_elem_size > b_elem_size, a_elem_size, b_elem_size);
+      vecN r = {a.type, a.n, r_element_size, malloc(a.n * r_element_size), NO_ERROR};
+      while(a.n--){
+          switch(a.type){
+              case DOUBLE:
+                  switch(b.type){
+                      case DOUBLE: r.elements.b8[a.n].d = exp_double2double((dbits){ .d = a.elements.b8[a.n].d}, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break;// DONE
+                      case FLOAT:  r.elements.b8[a.n].d = exp_double2float( (dbits){ .d = a.elements.b8[a.n].d}, (fbits){ .f = b.elements.b4[a.n].f}, &r.v_error); break;// DONE
+                      case CHAR:   r.elements.b8[a.n].d = exp_double2lint(  (dbits){ .d = a.elements.b8[a.n].d},               b.elements.b1[a.n].i,  &r.v_error); break;// DONE
+                      case UCHAR:  r.elements.b8[a.n].d = exp_double2luint( (dbits){ .d = a.elements.b8[a.n].d},               b.elements.b1[a.n].ui, &r.v_error); break;// DONE
+                      case INT:    r.elements.b8[a.n].d = exp_double2lint(  (dbits){ .d = a.elements.b8[a.n].d},               b.elements.b4[a.n].i,  &r.v_error); break;// DONE
+                      case UINT:   r.elements.b8[a.n].d = exp_double2luint( (dbits){ .d = a.elements.b8[a.n].d},               b.elements.b4[a.n].ui, &r.v_error); break;// DONE
+                      case LINT:   r.elements.b8[a.n].d = exp_double2lint(  (dbits){ .d = a.elements.b8[a.n].d},               b.elements.b8[a.n].i,  &r.v_error); break;// DONE
+                      case LUINT:  r.elements.b8[a.n].d = exp_double2luint( (dbits){ .d = a.elements.b8[a.n].d},               b.elements.b8[a.n].ui, &r.v_error); break;// DONE
+                  }
+              case FLOAT:
+                  switch(b.type){
+                      case DOUBLE: r.type = DOUBLE; 
+                                   r.elements.b8[a.n].d = exp_double2double((dbits){ .d = a.elements.b4[a.n].f}, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break;// DONE
+                      case FLOAT:  r.elements.b4[a.n].f = exp_float2float((fbits){ .f = a.elements.b4[a.n].f},   (fbits){ .f = b.elements.b4[a.n].f}, &r.v_error); break;// DONE
+                      case CHAR:   r.elements.b4[a.n].f = exp_float2lint( (fbits){ .f = a.elements.b4[a.n].f},               b.elements.b1[a.n].i, &r.v_error);    break;// DONE
+                      case UCHAR:  r.elements.b4[a.n].f = exp_float2luint((fbits){ .f = a.elements.b4[a.n].f},               b.elements.b1[a.n].ui, &r.v_error);   break;// DONE
+                      case INT:    r.elements.b4[a.n].f = exp_float2lint( (fbits){ .f = a.elements.b4[a.n].f},               b.elements.b4[a.n].i, &r.v_error);    break;// DONE
+                      case UINT:   r.elements.b4[a.n].f = exp_float2luint((fbits){ .f = a.elements.b4[a.n].f},               b.elements.b4[a.n].ui, &r.v_error);   break;// DONE
+                      case LINT:   r.elements.b8[a.n].d = exp_float2lint( (fbits){ .f = a.elements.b4[a.n].f},               b.elements.b8[a.n].i, &r.v_error);    break;// DONE
+                      case LUINT:  r.elements.b8[a.n].d = exp_float2luint((fbits){ .f = a.elements.b4[a.n].f},               b.elements.b8[a.n].ui, &r.v_error);   break;// DONE
+                  }
+              default:
+                  switch(b.type){
+                      case DOUBLE: 
+                          switch(a.type){
+                              case CHAR:  r.elements.b8[a.n].i  = pow(a.elements.b1[a.n].i,  b.elements.b8[a.n].d); break; // TODO
+                              case UCHAR: r.elements.b8[a.n].ui = pow(a.elements.b1[a.n].ui, b.elements.b8[a.n].d); break; // TODO
+                              case INT:   r.elements.b8[a.n].i  = pow(a.elements.b4[a.n].i,  b.elements.b8[a.n].d); break; // TODO
+                              case UINT:  r.elements.b8[a.n].ui = pow(a.elements.b4[a.n].ui, b.elements.b8[a.n].d); break; // TODO
+                              case LINT:  r.elements.b8[a.n].i  = pow(a.elements.b8[a.n].i,  b.elements.b8[a.n].d); break; // TODO
+                              case LUINT: r.elements.b8[a.n].ui = pow(a.elements.b8[a.n].ui, b.elements.b8[a.n].d); break; // TODO
+                          }
+                      break;
+                      case FLOAT: 
+                      switch(a.type){
+                          case CHAR:  r.elements.b4[a.n].i  = pow(a.elements.b1[a.n].i,  b.elements.b4[a.n].f); break; // TODO
+                          case UCHAR: r.elements.b4[a.n].ui = pow(a.elements.b1[a.n].ui, b.elements.b4[a.n].f); break; // TODO
+                          case INT:   r.elements.b4[a.n].i  = pow(a.elements.b4[a.n].i,  b.elements.b4[a.n].f); break; // TODO
+                          case UINT:  r.elements.b4[a.n].ui = pow(a.elements.b4[a.n].ui, b.elements.b4[a.n].f); break; // TODO
+                          case LINT:  r.elements.b8[a.n].i  = pow(a.elements.b8[a.n].i,  b.elements.b4[a.n].f); break; // TODO
+                          case LUINT: r.elements.b8[a.n].ui = pow(a.elements.b8[a.n].ui, b.elements.b4[a.n].f); break; // TODO
+                      }
+                      break;
+                      default:
+                          if (amount_of_type_bytes(r.type) == amount_of_type_bytes(a.type)) { b.type = a.type; }
+                          else{ a.type = b.type; }
+                          r.elements.b1[a.n].i  = pow(a.elements.b1[a.n].i , b.elements.b1[a.n].i); 
+                          r.elements.b1[a.n].ui = pow(a.elements.b1[a.n].ui, b.elements.b1[a.n].ui);
+                          r.elements.b4[a.n].i  = pow(a.elements.b4[a.n].i , b.elements.b4[a.n].i);
+                          r.elements.b4[a.n].ui = pow(a.elements.b4[a.n].ui, b.elements.b4[a.n].ui);
+                          r.elements.b8[a.n].i  = pow(a.elements.b8[a.n].i , b.elements.b8[a.n].i);
+                          r.elements.b8[a.n].ui = pow(a.elements.b8[a.n].ui, b.elements.b8[a.n].ui);
+                      break; 
+                  }
+          }      
+      }
+  }
