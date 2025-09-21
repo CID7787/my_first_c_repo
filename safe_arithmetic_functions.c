@@ -181,7 +181,7 @@ long unsigned int safe_luint_multiplication_optim_v_prot(long unsigned int a, lo
   
 
   return result;
-}u
+}
 
 
 // FUNCTION: double_absolute_value(double)

@@ -31,31 +31,27 @@ unsigned int amount_of_type_bytes(datatype t){
 vecN vector_creation(datatype type, unsigned int n, alldatapointer elements){
     unsigned int r_element_size = amount_of_type_bytes(type);
     vecN r = {type, n, malloc(n * r_element_size), NO_ERROR};
-    int* ptr = ternary(r_element_size < sizeof(int32_t), elements.b1, elements.b4);
-    ptr = ternary(r_element_size > sizeof(int32_t), elements.b8, ptr);
+    int* ptr = elements.b1;
     while(n--){
-        if(!ptr){ 
-            switch(r_element_size){
-                case 1:   r.elements.b1[n].i = 0; break;
-                case 4:   r.elements.b4[n].i = 0; break;
-                case 8:   r.elements.b8[n].i = 0; break;
-            }
-        }
-        else{
-            switch(type){
-                case CHAR:   r.elements.b1[n].i  = elements.b1[n].i; break;
-                case UCHAR:  r.elements.b1[n].ui = elements.b4[n].ui; break;
-                case INT:    r.elements.b4[n].i  = elements.b4[n].i; break;
-                case UINT:   r.elements.b4[n].ui = elements.b4[n].ui; break;
-                case FLOAT:  r.elements.b4[n].f  = elements.b4[n].f; break;
-                case LINT:   r.elements.b8[n].i  = elements.b8[n].i; break;
-                case LUINT:  r.elements.b8[n].ui = elements.b8[n].ui; break;
-                case DOUBLE: r.elements.b8[n].d  = elements.b8[n].d; break;
-            }
-        }
-    }
+        switch(type | -(!ptr)){
+            case CHAR:   r.elements.b1[n].i  = elements.b1[n].i; break;
+            case UCHAR:  r.elements.b1[n].ui = elements.b4[n].ui; break;
+            case INT:    r.elements.b4[n].i  = elements.b4[n].i; break;
+            case UINT:   r.elements.b4[n].ui = elements.b4[n].ui; break;
+            case FLOAT:  r.elements.b4[n].f  = elements.b4[n].f; break;
+            case LINT:   r.elements.b8[n].i  = elements.b8[n].i; break;
+            case LUINT:  r.elements.b8[n].ui = elements.b8[n].ui; break;
+            case DOUBLE: r.elements.b8[n].d  = elements.b8[n].d; break;
+            case -1: switch(r_element_size){
+                        case 1:   r.elements.b1[n].i = 0; break;
+                        case 4:   r.elements.b4[n].i = 0; break;
+                        case 8:   r.elements.b8[n].i = 0; break;
+                     }
+            break; 
+        }    }
     return r;
 }   
+
 
 vecN vector_negation(vecN a){
     vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type)), NO_ERROR};
