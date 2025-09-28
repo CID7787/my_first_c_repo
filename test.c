@@ -62,11 +62,6 @@ struct vector_n{
 
 double exp_double2double(dbits a, dbits b, error* err){
   if(!err){ return a.d; }
-  unsigned char a_overfl_cond = a.parts.exp > MAX_NORM_DOUBLE_EXP, b_overfl_cond = b.parts.exp > MAX_NORM_DOUBLE_EXP;
-  *err = ternary(a_overfl_cond, ternary(a.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), *err);// check for infinity value
-  *err = ternary(b_overfl_cond, ternary(b.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), *err);// check for infinity value
-  *err = ternary(a_overfl_cond && a.parts.mantissa, QNAN, *err);// check for NaN
-  *err = ternary(b_overfl_cond && b.parts.mantissa, QNAN, *err);// check for NaN
   dbits result = (dbits){ .d = 1};
   *err = ternary(have_frac_part(b), ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER, *err); 
   *err = ternary(!(a.d) && !(b.d), ZERO_TO_ZERO, *err);
@@ -115,7 +110,7 @@ double exp_double2luint(dbits a, long unsigned int b, error* err){
 float exp_float2float(fbits a, fbits b, error* err){
   if(!err){ return a.f; }
   fbits result = (fbits){ .f = 1}; 
-  *err = ternary(b.f - (int)b.f, ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER, *err); 
+  *err = ternary(b.f - have_frac_part((dbits){.d = b.f}), ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER, *err); 
   *err = ternary(!(a.f) && !(b.f), ZERO_TO_ZERO, *err);
   if(b.f < 0){
     while(b.f++ && !(*err)){
@@ -154,9 +149,38 @@ float exp_float2luint(fbits a, long unsigned int b, error* err){
     while(b-- && !(*err)){
         a.f = safe_float_multiplication_with_rounding(result, a, err);
     }
-     return result.f; 
+    return result.f; 
 }
 
+long int exp_lint2double(long int a, dbits b, error* err){
+    if(!err){ return a; }
+    long int r = 1;
+    unsigned int cond = -have_frac_part(b);
+    *err = (cond & ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER) | (cond & *err);
+    cond = -(!a & !b.d);
+    *err = (cond & ZERO_TO_ZERO) | (cond & *err);
+    cond = -(b.d < 0);
+    *err = (cond & UNDERFLOW) | (cond & *err);
+    while(b.d-- && !(*err)){
+        r = safe_lint_multiplication(r, a, err);
+    } 
+    return r;
+}
+
+long unsigned int exp_luint2double(long unsigned int a, dbits b, error* err){
+    if(!err){ return a; }
+    long unsigned int r = 1;
+    unsigned int cond = -have_frac_part(b);
+    *err = (cond & ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER) | (cond & *err);
+    cond = -(!a & !b.d);
+    *err = (cond & ZERO_TO_ZERO) | (cond & *err);
+    cond = -(b.d < 0);
+    *err = (cond & UNDERFLOW) | (cond & *err);
+    while(b.d-- && !(*err)){
+        r = safe_luint_multiplication(r, a, err);
+    } 
+    return r;
+}
 
 vecN vector_exponentiation(vecN a, vecN b){
     unsigned char a_elem_size = amount_of_type_bytes(a.type), b_elem_size = amount_of_type_bytes(b.type), r_elem_size = -(a_elem_size > b_elem_size);
@@ -190,22 +214,22 @@ vecN vector_exponentiation(vecN a, vecN b){
                 switch(b.type){
                     case DOUBLE: 
                         switch(a.type){
-                            case CHAR:  r.elements.b8[a.n].i  = exp_lint2double( a.elements.b1[a.n].i,  (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break; // TODO
-                            case UCHAR: r.elements.b8[a.n].ui = exp_luint2double(a.elements.b1[a.n].ui, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break; // TODO
-                            case INT:   r.elements.b8[a.n].i  = exp_lint2double( a.elements.b4[a.n].i,  (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break; // TODO
-                            case UINT:  r.elements.b8[a.n].ui = exp_luint2double(a.elements.b4[a.n].ui, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break; // TODO
-                            case LINT:  r.elements.b8[a.n].i  = exp_lint2double( a.elements.b8[a.n].i,  (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break; // TODO
-                            case LUINT: r.elements.b8[a.n].ui = exp_luint2double(a.elements.b8[a.n].ui, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break; // TODO
+                            case CHAR:  r.elements.b8[a.n].i  = exp_lint2double( a.elements.b1[a.n].i,  (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break; // DONE
+                            case UCHAR: r.elements.b8[a.n].ui = exp_luint2double(a.elements.b1[a.n].ui, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break; // DONE
+                            case INT:   r.elements.b8[a.n].i  = exp_lint2double( a.elements.b4[a.n].i,  (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break; // DONE
+                            case UINT:  r.elements.b8[a.n].ui = exp_luint2double(a.elements.b4[a.n].ui, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break; // DONE
+                            case LINT:  r.elements.b8[a.n].i  = exp_lint2double( a.elements.b8[a.n].i,  (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break; // DONE
+                            case LUINT: r.elements.b8[a.n].ui = exp_luint2double(a.elements.b8[a.n].ui, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break; // DONE
                         }
                     break;
                     case FLOAT: 
                     switch(a.type){
-                        case CHAR:  r.elements.b4[a.n].i  = exp_lint2double( a.elements.b1[a.n].i,  (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // TODO
-                        case UCHAR: r.elements.b4[a.n].ui = exp_luint2double(a.elements.b1[a.n].ui, (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // TODO
-                        case INT:   r.elements.b4[a.n].i  = exp_lint2double( a.elements.b4[a.n].i,  (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // TODO
-                        case UINT:  r.elements.b4[a.n].ui = exp_luint2double(a.elements.b4[a.n].ui, (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // TODO
-                        case LINT:  r.elements.b8[a.n].i  = exp_lint2double( a.elements.b8[a.n].i,  (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // TODO
-                        case LUINT: r.elements.b8[a.n].ui = exp_luint2double(a.elements.b8[a.n].ui, (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // TODO
+                        case CHAR:  r.elements.b4[a.n].i  = exp_lint2double( a.elements.b1[a.n].i,  (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
+                        case UCHAR: r.elements.b4[a.n].ui = exp_luint2double(a.elements.b1[a.n].ui, (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
+                        case INT:   r.elements.b4[a.n].i  = exp_lint2double( a.elements.b4[a.n].i,  (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
+                        case UINT:  r.elements.b4[a.n].ui = exp_luint2double(a.elements.b4[a.n].ui, (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
+                        case LINT:  r.elements.b8[a.n].i  = exp_lint2double( a.elements.b8[a.n].i,  (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
+                        case LUINT: r.elements.b8[a.n].ui = exp_luint2double(a.elements.b8[a.n].ui, (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
                     }
                     break;
                     default:
@@ -221,9 +245,4 @@ vecN vector_exponentiation(vecN a, vecN b){
                 }
         }      
     }
-}
-
-long int exp_lint2double(long int a, dbits b, error* err){
-
-    return r;
 }
