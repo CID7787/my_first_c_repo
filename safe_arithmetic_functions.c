@@ -706,10 +706,11 @@ long unsigned int exp_luint2luint(long unsigned int a, long unsigned int b, erro
 float exp_float2float(fbits a, fbits b, error* err){
   if(!err){ return a.f; }
   fbits result = (fbits){ .f = 1}; 
-  *err = else0(b.f - (int)b.f, ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER); 
+  *err = ternary(b.f - have_frac_part((dbits){.d = b.f}), ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER, *err); 
+  *err = ternary(!(a.f) && !(b.f), ZERO_TO_ZERO, *err);
   if(b.f < 0){
     while(b.f++ && !(*err)){
-    //  result.f = safe_float_division_with_rounding(result, a, err);
+      result.f = safe_float_division_with_rounding(result, a, err);// TODO: WRITE FLOAT DIVISION WITH ROUNDING FUNCTION
     }
   }
   else{
@@ -725,11 +726,12 @@ float exp_float2float(fbits a, fbits b, error* err){
 
 double exp_double2double(dbits a, dbits b, error* err){
   if(!err){ return a.d; }
-  dbits result = (dbits){ .d = 1}; 
-  *err = else0(b.d - (long int)b.d, ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER); 
+  dbits result = (dbits){ .d = 1};
+  *err = ternary(have_frac_part(b), ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER, *err); 
+  *err = ternary(!(a.d) && !(b.d), ZERO_TO_ZERO, *err);
   if(b.d < 0){ 
     while(b.d++ && !(*err)){  
-      // result.d = safe_double_division_with_rounding(result, a, err);
+      result.d = safe_double_division_with_rounding(result, a, err);// TODO: WRITE DOUBLE DIVISION WITH ROUNDING FUNCTION
     }
   }
   else{
@@ -738,6 +740,95 @@ double exp_double2double(dbits a, dbits b, error* err){
     }
   }
   return result.d;
+}
+
+
+// exponenetiation of double to long int(dbits, long int) 
+
+double exp_double2lint(dbits a, long int b, error* err){
+  if(!err){ return a.d; }
+  dbits r = (dbits){ .d = 1.0 };
+  *err = ternary(!(a.d) && !b, ZERO_TO_ZERO, *err);
+  if(b < 0){ 
+      while(b++ && !(*err)){
+          r.d = safe_double_division_with_rounding(r, a, err);// TODO: WRITE DOUBLE DIVISION WITH ROUNDING FUNCTION
+      }    
+  }
+  else{ 
+      while(b-- && !(*err)){
+          r.d = safe_double_multiplication_with_rounding(r, a, err);
+      }
+  }
+  return r.d;
+}
+
+
+// exponentiation float to long int(fbits, long int)
+
+float exp_float2lint(fbits a, long int b, error* err){
+  if(!err){ return a.f; }
+  *err = ternary(!(a.f) && !b, ZERO_TO_ZERO, *err);
+  fbits result = (fbits){ .f = 1.0 };
+  if(b < 0){ 
+      while(b++ && !(*err)){
+          a.f = safe_float_division_with_rounding(result, a, err); // TODO: WRITE FLOAT DIVISION WITH ROUNDING FUNCTION
+      }
+  }
+  else{
+      while(b-- && !(*err)){
+          a.f = safe_float_multiplication_with_rounding(result, a, err);
+      }
+  }
+  return result.f; 
+}
+
+
+// exponentiation float to long unsigned int(fbits, long unsigned int)
+
+float exp_float2luint(fbits a, long unsigned int b, error* err){
+  if(!err){ return a.f; }
+  *err = ternary(!(a.f) && !b, ZERO_TO_ZERO, *err);
+  fbits result = (fbits){ .f = 1.0 };
+  while(b-- && !(*err)){
+      a.f = safe_float_multiplication_with_rounding(result, a, err);
+  }
+  return result.f; 
+}
+
+
+// epxonentiation long int to double(long int, dbits)
+
+long int exp_lint2double(long int a, dbits b, error* err){
+  if(!err){ return a; }
+  long int r = 1;
+  unsigned int cond = -have_frac_part(b);
+  *err = (cond & ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER) | (cond & *err);
+  cond = -(!a & !b.d);
+  *err = (cond & ZERO_TO_ZERO) | (cond & *err);
+  cond = -(b.d < 0);
+  *err = (cond & UNDERFLOW) | (cond & *err);
+  while(b.d-- && !(*err)){
+      r = safe_lint_multiplication(r, a, err);
+  } 
+  return r;
+}
+
+
+// epxonentiation long unsigned int to double(long unsigned int, dbits)
+
+long unsigned int exp_luint2double(long unsigned int a, dbits b, error* err){
+  if(!err){ return a; }
+  long unsigned int r = 1;
+  unsigned int cond = -have_frac_part(b);
+  *err = (cond & ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER) | (cond & *err);
+  cond = -(!a & !b.d);
+  *err = (cond & ZERO_TO_ZERO) | (cond & *err);
+  cond = -(b.d < 0);
+  *err = (cond & UNDERFLOW) | (cond & *err);
+  while(b.d-- && !(*err)){
+      r = safe_luint_multiplication(r, a, err);
+  } 
+  return r;
 }
 
 

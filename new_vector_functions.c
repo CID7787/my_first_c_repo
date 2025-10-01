@@ -31,7 +31,7 @@ unsigned int amount_of_type_bytes(datatype t){
 vecN vector_creation(datatype type, unsigned int n, alldatapointer elements){
     unsigned int r_element_size = amount_of_type_bytes(type);
     vecN r = {type, n, malloc(n * r_element_size), NO_ERROR};
-    int* ptr = elements.b1;
+    int* ptr = (int*)elements.b1;
     while(n--){
         switch(type | -(!ptr)){
             case CHAR:   r.elements.b1[n].i  = elements.b1[n].i; break;
@@ -98,7 +98,7 @@ vecN vector_addition(vecN a, vecN b){
                 r.elements.b1[a.n].i = safe_char_addition(a.elements.b1[a.n].i, b.elements.b1[a.n].i, &r.v_error);
             break;
             case UCHAR:
-                r.elements.b1[a.n].ui = safe_unsigned_char_addition(a.elements.b1[a.n].ui, b.elements.b1[a.n].ui, &r.v_error); 
+                r.elements.b1[a.n].ui = safe_uchar_addition(a.elements.b1[a.n].ui, b.elements.b1[a.n].ui, &r.v_error); 
             break;
             case INT: 
                 r.elements.b4[a.n].i = safe_int_addition(a.elements.b4[a.n].i, b.elements.b4[a.n].i, &r.v_error); 
@@ -128,8 +128,6 @@ vecN vector_addition(vecN a, vecN b){
 }
 
 
-
-
 vecN vector_multiplication(vecN a, vecN b){
     if(a.type != b.type){ return a; }
     vecN r = {a.type, a.n, malloc(amount_of_type_bytes(a.type) * a.n), NO_ERROR};
@@ -151,19 +149,111 @@ vecN vector_multiplication(vecN a, vecN b){
             r.elements.b8[a.n].i = safe_lint_multiplication(a.elements.b8[a.n].i, b.elements.b8[a.n].i, &r.v_error);
             break;
             case LUINT: 
-            r.elements.b8[a.n].ui = safe_luint_multipication(a.elements.b8[a.n].ui, b.elements.b8[a.n].ui, &r.v_error);
+            r.elements.b8[a.n].ui = safe_luint_multiplication(a.elements.b8[a.n].ui, b.elements.b8[a.n].ui, &r.v_error);
             break;            
             case FLOAT: 
-                r.elements.b4[a.n].f = safe_float_multiplication_rounding((fbits){ .f = a.elements.b4[a.n].f }, (fbits){ .f = b.elements.b4[a.n].f }, &r.v_error);
+                r.elements.b4[a.n].f = safe_float_multiplication_with_rounding((fbits){ .f = a.elements.b4[a.n].f }, (fbits){ .f = b.elements.b4[a.n].f }, &r.v_error);
             break;
             case DOUBLE:
-                r.elements.b8[a.n].d = safe_double_mutltiplication_with_rounding((dbits){ .d = a.elements.b8[a.n].d }, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error);
+                r.elements.b8[a.n].d = safe_double_multiplication_with_rounding((dbits){ .d = a.elements.b8[a.n].d }, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error);
             break;
             default: 
                 r.elements.b1[a.n].i = a.elements.b1[a.n].i; 
             break; 
         }
 
+    }
+    return r;
+}
+
+vecN vector_exponentiation(vecN a, vecN b){
+    unsigned char a_elem_size = amount_of_type_bytes(a.type), b_elem_size = amount_of_type_bytes(b.type), r_elem_size = -(a_elem_size > b_elem_size);
+    r_elem_size = (r_elem_size & a_elem_size) | (r_elem_size & b_elem_size);
+    vecN r = {a.type, a.n, malloc(a.n * r_elem_size), NO_ERROR};
+    long int a_lint, b_lint;
+    long unsigned int a_luint, b_luint; 
+    while(a.n--){
+        switch(a.type){
+            case DOUBLE:
+                switch(b.type){
+                    case DOUBLE: r.elements.b8[a.n].d = exp_double2double((dbits){ .d = a.elements.b8[a.n].d}, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break;// DONE
+                    case FLOAT:  r.elements.b8[a.n].d = exp_double2double((dbits){ .d = a.elements.b8[a.n].d}, (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break;// DONE
+                    case CHAR:   r.elements.b8[a.n].d = exp_double2lint(  (dbits){ .d = a.elements.b8[a.n].d},               b.elements.b1[a.n].i,  &r.v_error); break;// DONE
+                    case UCHAR:  r.elements.b8[a.n].d = exp_double2luint( (dbits){ .d = a.elements.b8[a.n].d},               b.elements.b1[a.n].ui, &r.v_error); break;// DONE
+                    case INT:    r.elements.b8[a.n].d = exp_double2lint(  (dbits){ .d = a.elements.b8[a.n].d},               b.elements.b4[a.n].i,  &r.v_error); break;// DONE
+                    case UINT:   r.elements.b8[a.n].d = exp_double2luint( (dbits){ .d = a.elements.b8[a.n].d},               b.elements.b4[a.n].ui, &r.v_error); break;// DONE
+                    case LINT:   r.elements.b8[a.n].d = exp_double2lint(  (dbits){ .d = a.elements.b8[a.n].d},               b.elements.b8[a.n].i,  &r.v_error); break;// DONE
+                    case LUINT:  r.elements.b8[a.n].d = exp_double2luint( (dbits){ .d = a.elements.b8[a.n].d},               b.elements.b8[a.n].ui, &r.v_error); break;// DONE
+                }
+            case FLOAT:
+                switch(b.type){
+                    case DOUBLE: r.elements.b8[a.n].d = exp_double2double((dbits){ .d = a.elements.b4[a.n].f}, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); r.type = DOUBLE; break;// DONE
+                    case FLOAT:  r.elements.b4[a.n].f = exp_float2float((fbits){ .f = a.elements.b4[a.n].f},   (fbits){ .f = b.elements.b4[a.n].f}, &r.v_error); break;// DONE
+                    case CHAR:   r.elements.b4[a.n].f = exp_float2lint( (fbits){ .f = a.elements.b4[a.n].f},               b.elements.b1[a.n].i, &r.v_error);    break;// DONE
+                    case UCHAR:  r.elements.b4[a.n].f = exp_float2luint((fbits){ .f = a.elements.b4[a.n].f},               b.elements.b1[a.n].ui, &r.v_error);   break;// DONE
+                    case INT:    r.elements.b4[a.n].f = exp_float2lint( (fbits){ .f = a.elements.b4[a.n].f},               b.elements.b4[a.n].i, &r.v_error);    break;// DONE
+                    case UINT:   r.elements.b4[a.n].f = exp_float2luint((fbits){ .f = a.elements.b4[a.n].f},               b.elements.b4[a.n].ui, &r.v_error);   break;// DONE
+                    case LINT:   r.elements.b8[a.n].d = exp_float2lint( (fbits){ .f = a.elements.b4[a.n].f},               b.elements.b8[a.n].i, &r.v_error);    break;// DONE
+                    case LUINT:  r.elements.b8[a.n].d = exp_float2luint((fbits){ .f = a.elements.b4[a.n].f},               b.elements.b8[a.n].ui, &r.v_error);   break;// DONE
+                }
+            default:
+                switch(b.type){
+                    case DOUBLE: 
+                        switch(a.type){
+                            case CHAR:  r.elements.b8[a.n].i  = exp_lint2double( a.elements.b1[a.n].i,  (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break; // DONE
+                            case UCHAR: r.elements.b8[a.n].ui = exp_luint2double(a.elements.b1[a.n].ui, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break; // DONE
+                            case INT:   r.elements.b8[a.n].i  = exp_lint2double( a.elements.b4[a.n].i,  (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break; // DONE
+                            case UINT:  r.elements.b8[a.n].ui = exp_luint2double(a.elements.b4[a.n].ui, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break; // DONE
+                            case LINT:  r.elements.b8[a.n].i  = exp_lint2double( a.elements.b8[a.n].i,  (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break; // DONE
+                            case LUINT: r.elements.b8[a.n].ui = exp_luint2double(a.elements.b8[a.n].ui, (dbits){ .d = b.elements.b8[a.n].d}, &r.v_error); break; // DONE
+                        }
+                    break;
+                    case FLOAT: 
+                    switch(a.type){
+                        case CHAR:  r.elements.b4[a.n].i  = exp_lint2double( a.elements.b1[a.n].i,  (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
+                        case UCHAR: r.elements.b4[a.n].ui = exp_luint2double(a.elements.b1[a.n].ui, (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
+                        case INT:   r.elements.b4[a.n].i  = exp_lint2double( a.elements.b4[a.n].i,  (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
+                        case UINT:  r.elements.b4[a.n].ui = exp_luint2double(a.elements.b4[a.n].ui, (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
+                        case LINT:  r.elements.b8[a.n].i  = exp_lint2double( a.elements.b8[a.n].i,  (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
+                        case LUINT: r.elements.b8[a.n].ui = exp_luint2double(a.elements.b8[a.n].ui, (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
+                    }
+                    break;
+                    default:
+                        // if (r_elem_size == a_elem_size) { b.type = a.type; }
+                        // else{ a.type = b.type; }
+                        switch(b.type){
+                            case CHAR:  b_lint  = b.elements.b1[a.n].i;  break;
+                            case INT:   b_lint  = b.elements.b4[a.n].i;  break;
+                            case LINT:  b_lint  = b.elements.b8[a.n].i;  break;
+                            case UCHAR: b_luint = b.elements.b1[a.n].ui; break;
+                            case UINT:  b_luint = b.elements.b4[a.n].ui; break;
+                            case LUINT: b_luint = b.elements.b8[a.n].ui; break;
+                        }
+                        switch(a.type){
+                            case CHAR:  a_lint  = a.elements.b1[a.n].i;  break;
+                            case INT:   a_lint  = a.elements.b4[a.n].i;  break;
+                            case LINT:  a_lint  = a.elements.b8[a.n].i;  break;
+                            case UCHAR: a_luint = a.elements.b1[a.n].ui; break;
+                            case UINT:  a_luint = a.elements.b4[a.n].ui; break;
+                            case LUINT: a_luint = a.elements.b8[a.n].ui; break;
+
+                        }
+
+                        switch(a.type){
+                            case CHAR: 
+                            case INT: 
+                            case LINT:
+                                switch(r_elem_size){
+                                    case 1: 
+                                    case 4:
+                                    case 8:
+                                }
+                            break;
+
+                        }
+                        break; 
+                }
+        }      
     }
     return r;
 }

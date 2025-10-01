@@ -54,7 +54,6 @@ union POINTERS_TO_ALL_DATA_TYPES {
 struct vector_n{
     datatype type;
     unsigned int n;
-    unsigned char element_size;
     alldatapointer elements;
     error v_error;
 } typedef vecN;
@@ -233,16 +232,17 @@ vecN vector_exponentiation(vecN a, vecN b){
                     }
                     break;
                     default:
-                        if (r.element_size == a.element_size) { b.type = a.type; }
-                        else{ a.type = b.type; }
-                        r.elements.b1[a.n].i  = pow(a.elements.b1[a.n].i , b.elements.b1[a.n].i); 
-                        r.elements.b1[a.n].ui = pow(a.elements.b1[a.n].ui, b.elements.b1[a.n].ui);
-                        r.elements.b4[a.n].i  = pow(a.elements.b4[a.n].i , b.elements.b4[a.n].i);
-                        r.elements.b4[a.n].ui = pow(a.elements.b4[a.n].ui, b.elements.b4[a.n].ui);
-                        r.elements.b8[a.n].i  = pow(a.elements.b8[a.n].i , b.elements.b8[a.n].i);
-                        r.elements.b8[a.n].ui = pow(a.elements.b8[a.n].ui, b.elements.b8[a.n].ui);
+                        // if (r.element_size == a.element_size) { b.type = a.type; }
+                        // else{ a.type = b.type; }
+                        // r.elements.b1[a.n].i  = pow(a.elements.b1[a.n].i , b.elements.b1[a.n].i); 
+                        // r.elements.b1[a.n].ui = pow(a.elements.b1[a.n].ui, b.elements.b1[a.n].ui);
+                        // r.elements.b4[a.n].i  = pow(a.elements.b4[a.n].i , b.elements.b4[a.n].i);
+                        // r.elements.b4[a.n].ui = pow(a.elements.b4[a.n].ui, b.elements.b4[a.n].ui);
+                        // r.elements.b8[a.n].i  = pow(a.elements.b8[a.n].i , b.elements.b8[a.n].i);
+                        // r.elements.b8[a.n].ui = pow(a.elements.b8[a.n].ui, b.elements.b8[a.n].ui);
                     break; 
                 }
         }      
     }
+    return r;
 }
