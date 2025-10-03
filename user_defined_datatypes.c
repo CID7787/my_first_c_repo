@@ -85,27 +85,27 @@ typedef enum error_code{
 }error;
 
 typedef union one_byte_all_types{
-  int8_t i;
-  uint8_t ui;
+  int8_t* i;
+  uint8_t* ui;
 }B1type;
 
 typedef union four_byte_all_types{
-  int32_t i;
-  uint32_t ui;
-  float f;
+  int32_t* i;
+  uint32_t* ui;
+  float* f;
 }B4type;
 
 typedef union eight_byte_all_types{
-  int64_t i;
-  uint64_t ui;
-  double d;
+  int64_t* i;
+  uint64_t* ui;
+  double* d;
 }B8type;
 
 
 union POINTERS_TO_ALL_DATA_TYPES {
-  B1type* b1;
-  B4type* b4;
-  B8type* b8;
+  B1type b1;
+  B4type b4;
+  B8type b8;
 } typedef alldatapointer;
 
 enum DATATYPES { // enumeration

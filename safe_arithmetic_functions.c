@@ -258,6 +258,23 @@ float safe_float_multiplication_with_rounding(fbits a, fbits b, error* err){
 }  
 
 
+// FUNCTION: double_division(dbits, dbits, error*)
+  
+float safe_float_division_with_rounding(fbits a, fbits b, error* err){// quotient, remainder
+  if(!err){ return a.f; }
+  unsigned char a_overfl_cond = -(a.parts.exp > MAX_NORM_FLOAT_EXP), b_overfl_cond = -(b.parts.exp > MAX_NORM_FLOAT_EXP);
+  *err = ( a_overfl_cond & ((-a.parts.sign & NEGATIVE_INFINITY) | (-(!a.parts.sign) & POSITIVE_INFINITY)) ) | (-(!a_overfl_cond) & *err);// check for infinity value
+  *err = ( b_overfl_cond & ((-b.parts.sign & NEGATIVE_INFINITY) | (-(!b.parts.sign) & POSITIVE_INFINITY)) ) | (-(!b_overfl_cond) & *err);// check for infinity value
+  a_overfl_cond &= a.parts.mantissa; 
+  b_overfl_cond &= b.parts.mantissa;
+  *err = (a_overfl_cond & QNAN) | (-(!a_overfl_cond) & *err);// check for NaN
+  *err = (b_overfl_cond & QNAN) | (-(!b_overfl_cond) & *err);// check for NaN
+  b_overfl_cond = -(b.f == 0);
+  *err = (b_overfl_cond & DIVISION_BY_ZERO) | (-(!b_overfl_cond) & *err);
+  return a.f / b.f;
+}
+
+
 // FUNCTION: double_addition(dbits, error*)
 
 double safe_double_addition(dbits a, dbits b, error* err){
@@ -315,11 +332,13 @@ dbits safe_double_mantissa_multiplication_without_rouding(dbits a, dbits b, erro
 
 double safe_double_multiplication_without_rounding(dbits a, dbits b, error* err){
   if(!err){ return a.d; }
-  unsigned char a_overfl_cond = a.parts.exp > MAX_NORM_DOUBLE_EXP, b_overfl_cond = b.parts.exp > MAX_NORM_DOUBLE_EXP;
-  *err = ternary(a_overfl_cond, ternary(a.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), *err);// check for infinity value
-  *err = ternary(b_overfl_cond, ternary(b.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), *err);// check for infinity value
-  *err = ternary(a_overfl_cond && a.parts.mantissa, QNAN, *err);// check for NaN
-  *err = ternary(b_overfl_cond && b.parts.mantissa, QNAN, *err);// check for NaN
+  unsigned char a_overfl_cond = -(a.parts.exp > MAX_NORM_DOUBLE_EXP), b_overfl_cond = -(b.parts.exp > MAX_NORM_DOUBLE_EXP);
+  *err = ( a_overfl_cond & ((-a.parts.sign & NEGATIVE_INFINITY) | (-(!a.parts.sign) & POSITIVE_INFINITY)) ) | (-(!a_overfl_cond) & *err);// check for infinity value
+  *err = ( b_overfl_cond & ((-b.parts.sign & NEGATIVE_INFINITY) | (-(!b.parts.sign) & POSITIVE_INFINITY)) ) | (-(!b_overfl_cond) & *err);// check for infinity value
+  a_overfl_cond &= a.parts.mantissa; 
+  b_overfl_cond &= b.parts.mantissa;
+  *err = (a_overfl_cond & QNAN) | (-(!a_overfl_cond) & *err);// check for NaN
+  *err = (b_overfl_cond & QNAN) | (-(!b_overfl_cond) & *err);// check for NaN
   if(!a.d | !b.d){ return 0; } // check whether or not one of arguments equal to 0
   dbits result = b;
   result = safe_double_mantissa_multiplication_without_rouding(a, b, err); if(*err){ return result.d; }
@@ -390,11 +409,13 @@ a_right * b_left = (aaaaaaaa aaaaaaaa aaaaaaaa aaaaaaaa * 00000000 0000000b bbbb
 
 double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
   if(!err){ return a.d; }// check whether or not is NULL pointer
-  unsigned char a_overfl_cond = a.parts.exp > MAX_NORM_DOUBLE_EXP, b_overfl_cond = b.parts.exp > MAX_NORM_DOUBLE_EXP;
-  *err = ternary(a_overfl_cond, ternary(a.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), *err);// check for infinity value
-  *err = ternary(b_overfl_cond, ternary(b.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), *err);// check for infinity value
-  *err = ternary(a_overfl_cond && a.parts.mantissa, QNAN, *err);// check for NaN
-  *err = ternary(b_overfl_cond && b.parts.mantissa, QNAN, *err);// check for NaN
+  unsigned char a_overfl_cond = -(a.parts.exp > MAX_NORM_DOUBLE_EXP), b_overfl_cond = -(b.parts.exp > MAX_NORM_DOUBLE_EXP);
+  *err = (a_overfl_cond & ((-a.parts.sign & NEGATIVE_INFINITY) | (-(!a.parts.sign) & POSITIVE_INFINITY)) ) | (-(!a_overfl_cond) & *err);// check for infinity value
+  *err = ( b_overfl_cond & ((-b.parts.sign & NEGATIVE_INFINITY) | (-(!b.parts.sign) & POSITIVE_INFINITY)) ) | (-(!b_overfl_cond) & *err);// check for infinity value
+  a_overfl_cond &= a.parts.mantissa; 
+  b_overfl_cond &= b.parts.mantissa;
+  *err = (a_overfl_cond & QNAN) | (-(!a_overfl_cond) & *err);// check for NaN
+  *err = (b_overfl_cond & QNAN) | (-(!b_overfl_cond) & *err);// check for NaN
   if(!a.d | !b.d){ return 0; }// check whether or not one of argument is equal to 0
   dbits result = safe_double_mantissa_multiplication_with_rounding(a, b);
   int exponent = a.parts.exp + b.parts.exp + result.parts.exp - DOUBLE_EXP_BIAS;
@@ -405,6 +426,23 @@ double safe_double_multiplication_with_rounding(dbits a, dbits b, error* err){
   result.parts.exp = exponent;
   return result.d;
 }  
+
+
+// FUNCTION: double_division(dbits, dbits, error*)
+  
+double safe_double_division_with_rounding(dbits a, dbits b, error* err){// quotient, remainder
+  if(!err){ return a.d; }
+  unsigned char a_overfl_cond = -(a.parts.exp > MAX_NORM_DOUBLE_EXP), b_overfl_cond = -(b.parts.exp > MAX_NORM_DOUBLE_EXP);
+  *err = ( a_overfl_cond & ((-a.parts.sign & NEGATIVE_INFINITY) | (-(!a.parts.sign) & POSITIVE_INFINITY)) ) | (-(!a_overfl_cond) & *err);// check for infinity value
+  *err = ( b_overfl_cond & ((-b.parts.sign & NEGATIVE_INFINITY) | (-(!b.parts.sign) & POSITIVE_INFINITY)) ) | (-(!b_overfl_cond) & *err);// check for infinity value
+  a_overfl_cond &= a.parts.mantissa; 
+  b_overfl_cond &= b.parts.mantissa;
+  *err = (a_overfl_cond & QNAN) | (-(!a_overfl_cond) & *err);// check for NaN
+  *err = (b_overfl_cond & QNAN) | (-(!b_overfl_cond) & *err);// check for NaN
+  b_overfl_cond = -(b.d == 0);
+  *err = (b_overfl_cond & DIVISION_BY_ZERO) | (-(!b_overfl_cond) & *err);
+  return a.d / b.d;
+}
 
 
 // FUNCTION: factorial(unsigned int, error*)
@@ -619,7 +657,8 @@ float float_division(float result, float m1, float precision){ // a = 9, b = 3 c
 
 double exp_double2luint(dbits a, long unsigned int b, error* err){
   if(!err){ return a.d; }
-  *err = ternary(!(a.d) && !b, ZERO_TO_ZERO, *err);
+  unsigned int cond = -(!(a.d || b));
+  *err = (cond & ZERO_TO_ZERO) | (-(!cond) & *err);
   dbits r = (dbits){ .d = 1.0 };
   while(b-- && !(*err)){
       r.d = safe_double_multiplication_with_rounding(r, a, err);
@@ -705,9 +744,11 @@ long unsigned int exp_luint2luint(long unsigned int a, long unsigned int b, erro
 
 float exp_float2float(fbits a, fbits b, error* err){
   if(!err){ return a.f; }
-  fbits result = (fbits){ .f = 1}; 
-  *err = ternary(b.f - have_frac_part((dbits){.d = b.f}), ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER, *err); 
-  *err = ternary(!(a.f) && !(b.f), ZERO_TO_ZERO, *err);
+  fbits result = (fbits){ .f = 1};
+  unsigned int cond = -( have_frac_part((dbits){ .d = b.f }) ); 
+  *err = (cond & ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER) | (-(!cond) & *err);
+  cond = -(!(a.f || b.f)); 
+  *err = (cond & ZERO_TO_ZERO) | (-(!cond) & *err);
   if(b.f < 0){
     while(b.f++ && !(*err)){
       result.f = safe_float_division_with_rounding(result, a, err);// TODO: WRITE FLOAT DIVISION WITH ROUNDING FUNCTION
@@ -727,8 +768,10 @@ float exp_float2float(fbits a, fbits b, error* err){
 double exp_double2double(dbits a, dbits b, error* err){
   if(!err){ return a.d; }
   dbits result = (dbits){ .d = 1};
-  *err = ternary(have_frac_part(b), ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER, *err); 
-  *err = ternary(!(a.d) && !(b.d), ZERO_TO_ZERO, *err);
+  unsigned int cond = -have_frac_part(b);
+  *err = (cond & ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER) | (-(!cond) & *err);
+  cond = -(!(a.d || b.d));
+  *err = (cond & ZERO_TO_ZERO) | (-(!cond) & *err);
   if(b.d < 0){ 
     while(b.d++ && !(*err)){  
       result.d = safe_double_division_with_rounding(result, a, err);// TODO: WRITE DOUBLE DIVISION WITH ROUNDING FUNCTION
@@ -748,7 +791,8 @@ double exp_double2double(dbits a, dbits b, error* err){
 double exp_double2lint(dbits a, long int b, error* err){
   if(!err){ return a.d; }
   dbits r = (dbits){ .d = 1.0 };
-  *err = ternary(!(a.d) && !b, ZERO_TO_ZERO, *err);
+  unsigned int cond = -(!(a.d || b));
+  *err = (cond & ZERO_TO_ZERO) | (-(!cond) & *err);
   if(b < 0){ 
       while(b++ && !(*err)){
           r.d = safe_double_division_with_rounding(r, a, err);// TODO: WRITE DOUBLE DIVISION WITH ROUNDING FUNCTION
@@ -767,7 +811,8 @@ double exp_double2lint(dbits a, long int b, error* err){
 
 float exp_float2lint(fbits a, long int b, error* err){
   if(!err){ return a.f; }
-  *err = ternary(!(a.f) && !b, ZERO_TO_ZERO, *err);
+  unsigned int cond = -(!(a.f || b));
+  *err = (cond & ZERO_TO_ZERO) | (-(!cond) & *err);
   fbits result = (fbits){ .f = 1.0 };
   if(b < 0){ 
       while(b++ && !(*err)){
@@ -787,7 +832,8 @@ float exp_float2lint(fbits a, long int b, error* err){
 
 float exp_float2luint(fbits a, long unsigned int b, error* err){
   if(!err){ return a.f; }
-  *err = ternary(!(a.f) && !b, ZERO_TO_ZERO, *err);
+  unsigned int cond = -(!(a.f || b));
+  *err = (cond & ZERO_TO_ZERO) | (-(!cond) & *err);
   fbits result = (fbits){ .f = 1.0 };
   while(b-- && !(*err)){
       a.f = safe_float_multiplication_with_rounding(result, a, err);
@@ -802,7 +848,7 @@ long int exp_lint2double(long int a, dbits b, error* err){
   if(!err){ return a; }
   long int r = 1;
   unsigned int cond = -have_frac_part(b);
-  *err = (cond & ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER) | (cond & *err);
+  *err = (cond & ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER) | (-(!cond) & *err);
   cond = -(!a & !b.d);
   *err = (cond & ZERO_TO_ZERO) | (cond & *err);
   cond = -(b.d < 0);
@@ -820,11 +866,11 @@ long unsigned int exp_luint2double(long unsigned int a, dbits b, error* err){
   if(!err){ return a; }
   long unsigned int r = 1;
   unsigned int cond = -have_frac_part(b);
-  *err = (cond & ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER) | (cond & *err);
-  cond = -(!a & !b.d);
-  *err = (cond & ZERO_TO_ZERO) | (cond & *err);
+  *err = (cond & ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER) | (-(!cond) & *err);
+  cond = -(!(a || b.d));
+  *err = (cond & ZERO_TO_ZERO) | (-(!cond) & *err);
   cond = -(b.d < 0);
-  *err = (cond & UNDERFLOW) | (cond & *err);
+  *err = (cond & UNDERFLOW) | (-(!cond) & *err);
   while(b.d-- && !(*err)){
       r = safe_luint_multiplication(r, a, err);
   } 
@@ -834,18 +880,13 @@ long unsigned int exp_luint2double(long unsigned int a, dbits b, error* err){
 
 // exponentiation long int to luint(long int, long unsigned int)
 
-long int exp_lin2luint(long int a, long unsigned int b, error* err){ 
+long int exp_lint2luint(long int a, long unsigned int b, error* err){ 
   if(!err){ return a; }
   long int result = 1;
   while(b-- && !(*err)){
-      result = safe_lint_multiplication(result, a, err);
+    result = safe_lint_multiplication(result, a, err);
   }    
   return result;
 }
 
 
-// FUNCTION: double_division
-
-double safe_double_division(double dividend, double divisor){// quotient, remainder
-    return dividend / divisor;
-}
