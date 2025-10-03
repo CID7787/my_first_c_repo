@@ -52,7 +52,6 @@ vecN vector_creation(datatype type, unsigned int n, alldatapointer elements){
     return r;
 }   
 
-
 vecN vector_negation(vecN a){
     vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type)), NO_ERROR};
     while(a.n-- ){
@@ -127,7 +126,6 @@ vecN vector_addition(vecN a, vecN b){
     return r;
 }
 
-
 vecN vector_multiplication(vecN a, vecN b){
     if(a.type != b.type){ return a; }
     vecN r = {a.type, a.n, malloc(amount_of_type_bytes(a.type) * a.n), NO_ERROR};
@@ -165,6 +163,7 @@ vecN vector_multiplication(vecN a, vecN b){
     }
     return r;
 }
+
 
 vecN vector_exponentiation(vecN a, vecN b){
     unsigned char a_elem_size = amount_of_type_bytes(a.type), b_elem_size = amount_of_type_bytes(b.type), r_elem_size = -(a_elem_size > b_elem_size);
@@ -209,18 +208,16 @@ vecN vector_exponentiation(vecN a, vecN b){
                         }
                     break;
                     case FLOAT: 
-                    switch(a.type){
-                        case CHAR:  r.elements.b4[a.n].i  = exp_lint2double( a.elements.b1[a.n].i,  (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
-                        case UCHAR: r.elements.b4[a.n].ui = exp_luint2double(a.elements.b1[a.n].ui, (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
-                        case INT:   r.elements.b4[a.n].i  = exp_lint2double( a.elements.b4[a.n].i,  (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
-                        case UINT:  r.elements.b4[a.n].ui = exp_luint2double(a.elements.b4[a.n].ui, (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
-                        case LINT:  r.elements.b8[a.n].i  = exp_lint2double( a.elements.b8[a.n].i,  (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
-                        case LUINT: r.elements.b8[a.n].ui = exp_luint2double(a.elements.b8[a.n].ui, (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
-                    }
+                        switch(a.type){
+                            case CHAR:  r.elements.b4[a.n].i  = exp_lint2double( a.elements.b1[a.n].i,  (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
+                            case UCHAR: r.elements.b4[a.n].ui = exp_luint2double(a.elements.b1[a.n].ui, (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
+                            case INT:   r.elements.b4[a.n].i  = exp_lint2double( a.elements.b4[a.n].i,  (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
+                            case UINT:  r.elements.b4[a.n].ui = exp_luint2double(a.elements.b4[a.n].ui, (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
+                            case LINT:  r.elements.b8[a.n].i  = exp_lint2double( a.elements.b8[a.n].i,  (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
+                            case LUINT: r.elements.b8[a.n].ui = exp_luint2double(a.elements.b8[a.n].ui, (dbits){ .d = b.elements.b4[a.n].f}, &r.v_error); break; // DONE
+                        }
                     break;
-                    default:
-                        // if (r_elem_size == a_elem_size) { b.type = a.type; }
-                        // else{ a.type = b.type; }
+                    default: {
                         switch(b.type){
                             case CHAR:  b_lint  = b.elements.b1[a.n].i;  break;
                             case INT:   b_lint  = b.elements.b4[a.n].i;  break;
@@ -238,22 +235,111 @@ vecN vector_exponentiation(vecN a, vecN b){
                             case LUINT: a_luint = a.elements.b8[a.n].ui; break;
 
                         }
-
-                        switch(a.type){
-                            case CHAR: 
-                            case INT: 
-                            case LINT:
-                                switch(r_elem_size){
-                                    case 1: 
-                                    case 4:
-                                    case 8:
+                        switch(r_elem_size){
+                            case 1:
+                                switch(a.type){
+                                    case CHAR:  r.v_error = ternary((b.type == CHAR) & (b_lint < 0), UNDERFLOW, r.v_error);
+                                                r.elements.b1[a.n].i = exp_lint2luint(a_lint, b_luint, &r.v_error);
+                                    break; 
+                                    case UCHAR: r.v_error = ternary((b.type == CHAR) & (b_lint < 0), UNDERFLOW, r.v_error);
+                                                r.elements.b1[a.n].ui = exp_uchar2uchar(a_luint, b_luint, &r.v_error);
+                                    break;       
+                                } 
+                            break;  
+                            case 4:
+                                switch(a.type){
+                                    case CHAR:
+                                    case INT:   r.v_error = ternary(( (b.type == CHAR) | (b.type == INT) ) & (b_lint < 0), UNDERFLOW, r.v_error);
+                                                r.elements.b4[a.n].i = exp_lint2luint(a_lint, b_luint, &r.v_error);
+                                    break;
+                                    case UCHAR:
+                                    case UINT: r.v_error = ternary(( (b.type == CHAR) | (b.type == INT) ) & (b_lint < 0), UNDERFLOW, r.v_error);
+                                               r.elements.b4[a.n].ui = exp_uint2uint(a_luint, b_luint, &r.v_error);
+                                    break; 
                                 }
                             break;
-
+                            case 8:
+                                switch(a.type){
+                                    case CHAR:
+                                    case INT:
+                                    case LINT:  r.v_error = ternary(( (b.type == CHAR) | (b.type == INT) | (b.type == LINT) ) & (b_lint < 0), UNDERFLOW, r.v_error);
+                                                r.elements.b8[a.n].i = exp_lint2luint(a_lint, b_luint, &r.v_error);
+                                    break;
+                                    case UCHAR:
+                                    case UINT:
+                                    case LUINT: r.v_error = ternary(( (b.type == CHAR) | (b.type == INT) | (b.type == LINT) ) & (b_lint < 0), UNDERFLOW, r.v_error);
+                                                r.elements.b8[a.n].ui = exp_luint2luint(a_luint, b_luint, &r.v_error);
+                                    break;
+                                }
+                            break;
                         }
-                        break; 
+                    }
                 }
         }      
     }
     return r;
 }
+/* prototype of how last default should look like
+switch(a.type){
+    case CHAR:
+        switch(b.type){
+            case CHAR: r.v_error = ternary(b.elements.b1[a.n].i < 0, UNDERFLOW, r.v_error); r.elements.b1[a.n].i = exp_char2uchar(a.elements.b1[a.n].i, a.elements.b1[a.n].i, &r.v_error);
+            case UCHAR: r.elements.b1[a.n].i = exp_char2uchar(a.elements.b1[a.n].i, b.elements.b1[a.n].ui, &r.v_error);
+            case INT: r.v_error = ternary(b.elements.b4[a.n].i < 0, UNDERFLOW, r.v_error); r.elements.b4[a.n].i = exp_int2uint(a.elements.b1[a.n].i, b.elements.b4[a.n].i, &r.v_error);
+            case UINT: r.elements.b4[a.n].i = exp_int2uint(a.elements.b1[a.n].i, a.elements.b4[a.n].ui, r.v_error);
+            case LINT: r.v_error = ternary(b.elements.b8[a.n].i < 0, UNDERFLOW, r.v_error); r.elements.b8[a.n].i = exp_lint2luint(a.elements.b1[a.n].i, b.elements.b8[a.n].i, &r.v_error);
+            case LUINT: r.elements.b8[a.n].i = exp_lint2luint(a.elements.b1[a.n].i, b.elements.b8[a.n].ui, &r.v_error);
+        }
+    break;
+    case UCHAR:
+        switch(b.type){
+            case CHAR: r.v_error = ternary(b.elements.b1[a.n].i < 0, UNDERFLOW, r.v_error); r.elements.b1[a.n].ui = exp_uchar2uchar(a.elements.b1[a.n].ui, a.elements.b1[a.n].i, &r.v_error);
+            case UCHAR: r.elements.b1[a.n].ui = exp_uchar2uchar(a.elements.b1[a.n].ui, b.elements.b1[a.n].ui, &r.v_error);
+            case INT: r.v_error = ternary(b.elements.b4[a.n].i < 0, UNDERFLOW, r.v_error); r.elements.b4[a.n].ui = exp_uint2uint(a.elements.b1[a.n].ui, b.elements.b4[a.n].i, &r.v_error);
+            case UINT: r.elements.b4[a.n].ui = exp_uint2uint(a.elements.b1[a.n].ui, a.elements.b4[a.n].ui, r.v_error);
+            case LINT: r.v_error = ternary(b.elements.b1[a.n].i < 0, UNDERFLOW, r.v_error); r.elements.b8[a.n].ui = exp_luint2luint(a.elements.b1[a.n].ui, b.elements.b8[a.n].i, &r.v_error);
+            case LUINT: r.elements.b8[a.n].ui = exp_luint2luint(a.elements.b1[a.n].ui, b.elements.b8[a.n].ui, &r.v_error);
+        }
+    break;
+    case INT:
+        switch(b.type){
+            case CHAR: r.v_error = ternary(b.elements.b1[a.n].i < 0, UNDERFLOW, r.v_error); r.elements.b4[a.n].i = exp_int2uchar(a.elements.b4[a.n].i, a.elements.b1[a.n].i, &r.v_error);
+            case UCHAR: r.elements.b4[a.n].i = exp_int2uint(a.elements.b4[a.n].i, b.elements.b1[a.n].ui, &r.v_error);
+            case INT: r.v_error = ternary(b.elements.b4[a.n].i < 0, UNDERFLOW, r.v_error); r.elements.b4[a.n].i = exp_int2uint(a.elements.b4[a.n].i, b.elements.b4[a.n].i, &r.v_error);
+            case UINT: r.elements.b4[a.n].i = exp_int2uint(a.elements.b4[a.n].i, a.elements.b4[a.n].ui, r.v_error);
+            case LINT: r.v_error = ternary(b.elements.b8[a.n].i < 0, UNDERFLOW, r.v_error); r.elements.b8[a.n].i = exp_lint2luint(a.elements.b4[a.n].i, b.elements.b8[a.n].i, &r.v_error);
+            case LUINT: r.elements.b8[a.n].i = exp_lint2luint(a.elements.b4[a.n].i, b.elements.b8[a.n].ui, &r.v_error);
+        }
+    break;
+    case UINT:
+        switch(b.type){
+            case CHAR: r.v_error = ternary(b.elements.b1[a.n].i < 0, UNDERFLOW, r.v_error); r.elements.b4[a.n].ui = exp_uint2uint(a.elements.b4[a.n].ui, a.elements.b1[a.n].i, &r.v_error);
+            case UCHAR: r.elements.b4[a.n].ui = exp_uint2uint(a.elements.b1[a.n].ui, b.elements.b1[a.n].ui, &r.v_error);
+            case INT: r.v_error = ternary(b.elements.b4[a.n].i < 0, UNDERFLOW, r.v_error); r.elements.b4[a.n].ui = exp_uint2uint(a.elements.b4[a.n].ui, b.elements.b4[a.n].i, &r.v_error);
+            case UINT: r.elements.b4[a.n].ui = exp_uint2uint(a.elements.b4[a.n].ui, a.elements.b4[a.n].ui, r.v_error);
+            case LINT: r.v_error = ternary(b.elements.b8[a.n].i < 0, UNDERFLOW, r.v_error); r.elements.b8[a.n].ui = exp_luint2luint(a.elements.b4[a.n].ui, b.elements.b8[a.n].i, &r.v_error);
+            case LUINT: r.elements.b8[a.n].ui = exp_luint2luint(a.elements.b4[a.n].ui, b.elements.b8[a.n].ui, &r.v_error);
+        }
+    break;
+    case LINT:
+        switch(b.type){
+            case CHAR: r.v_error = ternary(b.elements.b1[a.n].i < 0, UNDERFLOW, r.v_error); r.elements.b8[a.n].i = exp_lint2luint(a.elements.b8[a.n].i, a.elements.b1[a.n].i, &r.v_error);
+            case UCHAR: r.elements.b8[a.n].i = exp_lint2luint(a.elements.b8[a.n].i, b.elements.b1[a.n].ui, &r.v_error);
+            case INT: r.v_error = ternary(b.elements.b4[a.n].i < 0, UNDERFLOW, r.v_error); r.elements.b8[a.n].i = exp_lint2luint(a.elements.b8[a.n].i, b.elements.b4[a.n].i, &r.v_error);
+            case UINT: r.elements.b8[a.n].i = exp_lint2uint(a.elements.b8[a.n].i, a.elements.b4[a.n].ui, r.v_error);
+            case LINT: r.v_error = ternary(b.elements.b8[a.n].i < 0, UNDERFLOW, r.v_error); r.elements.b8[a.n].i = exp_lint2luint(a.elements.b8[a.n].i, b.elements.b8[a.n].i, &r.v_error);
+            case LUINT: r.elements.b8[a.n].i = exp_lint2luint(a.elements.b8[a.n].i, b.elements.b8[a.n].ui, &r.v_error);
+        }
+    break;
+    case LUINT:
+        switch(b.type){
+            case CHAR: r.v_error = ternary(b.elements.b1[a.n].i < 0, UNDERFLOW, r.v_error); r.elements.b8[a.n].ui = exp_luint2luint(a.elements.b8[a.n].i, a.elements.b1[a.n].i, &r.v_error);
+            case UCHAR: r.elements.b8[a.n].ui = exp_luint2luint(a.elements.b8[a.n].ui, b.elements.b1[a.n].ui, &r.v_error);
+            case INT: r.v_error = ternary(b.elements.b4[a.n].i < 0, UNDERFLOW, r.v_error); r.elements.b8[a.n].ui = exp_luint2luint(a.elements.b8[a.n].ui, b.elements.b4[a.n].i, &r.v_error);
+            case UINT: r.elements.b8[a.n].ui = exp_luint2luint(a.elements.b8[a.n].ui, a.elements.b4[a.n].ui, r.v_error);
+            case LINT: r.v_error = ternary(b.elements.b8[a.n].i < 0, UNDERFLOW, r.v_error); r.elements.b8[a.n].ui = exp_luint2luint(a.elements.b8[a.n].ui, b.elements.b8[a.n].i, &r.v_error);
+            case LUINT: r.elements.b8[a.n].ui = exp_luint2luint(a.elements.b8[a.n].ui, b.elements.b8[a.n].ui, &r.v_error);
+        }
+    break;
+}
+*/

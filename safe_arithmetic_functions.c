@@ -832,6 +832,18 @@ long unsigned int exp_luint2double(long unsigned int a, dbits b, error* err){
 }
 
 
+// exponentiation long int to luint(long int, long unsigned int)
+
+long int exp_lin2luint(long int a, long unsigned int b, error* err){ 
+  if(!err){ return a; }
+  long int result = 1;
+  while(b-- && !(*err)){
+      result = safe_lint_multiplication(result, a, err);
+  }    
+  return result;
+}
+
+
 // FUNCTION: double_division
 
 double safe_double_division(double dividend, double divisor){// quotient, remainder
