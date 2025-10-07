@@ -33,20 +33,20 @@ unsigned int amount_of_type_bytes(datatype t){
 }
 
 
-vecN vector_creation(datatype type, unsigned int n, alldatapointer elements){
+vecN vector_creation(datatype type, unsigned int n, alldatapointer elements){// TESTED
     unsigned int r_element_size = amount_of_type_bytes(type);
     vecN r = {type, n, malloc(n * r_element_size), NO_ERROR};
     int* ptr = (int*)elements.b1.i;
     while(n--){
         switch(type | -(!ptr)){
             case CHAR:  r.elements.b1.i[n]  = elements.b1.i[n]; break;
+            case UCHAR: r.elements.b1.ui[n] = elements.b1.ui[n]; break;
             case INT:   r.elements.b4.i[n]  = elements.b4.i[n]; break;
-            case LINT:  r.elements.b8.i[n]  = elements.b8.i[n]; break;
-            case FLOAT: r.elements.b4.f[n]  = elements.b4.f[n]; break;
-            case DOUBLE:r.elements.b8.d[n]  = elements.b8.d[n]; break;
             case UINT:  r.elements.b4.ui[n] = elements.b4.ui[n]; break;
-            case UCHAR: r.elements.b1.ui[n] = elements.b4.ui[n]; break;
+            case FLOAT: r.elements.b4.f[n]  = elements.b4.f[n]; break;
+            case LINT:  r.elements.b8.i[n]  = elements.b8.i[n]; break;
             case LUINT: r.elements.b8.ui[n] = elements.b8.ui[n]; break;
+            case DOUBLE:r.elements.b8.d[n]  = elements.b8.d[n]; break;
             case -1:    switch(r_element_size){
                             case 1:   r.elements.b1.i[n] = 0; break;
                             case 4:   r.elements.b4.i[n] = 0; break;
@@ -57,19 +57,19 @@ vecN vector_creation(datatype type, unsigned int n, alldatapointer elements){
     return r;
 }   
 
-vecN vector_negation(vecN a){
+vecN vector_negation(vecN a){// TESTED
     vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type)), NO_ERROR};
     while(a.n-- ){
         switch(r.type){
             case CHAR: 
-                r.v_error = ternary(a.elements.b1.i[a.n] == MIN_CHAR, POSITIVE_OVERFLOW, r.v_error); 
+                r.v_error = ternary(a.elements.b1.i[a.n] == MIN_CHAR, POSITIVE_OVERFLOW, r.v_error); // TODO: replace ternary function call with bitwise and logical operators
                 r.elements.b1.i[a.n] = -a.elements.b1.i[a.n];
             break;
             case UCHAR:
                 r.elements.b1.ui[a.n] = a.elements.b1.ui[a.n]; 
             break;
             case INT: 
-                r.v_error = ternary(a.elements.b4.i[a.n] == MIN_INT, POSITIVE_OVERFLOW, r.v_error); 
+                r.v_error = ternary(a.elements.b4.i[a.n] == MIN_INT, POSITIVE_OVERFLOW, r.v_error); // TODO: replace ternary function call with bitwise and logical operators
                 r.elements.b4.i[a.n] =  -a.elements.b4.i[a.n]; 
             break;
             case UINT: 
@@ -79,7 +79,7 @@ vecN vector_negation(vecN a){
                 r.elements.b4.f[a.n] = -a.elements.b4.f[a.n]; 
             break;
             case LINT: 
-                r.v_error = ternary(a.elements.b8.i[a.n] == MIN_LINT, POSITIVE_OVERFLOW, r.v_error); 
+                r.v_error = ternary(a.elements.b8.i[a.n] == MIN_LINT, POSITIVE_OVERFLOW, r.v_error); // TODO: replace ternary function call with bitwise and logical operators
                 r.elements.b8.i[a.n] = -a.elements.b8.i[a.n]; 
             break;
             case LUINT: 
@@ -93,7 +93,7 @@ vecN vector_negation(vecN a){
     return r;
 }
 
-vecN vector_addition(vecN a, vecN b){
+vecN vector_addition(vecN a, vecN b){//TEST
     if(a.type != b.type){ return a; }
     vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type)), NO_ERROR};
     while(a.n--){
@@ -131,7 +131,7 @@ vecN vector_addition(vecN a, vecN b){
     return r;
 }
 
-vecN vector_multiplication(vecN a, vecN b){
+vecN vector_multiplication(vecN a, vecN b){//TEST
     if(a.type != b.type){ return a; }
     vecN r = {a.type, a.n, malloc(amount_of_type_bytes(a.type) * a.n), NO_ERROR};
     while(a.n--){
@@ -169,7 +169,7 @@ vecN vector_multiplication(vecN a, vecN b){
     return r;
 }
 
-vecN vector_exponentiation(vecN a, vecN b){
+vecN vector_exponentiation(vecN a, vecN b){//TEST
     unsigned char a_elem_size = amount_of_type_bytes(a.type), b_elem_size = amount_of_type_bytes(b.type), r_elem_size = -(a_elem_size > b_elem_size);
     r_elem_size = (r_elem_size & a_elem_size) | (r_elem_size & b_elem_size);
     vecN r = {a.type, a.n, malloc(a.n * r_elem_size), NO_ERROR};

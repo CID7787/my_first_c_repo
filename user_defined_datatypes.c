@@ -24,7 +24,7 @@ union union_name2{
 
 typedef struct long_long_int {
   long unsigned int high;
-    long unsigned int low;
+  long unsigned int low;
 } lluint;
 
 

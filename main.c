@@ -12,23 +12,30 @@
 #include "bitwise_functions.c"
 #include "safe_arithmetic_functions.c"
 #include "new_vector_functions.c"
-// #include "my_test.c"
+#include "test.c"
+
+void small_vec_neg_test(void){
+    vecN char_vec = vector_creation(CHAR, 1, B1type_i_elements((char[]){-3}));
+    printf("\n first element of array equals to: %d\n", char_vec.elements.b1.i[0]);
+    char_vec = vector_negation(char_vec);
+    printf("\n negative first element of array equals to: %d\n", char_vec.elements.b1.i[0]);
+
+
+}
 
 int main(){ 
-    vecN a = vector_creation(FLOAT, 5, B4type_f_elements((float[]){3.4, 6.3, 9.4, 5.6, 54.2}));
-    vecN b = vector_creation(FLOAT, 5, B4type_f_elements((float[]){34.1, 13.1, 35.7, 1.2, 6.2}));
-    a = vector_negation(b);
-    int v = 0;
-    while(v < a.n){
-        printf("\na.elements.b4.f[%d] = %f\n", v, a.elements.b4.f[v]);
-        v++;
-    }
-    // test negation, addition, multiplication and exponentiation(check extremums and random values)
-    return 0;
+    // small_vec_neg_test();
+    vector_negation_test();
+    return 0;    
 }
 
 
 /*
+int v = 0;
+while(v < a.n){
+    printf("\na.elements.b4.f[%d] = %f\n", v, a.elements.b4.f[v]);
+    v++;
+}
 v = 0;
 while(v < a.n){
     printf("\nb.elements.b4.f[%d] = %f\n", v, b.elements.b4.f[v]);

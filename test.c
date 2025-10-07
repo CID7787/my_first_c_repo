@@ -10,62 +10,180 @@
 #endif
 
 void vector_creation_test(void){
+
     // variable declaration 
-    unsigned int f_pos_inf_ui = 0b01111111100000000000000000000000, f_neg_inf_ui = 0b01111111100000000000000000000000, f_pos_nan_w_h_m_b = 0b01111111110000100110000010000000, f_neg_nan_w_h_m_b = 0b11111111110000100110000010000000, f_pos_nan_w_o_m_b = 0b01111111100000100110000010000000, f_neg_nan_w_o_m_b = 0b11111111100000100110000010000000;
-    long unsigned int d_pos_inf_lui = 0b0111111111110000000000000000000000000000000000000000000000000000, d_neg_inf_lui = 0b1111111111110000000000000000000000000000000000000000000000000000, d_pos_nan_w_h_m_b = 0b0111111111111000000000000010001000001100000011100000000000000000, d_neg_nan_w_h_m_b = 0b1111111111111000000000000010001000001100000011100000000000000000, d_pos_nan_w_o_m_b = 0b0111111111110000000000000010001000001100000011100000000000000000, d_neg_nan_w_o_m_b = 0b1111111111110000000000000010001000001100000011100000000000000000;
-    float f_pos_inf = f_pos_inf_ui, f_neg_inf = f_neg_inf_ui, f_pos_nan_with_high_man_bit = f_pos_nan_w_h_m_b, f_neg_nan_with_high_man_bit = f_neg_nan_w_h_m_b, f_pos_nan_w_o_high_man_bit = f_pos_nan_w_o_m_b, f_neg_nan_w_o_high_man_bit = f_neg_nan_w_o_m_b;
-    double d_pos_inf = d_pos_inf_lui, d_neg_inf = d_neg_inf_lui, d_pos_nan_with_high_man_bit = d_pos_nan_w_h_m_b, d_neg_nan_with_high_man_bit = d_neg_nan_w_h_m_b, d_pos_nan_w_o_high_man_bit = d_pos_nan_w_o_m_b, d_neg_nan_w_o_high_man_bit = d_neg_nan_w_o_m_b;
+    unsigned int f_pos_inf_ui = 0b01111111100000000000000000000000, f_neg_inf_ui = 0b11111111100000000000000000000000, ui_f_pos_nan = 0b01111111110000100110000010000000, ui_f_neg_nan = 0b11111111110000100110000010000000, ui_max_fl = 0b01111111011111111111111111111111, ui_min_fl = 0b00000000100000000000000000000000;
+    long unsigned int d_pos_inf_lui = 0b0111111111110000000000000000000000000000000000000000000000000000, d_neg_inf_lui = 0b1111111111110000000000000000000000000000000000000000000000000000, lui_d_pos_nan = 0b0111111111111000000000000010001000001100000011100000000000000000, lui_d_neg_nan = 0b1111111111111000000000000010001000001100000011100000000000000000, lui_max_d = 0b0111111111101111111111111111111111111111111111111111111111111111, lui_min_d = 0b0000000000010000000000000000000000000000000000000000000000000000;
+    float f_pos_inf = *(float*)&f_pos_inf_ui, f_neg_inf = *(float*)&f_neg_inf_ui, f_pos_nan = *(float*)&ui_f_pos_nan, f_neg_nan = *(float*)&ui_f_neg_nan, f_max = *(float*)&ui_max_fl, f_min = *(float*)&ui_min_fl;
+    double d_pos_inf = *(double*)&d_pos_inf_lui, d_neg_inf = *(double*)&d_neg_inf_lui, d_pos_nan = *(double*)&lui_d_pos_nan, d_neg_nan = *(double*)&lui_d_neg_nan, d_max = *(double*)&lui_max_d, d_min = *(double*)&lui_min_d;
     // vectors declaration
     vecN vec_int, vec_uint, vec_char, vec_uchar, vec_lint, vec_luint, vec_float, vec_double;
-    vec_char = vector_creation(CHAR, 5, B1type_i_elements((char[]){2, 35, -324, 0, -32}));
-    vec_uchar = vector_creation(UCHAR, 5, B1type_ui_elements((unsigned char[]){2,652,62,23, 0}));
-    vec_int = vector_creation(INT, 5, B4type_i_elements((int[]){251235, 346143, -23536, -23523, 0}));
-    vec_uint = vector_creation(UINT, 5, B4type_ui_elements((unsigned int[]){1,23523, 612465136, 2572, 0}));
-    vec_lint = vector_creation(LINT, 5, B8type_i_elements((long int[]){234614, 7357357, -2572725, -235236232, 0}));
-    vec_luint = vector_creation(LUINT, 5, B8type_ui_elements((long unsigned int[]){235236, 2346263,14376325762, 24362436, 0}));
-    vec_float = vector_creation(FLOAT, 11, B4type_f_elements((float[]){234.235, 235233.1, -2343232.222, -23362, 0, }));
-    vec_double = vector_creation(DOUBLE, 11, B8type_d_elements((double[]){23432.363464, 23425.23634, -987897.888, -239929, 0}));
+    vec_char = vector_creation(CHAR, 5, B1type_i_elements((char[]){0x80, 0x7f, -128, 0, -32}));
+    vec_uchar = vector_creation(UCHAR, 5, B1type_ui_elements((unsigned char[]){0xff, 162, 0x7f, 23, 0}));
+    vec_int = vector_creation(INT, 5, B4type_i_elements((int[]){0x80000000, 0x7fffffff, 23536, -23523, 0}));
+    vec_uint = vector_creation(UINT, 5, B4type_ui_elements((unsigned int[]){0xffffffff, 0x7fffffff, 612465136, 2572, 0}));
+    vec_lint = vector_creation(LINT, 5, B8type_i_elements((long int[]){0x8000000000000000, 0x7fffffffffffffff, -2572725, -235236232, 0}));
+    vec_luint = vector_creation(LUINT, 5, B8type_ui_elements((long unsigned int[]){0xffffffffffffffff, 0x7fffffffffffffff,14376325762, 24362436, 0}));
+    vec_float = vector_creation(FLOAT, 11, B4type_f_elements((float[]){234.235, 235233.1, -2343232.222, -23362, 0, f_pos_inf, f_neg_inf, f_pos_nan, f_neg_nan, f_max, f_min}));
+    vec_double = vector_creation(DOUBLE, 11, B8type_d_elements((double[]){23432.363464, 23425.23634, -987897.888, -239929, 0, d_pos_inf, d_neg_inf, d_pos_nan, d_neg_nan, d_max, d_min}));
     // show vectors's values
     int v = 0;
     while(v < vec_char.n){
-      printf("\nvec_char.elements.b1.f[%d] = %d\n", v, vec_char.elements.b1.i[v]);
+      printf("\nvec_char.elements.b1.i[%d] = %d\n", v, vec_char.elements.b1.i[v]); // 00000010 + 11111110+
       v++;
     }
     v = 0;
     while(v < vec_char.n){
-      printf("\nvec_uchar.elements.b1.f[%d] = %u\n", v, vec_uchar.elements.b1.i[v]);
+      printf("\nvec_uchar.elements.b1.ui[%d] = %u\n", v, vec_uchar.elements.b1.ui[v]);// TODO: PROBLEM FIND WHAT
+      v++;  
+    }
+    v = 0;
+    while(v < vec_char.n){
+      printf("\nvec_int.elements.b4.i[%d] = %d\n", v, vec_int.elements.b4.i[v]);
       v++;
     }
     v = 0;
     while(v < vec_char.n){
-      printf("\nvec_int.elements.b4.f[%d] = %d\n", v, vec_int.elements.b4.i[v]);
-      v++;
-    }
-    v = 0;
-    while(v < vec_char.n){
-      printf("\nvec_uint.elements.b4.f[%d] = %u\n", v, vec_uint.elements.b4.ui[v]);
+      printf("\nvec_uint.elements.b4.ui[%d] = %u\n", v, vec_uint.elements.b4.ui[v]);
       v++;
     }
     v = 0;
     while(v < vec_float.n){
-      printf("\nvec_float.elements.b4.f[%d] = %f\n", v, vec_float.elements.b4.f[v]);
+      printf("\nvec_float.elements.b4.f[%d] = %f\n", v, vec_float.elements.b4.f[v]);// TODO: PROBLEM FIND WHAT
       v++;
     }
     v = 0;
     while(v < vec_char.n){
-      printf("\nvec_lint.elements.b4.f[%d] = %li\n", v, vec_lint.elements.b8.i[v]);
+      printf("\nvec_lint.elements.b8.i[%d] = %li\n", v, vec_lint.elements.b8.i[v]);
       v++;
     }
     v = 0;
     while(v < vec_char.n){
-      printf("\nvec_luint.elements.b4.f[%d] = %lu\n", v, vec_luint.elements.b8.ui[v]);
+      printf("\nvec_luint.elements.b8.ui[%d] = %lu\n", v, vec_luint.elements.b8.ui[v]);
       v++;
     }
     v = 0;
     while(v < vec_double.n){
-      printf("\nvec_double.elements.b4.f[%d] = %f\n", v, vec_double.elements.b8.d[v]);
+      printf("\nvec_double.elements.b8.d[%d] = %f\n", v, vec_double.elements.b8.d[v]);// TODO: PROBLEM FIND WHAT
       v++;
     }
     // function call
     // vecN d = vector_creation(a.type, a.n, a.elements);
 }
+
+void vector_negation_test(void){
+  // variable declaration 
+  unsigned int f_pos_inf_ui = 0b01111111100000000000000000000000, f_neg_inf_ui = 0b11111111100000000000000000000000, ui_f_pos_nan = 0b01111111110000100110000010000000, ui_f_neg_nan = 0b11111111110000100110000010000000, ui_max_fl = 0b01111111011111111111111111111111, ui_min_fl = 0b00000000100000000000000000000000;
+  long unsigned int d_pos_inf_lui = 0b0111111111110000000000000000000000000000000000000000000000000000, d_neg_inf_lui = 0b1111111111110000000000000000000000000000000000000000000000000000, lui_d_pos_nan = 0b0111111111111000000000000010001000001100000011100000000000000000, lui_d_neg_nan = 0b1111111111111000000000000010001000001100000011100000000000000000, lui_max_d = 0b0111111111101111111111111111111111111111111111111111111111111111, lui_min_d = 0b0000000000010000000000000000000000000000000000000000000000000000;
+  float f_pos_inf = *(float*)&f_pos_inf_ui, f_neg_inf = *(float*)&f_neg_inf_ui, f_pos_nan = *(float*)&ui_f_pos_nan, f_neg_nan = *(float*)&ui_f_neg_nan, f_max = *(float*)&ui_max_fl, f_min = *(float*)&ui_min_fl;
+  double d_pos_inf = *(double*)&d_pos_inf_lui, d_neg_inf = *(double*)&d_neg_inf_lui, d_pos_nan = *(double*)&lui_d_pos_nan, d_neg_nan = *(double*)&lui_d_neg_nan, d_max = *(double*)&lui_max_d, d_min = *(double*)&lui_min_d;
+  // vectors declaration
+  vecN vec_int, vec_uint, vec_char, vec_uchar, vec_lint, vec_luint, vec_float, vec_double;
+  vec_char = vector_creation(CHAR, 5, B1type_i_elements((char[]){0x80, 0x7f, -128, 0, -32}));
+  vec_uchar = vector_creation(UCHAR, 5, B1type_ui_elements((unsigned char[]){0xff, 162, 0x7f, 23, 0}));
+  vec_int = vector_creation(INT, 5, B4type_i_elements((int[]){0x80000000, 0x7fffffff, 23536, -23523, 0}));
+  vec_uint = vector_creation(UINT, 5, B4type_ui_elements((unsigned int[]){0xffffffff, 0x7fffffff, 612465136, 2572, 0}));
+  vec_lint = vector_creation(LINT, 5, B8type_i_elements((long int[]){0x8000000000000000, 0x7fffffffffffffff, -2572725, -235236232, 0}));
+  vec_luint = vector_creation(LUINT, 5, B8type_ui_elements((long unsigned int[]){0xffffffffffffffff, 0x7fffffffffffffff,14376325762, 24362436, 0}));
+  vec_float = vector_creation(FLOAT, 11, B4type_f_elements((float[]){234.235, 235233.1, -2343232.222, -23362, 0, f_pos_inf, f_neg_inf, f_pos_nan, f_neg_nan, f_max, f_min}));
+  vec_double = vector_creation(DOUBLE, 11, B8type_d_elements((double[]){23432.363464, 23425.23634, -987897.888, -239929, 0, d_pos_inf, d_neg_inf, d_pos_nan, d_neg_nan, d_max, d_min}));
+  // show vectors's values
+  int v = 0;
+  while(v < vec_char.n){
+    printf("\nvec_char.elements.b1.i[%d] = %d\n", v, vec_char.elements.b1.i[v]); // 00000010 + 11111110+
+    v++;
+  }
+  v = 0;
+  while(v < vec_char.n){
+    printf("\nvec_uchar.elements.b1.ui[%d] = %u\n", v, vec_uchar.elements.b1.ui[v]);// TODO: PROBLEM FIND WHAT
+    v++;  
+  }
+  v = 0;
+  while(v < vec_char.n){
+    printf("\nvec_int.elements.b4.i[%d] = %d\n", v, vec_int.elements.b4.i[v]);
+    v++;
+  }
+  v = 0;
+  while(v < vec_char.n){
+    printf("\nvec_uint.elements.b4.ui[%d] = %u\n", v, vec_uint.elements.b4.ui[v]);
+    v++;
+  }
+  v = 0;
+  while(v < vec_float.n){
+    printf("\nvec_float.elements.b4.f[%d] = %f\n", v, vec_float.elements.b4.f[v]);// TODO: PROBLEM FIND WHAT
+    v++;
+  }
+  v = 0;
+  while(v < vec_char.n){
+    printf("\nvec_lint.elements.b8.i[%d] = %li\n", v, vec_lint.elements.b8.i[v]);
+    v++;
+  }
+  v = 0;
+  while(v < vec_char.n){
+    printf("\nvec_luint.elements.b8.ui[%d] = %lu\n", v, vec_luint.elements.b8.ui[v]);
+    v++;
+  }
+  v = 0;
+  while(v < vec_double.n){
+    printf("\nvec_double.elements.b8.d[%d] = %f\n", v, vec_double.elements.b8.d[v]);// TODO: PROBLEM FIND WHAT
+    v++;
+  }
+  vec_char = vector_negation(vec_char);
+  vec_uchar = vector_negation(vec_uchar);
+  vec_int = vector_negation(vec_int);
+  vec_uint = vector_negation(vec_uint);
+  vec_float = vector_negation(vec_float);
+  vec_double = vector_negation(vec_double);
+  vec_lint = vector_negation(vec_lint);
+  vec_luint = vector_negation(vec_luint);
+  v = 0;
+  printf("\n\n\n\n\n");
+  while(v < vec_char.n){
+    printf("\nvec_char.elements.b1.i[%d] = %d\n", v, vec_char.elements.b1.i[v]); // 00000010 + 11111110+
+    v++;
+  }
+  v = 0;
+  while(v < vec_char.n){
+    printf("\nvec_uchar.elements.b1.ui[%d] = %u\n", v, vec_uchar.elements.b1.ui[v]);// TODO: PROBLEM FIND WHAT
+    v++;  
+  }
+  v = 0;
+  while(v < vec_char.n){
+    printf("\nvec_int.elements.b4.i[%d] = %d\n", v, vec_int.elements.b4.i[v]);
+    v++;
+  }
+  v = 0;
+  while(v < vec_char.n){
+    printf("\nvec_uint.elements.b4.ui[%d] = %u\n", v, vec_uint.elements.b4.ui[v]);
+    v++;
+  }
+  v = 0;
+  while(v < vec_float.n){
+    printf("\nvec_float.elements.b4.f[%d] = %f\n", v, vec_float.elements.b4.f[v]);// TODO: PROBLEM FIND WHAT
+    v++;
+  }
+  v = 0;
+  while(v < vec_char.n){
+    printf("\nvec_lint.elements.b8.i[%d] = %li\n", v, vec_lint.elements.b8.i[v]);
+    v++;
+  }
+  v = 0;
+  while(v < vec_char.n){
+    printf("\nvec_luint.elements.b8.ui[%d] = %lu\n", v, vec_luint.elements.b8.ui[v]);
+    v++;
+  }
+  v = 0;
+  while(v < vec_double.n){
+    printf("\nvec_double.elements.b8.d[%d] = %f\n", v, vec_double.elements.b8.d[v]);// TODO: PROBLEM FIND WHAT
+    v++;
+  }
+
+  // function call
+  // vecN d = vector_creation(a.type, a.n, a.elements);
+}
+
+void vector_addition_test(void){}
+
+void vector_multiplication(void){}
+
+void vector_exponentiation(void){}
