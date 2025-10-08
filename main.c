@@ -12,20 +12,11 @@
 #include "bitwise_functions.c"
 #include "safe_arithmetic_functions.c"
 #include "new_vector_functions.c"
-#include "test.c"
+#include "test.c"   
 
-void small_vec_neg_test(void){
-    vecN char_vec = vector_creation(CHAR, 1, B1type_i_elements((char[]){-3}));
-    printf("\n first element of array equals to: %d\n", char_vec.elements.b1.i[0]);
-    char_vec = vector_negation(char_vec);
-    printf("\n negative first element of array equals to: %d\n", char_vec.elements.b1.i[0]);
-
-
-}
 
 int main(){ 
-    // small_vec_neg_test();
-    vector_negation_test();
+    vector_multiplication_test();
     return 0;    
 }
 

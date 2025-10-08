@@ -111,7 +111,7 @@ vecN vector_addition(vecN a, vecN b){//TEST
                 r.elements.b4.ui[a.n] = safe_uint_addition(a.elements.b4.ui[a.n], b.elements.b4.ui[a.n], &r.v_error); 
             break;
             case LINT: 
-            r.elements.b8.i[a.n] = safe_lint_addition(a.elements.b4.i[a.n], b.elements.b4.i[a.n], &r.v_error);
+            r.elements.b8.i[a.n] = safe_lint_addition(a.elements.b8.i[a.n], b.elements.b8.i[a.n], &r.v_error);
             break;
             case LUINT:
             r.elements.b8.ui[a.n] = safe_luint_addition(a.elements.b8.ui[a.n], b.elements.b8.ui[a.n], &r.v_error);
