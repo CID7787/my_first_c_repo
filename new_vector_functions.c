@@ -93,7 +93,7 @@ vecN vector_negation(vecN a){// TESTED
     return r;
 }
 
-vecN vector_addition(vecN a, vecN b){//TEST
+vecN vector_addition(vecN a, vecN b){//TESTED
     if(a.type != b.type){ return a; }
     vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type)), NO_ERROR};
     while(a.n--){
@@ -132,7 +132,7 @@ vecN vector_addition(vecN a, vecN b){//TEST
 }
 
 vecN vector_multiplication(vecN a, vecN b){//TEST
-    if(a.type != b.type){ return a; }
+    if(a.type != b.type){ return a; }// TODO: make it available for some type to be multiply with each other
     vecN r = {a.type, a.n, malloc(amount_of_type_bytes(a.type) * a.n), NO_ERROR};
     while(a.n--){
         switch(a.type){
@@ -168,7 +168,7 @@ vecN vector_multiplication(vecN a, vecN b){//TEST
     }
     return r;
 }
-
+ 
 vecN vector_exponentiation(vecN a, vecN b){//TEST
     unsigned char a_elem_size = amount_of_type_bytes(a.type), b_elem_size = amount_of_type_bytes(b.type), r_elem_size = -(a_elem_size > b_elem_size);
     r_elem_size = (r_elem_size & a_elem_size) | (r_elem_size & b_elem_size);

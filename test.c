@@ -1,4 +1,4 @@
-#ifndef headerfile
+// #ifndef headerfile
     #include <stdint.h>
     #include <stdlib.h>
     #include "user_defined_datatypes.c"
@@ -7,7 +7,7 @@
     #include "bitwise_functions.c"
     #include "safe_arithmetic_functions.c"
     #include "new_vector_functions.c"
-#endif
+// #endif
 
 void vector_creation_test(void){
     // variable declaration 
@@ -363,6 +363,7 @@ void vector_multiplication_test(void){
     vec_float = vector_multiplication(vec_float, vec_float);
     vec_double = vector_multiplication(vec_double, vec_double);
     v = 0;
+    
     while(v < vec_char.n){
       printf("\nvec_char.elements.b1.i[%d] = %d\n", v, vec_char.elements.b1.i[v]); 
       v++;
@@ -413,3 +414,4 @@ void vector_multiplication_test(void){
 }
 
 void vector_exponentiation_test(void){}
+
