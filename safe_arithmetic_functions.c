@@ -340,8 +340,7 @@ double safe_double_multiplication_without_rounding(dbits a, dbits b, error* err)
   *err = (a_overfl_cond & QNAN) | (-(!a_overfl_cond) & *err);// check for NaN
   *err = (b_overfl_cond & QNAN) | (-(!b_overfl_cond) & *err);// check for NaN
   if(!a.d | !b.d){ return 0; } // check whether or not one of arguments equal to 0
-  dbits result = b;
-  result = safe_double_mantissa_multiplication_without_rouding(a, b, err); if(*err){ return result.d; }
+  dbits result = safe_double_mantissa_multiplication_without_rouding(a, b, err); if(*err){ return result.d; }
   unsigned int exponent = safe_uint_addition(a.parts.exp, b.parts.exp, err); if(*err){ return result.d; }
   exponent = safe_uint_addition(exponent, result.parts.exp, err); if(*err){ return result.d; }
   exponent = safe_int_addition(exponent, -DOUBLE_EXP_BIAS, err); if(*err){ return result.d; }
@@ -656,7 +655,7 @@ float float_division(float result, float m1, float precision){ // a = 9, b = 3 c
 double exp_double2luint(dbits a, long unsigned int b, error* err){
   if(!err){ return a.d; }
   unsigned int cond = -(!(a.d || b));
-  *err = (cond & ZERO_TO_ZERO) | (-(!cond) & *err);
+  *err = (cond & ZERO_TO_ZERO) | (~cond & *err);
   dbits r = (dbits){ .d = 1.0 };
   while(b-- && !(*err)){
       r.d = safe_double_multiplication_with_rounding(r, a, err);
@@ -744,7 +743,7 @@ float exp_float2float(fbits a, fbits b, error* err){
   if(!err){ return a.f; }
   fbits result = (fbits){ .f = 1};
   unsigned int cond = -( have_frac_part((dbits){ .d = b.f }) ); 
-  *err = (cond & ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER) | (-(!cond) & *err);
+  *err = (cond & ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER) | (~cond & *err);
   cond = -(!(a.f || b.f)); 
   *err = (cond & ZERO_TO_ZERO) | (-(!cond) & *err);
   if(b.f < 0){
@@ -767,7 +766,7 @@ double exp_double2double(dbits a, dbits b, error* err){
   if(!err){ return a.d; }
   dbits result = (dbits){ .d = 1};
   unsigned int cond = -have_frac_part(b);
-  *err = (cond & ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER) | (-(!cond) & *err);
+  *err = (cond & ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER) | (~cond & *err);
   cond = -(!(a.d || b.d));
   *err = (cond & ZERO_TO_ZERO) | (-(!cond) & *err);
   if(b.d < 0){ 
@@ -790,7 +789,7 @@ double exp_double2lint(dbits a, long int b, error* err){
   if(!err){ return a.d; }
   dbits r = (dbits){ .d = 1.0 };
   unsigned int cond = -(!(a.d || b));
-  *err = (cond & ZERO_TO_ZERO) | (-(!cond) & *err);
+  *err = (cond & ZERO_TO_ZERO) | (~cond & *err);
   if(b < 0){ 
       while(b++ && !(*err)){
           r.d = safe_double_division_with_rounding(r, a, err);// TODO: WRITE DOUBLE DIVISION WITH ROUNDING FUNCTION
@@ -810,7 +809,7 @@ double exp_double2lint(dbits a, long int b, error* err){
 float exp_float2lint(fbits a, long int b, error* err){
   if(!err){ return a.f; }
   unsigned int cond = -(!(a.f || b));
-  *err = (cond & ZERO_TO_ZERO) | (-(!cond) & *err);
+  *err = (cond & ZERO_TO_ZERO) | (~cond & *err);
   fbits result = (fbits){ .f = 1.0 };
   if(b < 0){ 
       while(b++ && !(*err)){
@@ -831,7 +830,7 @@ float exp_float2lint(fbits a, long int b, error* err){
 float exp_float2luint(fbits a, long unsigned int b, error* err){
   if(!err){ return a.f; }
   unsigned int cond = -(!(a.f || b));
-  *err = (cond & ZERO_TO_ZERO) | (-(!cond) & *err);
+  *err = (cond & ZERO_TO_ZERO) | (~cond & *err);
   fbits result = (fbits){ .f = 1.0 };
   while(b-- && !(*err)){
       a.f = safe_float_multiplication_with_rounding(result, a, err);
@@ -846,7 +845,7 @@ long int exp_lint2double(long int a, dbits b, error* err){
   if(!err){ return a; }
   long int r = 1;
   unsigned int cond = -have_frac_part(b);
-  *err = (cond & ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER) | (-(!cond) & *err);
+  *err = (cond & ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER) | (~cond & *err);
   cond = -(!a & !b.d);
   *err = (cond & ZERO_TO_ZERO) | (cond & *err);
   cond = -(b.d < 0);
@@ -864,7 +863,7 @@ long unsigned int exp_luint2double(long unsigned int a, dbits b, error* err){
   if(!err){ return a; }
   long unsigned int r = 1;
   unsigned int cond = -have_frac_part(b);
-  *err = (cond & ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER) | (-(!cond) & *err);
+  *err = (cond & ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER) | (~cond & *err);
   cond = -(!(a || b.d));
   *err = (cond & ZERO_TO_ZERO) | (-(!cond) & *err);
   cond = -(b.d < 0);

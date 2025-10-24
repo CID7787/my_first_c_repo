@@ -132,7 +132,7 @@ vecN vector_addition(vecN a, vecN b){//TESTED
 }
 
 vecN vector_multiplication(vecN a, vecN b){//TEST
-    if(a.type != b.type){ return a; }// TODO: make it available for some type to be multiply with each other
+    if(a.type != b.type){ return a; }// TODO: some types should be able to multiply with each other
     vecN r = {a.type, a.n, malloc(amount_of_type_bytes(a.type) * a.n), NO_ERROR};
     while(a.n--){
         switch(a.type){
@@ -157,7 +157,7 @@ vecN vector_multiplication(vecN a, vecN b){//TEST
             case FLOAT: 
                 r.elements.b4.f[a.n] = safe_float_multiplication_with_rounding((fbits){ .f = a.elements.b4.f[a.n] }, (fbits){ .f = b.elements.b4.f[a.n] }, &r.v_error);
             break;
-            case DOUBLE:
+            case DOUBLE:    
                 r.elements.b8.d[a.n] = safe_double_multiplication_with_rounding((dbits){ .d = a.elements.b8.d[a.n] }, (dbits){ .d = b.elements.b8.d[a.n]}, &r.v_error);
             break;
             default: 
@@ -171,7 +171,7 @@ vecN vector_multiplication(vecN a, vecN b){//TEST
  
 vecN vector_exponentiation(vecN a, vecN b){//TEST
     unsigned char a_elem_size = amount_of_type_bytes(a.type), b_elem_size = amount_of_type_bytes(b.type), r_elem_size = -(a_elem_size > b_elem_size);
-    r_elem_size = (r_elem_size & a_elem_size) | (r_elem_size & b_elem_size);
+    r_elem_size = (r_elem_size & a_elem_size) | (~r_elem_size & b_elem_size);
     vecN r = {a.type, a.n, malloc(a.n * r_elem_size), NO_ERROR};
     long int a_lint, b_lint;
     long unsigned int a_luint, b_luint; 

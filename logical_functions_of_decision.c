@@ -12,7 +12,7 @@ long unsigned int else0(long unsigned int condition, long unsigned int x){
 long unsigned int ternary(unsigned char condition, long unsigned int true_value, long unsigned int false_value){
     long unsigned int array[2] = {true_value, false_value};
     return array[!condition];
-}
+}// TODO: write new ternary that won't use array
 
 int have_frac_part(dbits a){
     int norm_exp = a.parts.exp - DOUBLE_EXP_BIAS;
