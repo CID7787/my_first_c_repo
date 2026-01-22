@@ -1,3 +1,15 @@
+#ifndef headerfile
+#include <stdio.h>
+#include <time.h>
+#include <stdlib.h>
+#include <math.h>
+#include <stdint.h>
+#include "user_defined_datatypes.c"
+#include "constants.c"
+#include "bitwise_functions.c"
+#include "safe_arithmetic_functions.c"
+#include "new_vector_functions.c"
+#endif
 long unsigned int else0_array(unsigned int cond, int x){
     long unsigned int array[2] = {x, 0};
     return array[!cond];

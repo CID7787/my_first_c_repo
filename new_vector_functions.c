@@ -94,7 +94,7 @@ vecN vector_negation(vecN a){// TESTED
 }
 
 vecN vector_addition(vecN a, vecN b){//TESTED
-    if(a.type != b.type){ return a; }
+    if(a.type != b.type){ return a; }// TODO: some types should be able to multiply with each other
     vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type)), NO_ERROR};
     while(a.n--){
         switch(a.type){
@@ -131,7 +131,7 @@ vecN vector_addition(vecN a, vecN b){//TESTED
     return r;
 }
 
-vecN vector_multiplication(vecN a, vecN b){//TEST
+vecN vector_multiplication(vecN a, vecN b){//TESTED
     if(a.type != b.type){ return a; }// TODO: some types should be able to multiply with each other
     vecN r = {a.type, a.n, malloc(amount_of_type_bytes(a.type) * a.n), NO_ERROR};
     while(a.n--){

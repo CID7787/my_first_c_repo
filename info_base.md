@@ -66,17 +66,17 @@ Paradigms:
 [C Operator precedence](https://en.cppreference.com/w/c/language/operator_precedence)  
 [C Standards](https://iso-9899.info/wiki/The_Standard) \( [C99](https://www.open-std.org/jtc1/sc22/WG14/www/docs/n1256.pdf) \)  
 [Nullable pointer in c](https://stackoverflow.com/questions/77310920/what-is-nullable-pointer-in-c/77310990#77310990)\
-// https://en.wikipedia.org/wiki/Instruction_set_architecture
-// https://en.wikipedia.org/wiki/Tunnel_vision
-// https://en.wikipedia.org/wiki/Von_Neumann_architecture
-// https://en.wikipedia.org/wiki/Harvard_architecture
-// https://killedbygoogle.com/
-// https://www.programmingfonts.org/
-// https://betterexplained.com
-// https://www.mathsisfun.com/algebra/logarithms.html
-// https://www.youtube.com/watch?v=IxXaizglscw
-// https://www.open-std.org/jtc1/sc22/WG14/www/docs/n1256.pdf
-// https://gcc.gnu.org/onlinedocs/gcc-2.95.3/cpp_toc.html#SEC_Contents
+[Instruction set architecture]( https://en.wikipedia.org/wiki/Instruction_set_architecture)\
+[Tunnel vision](https://en.wikipedia.org/wiki/Tunnel_vision)\
+[Von Neumann architecture](https://en.wikipedia.org/wiki/Von_Neumann_architecture)\
+[Harvard architecture](https://en.wikipedia.org/wiki/Harvard_architecture)\
+[Killed by google](https://killedbygoogle.com/)\
+[Programming fonts](https://www.programmingfonts.org/)\
+[maths reference point1](https://betterexplained.com)\
+[maths reference point2](https://www.mathsisfun.com/algebra/logarithms.html)\
+[computer from water pipelines](https://www.youtube.com/watch?v=IxXaizglscw)\
+[iso C](https://www.open-std.org/jtc1/sc22/WG14/www/docs/n1256.pdf)\
+[preprocessor](https://gcc.gnu.org/onlinedocs/gcc-2.95.3/cpp_toc.html#SEC_Contents)
 
 ---
 
@@ -158,7 +158,7 @@ Paradigms:
 - Исчислимые и неисчислимые множества (диагональный аргумент Кантора)
 - Кардинальность
 - Аналитическая и дискретная математика
-- Аналоговый и цифоровой сигнал
+- Аналоговый и цифровой сигнал
 - Аналоговый и цифровой компьютер
 - Поле (физика)
 - 4 фундаментальных взаимодействия

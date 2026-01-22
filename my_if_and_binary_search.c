@@ -32,15 +32,7 @@ void* conditional_operator(int cond, void* (*true_cond_func)(), void* (*false_co
   resulting_function(); // call a function
   return result;
 }
-  
-  
-typedef enum function_state{
- NO_PROBLEM = 0,
- ROUNDING,
- F_OVERFLOW,
- F_UNDERFLOW,
-}f_error;
-    
+
 
 unsigned int dist_uint(unsigned int a, unsigned int b){
   if(b > a){ swap_in_place(&a, &b); }
@@ -78,6 +70,8 @@ int integer_binary_search_v2(int num, int (*func)(int, f_error*), int left, int 
   }     
   return middle;
 }
+
+
 
 int integer_binary_search(int num, int (*func)(int, f_error*), int start, unsigned int size, unsigned int precision, f_error* err){
   if(!err){ return num; }

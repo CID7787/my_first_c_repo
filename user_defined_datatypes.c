@@ -142,3 +142,10 @@ struct vector_n {
   //                             unsigned int* u
   //                             double *d
 } typedef vecN;
+
+typedef enum function_state{
+  NO_PROBLEM = 0,
+  ROUNDING,
+  F_OVERFLOW,
+  F_UNDERFLOW,
+}f_error;

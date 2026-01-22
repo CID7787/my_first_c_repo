@@ -1,7 +1,7 @@
 const double PI = 3.141592653589793; // TODO: hint to solve it: search for some aprouches of how to do it mathematicaly
 const double PI2 = PI * 2;
 const float MAX_FLOAT = 85070586659632214952926045871129231360.0;
-const float MIN_FLOAT = -85070586659632214952926045871129231360.0;
+const float NEG_MAX_FLOAT = -85070586659632214952926045871129231360.0;
 
 typedef enum all_unsigned_and_signed_constants{
 	MAX_CHAR = 0x7f,

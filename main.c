@@ -12,12 +12,11 @@
 #include "bitwise_functions.c"
 #include "safe_arithmetic_functions.c"
 #include "new_vector_functions.c"
-#include "test.c"   
+// #include "test.c"   
 
-
-char main(){
-  vector_exponentiation_test();
-  return 0;    
+int main(){
+  error d = NO_ERROR;
+  printf("%lu", factorial(25, &d));
 }
 
 

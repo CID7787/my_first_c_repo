@@ -445,14 +445,14 @@ double safe_double_division_with_rounding(dbits a, dbits b, error* err){// quoti
 // FUNCTION: factorial(unsigned int, error*)
 
 #define factorial_lookup_table_size 11
-const unsigned int factorial_lookup_table[factorial_lookup_table_size] = {1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800};  // DESCRIPTION: factorial values list of numbers from 0 to 10
+const unsigned int factorial_lookup_table[factorial_lookup_table_size] = {1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 43545600};  // DESCRIPTION: factorial values list of numbers from 0 to 10
 
-unsigned int factorial(unsigned int a, error* err){
+long unsigned int factorial(long unsigned int a, error* err){
   if(!err){ return a; }
   if(a < factorial_lookup_table_size){ return factorial_lookup_table[a]; }
-  unsigned int result = a;
+  long unsigned int result = a;
   while(a-- > 1){
-    result = safe_uint_multiplication(result, a, err);
+    result = safe_luint_multiplication(result, a, err);
     if(*err){ return result; }
   }    
   return result;
@@ -575,9 +575,9 @@ float square_root(float value, float precision) {// TODO: negative argument hand
   while (--i) {
     if ((center*center) > (value + precision)) { size = center; }
     if ((center*center) < (value - precision)) { start = center; }
-    center = start + (start + size) / 2;
+    center = start + (size - start) / 2;
     if ( ((center*center) < (value + precision)) 
-    || ((center*center) > (value - precision)) ) { return center; }
+    && ((center*center) > (value - precision)) ) { return center; }
   }    
   return center;
 }    
