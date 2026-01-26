@@ -18,100 +18,66 @@ https://yandex.com/search/?text=c+fgets&lr=202
 */
 
 /* observe the principle of this recursion
-long long unsigned int comb(int n, int k){ // n! / (k! * (n - k)!)
+#define lluint long long unsigned int
+lluint comb(int n, int k){
     if(k > n){ return 0; }
     if(k < 1){ return 1; }
-    return (long long unsigned int)comb(n - 1, k - 1) + comb(n - 1, k);
+    return (lluint)comb(n - 1, k - 1) + comb(n - 1, k);
 }
 */
 
 // very important: memory layout, virtual machine, c99 compiler either on comp or online(source that will be available no matter where or through what use it), how to compile and execute program in Windows
 
-#include <stdlib.h>
+/*
+void* my_if(int cond, void* (*true_cond_func)(), void* (*false_cond_func)()){
+    cond = !(!cond); // 1; 0
+    void* t = true_cond_func; // convert function pointer to data pointer
+    void* f = false_cond_func;
+    int big = cond << (sizeof(int) << 1); // 0/0010000....
+    int r = (~0) >> big; // 00000000... | 11111111......
+    void* result = (void*)((r & (long long int)t) | (r & (long long int)f)); // leave only one data pointer according to IF/OR logic, based on cond value
+    void* (*resulting_function)() = (void* (*)())result; // convert back to the function pointer
+    resulting_function(); // call a function
+}
+*/
+
+
 #include <stdio.h>
 #define uint unsigned int
+uint arr[200000] = { 0 }, i = 0;
+uint is_primer(uint number){
+    uint flag = 1, i;
+    if(number <= 1){ return 0;}
+    for(i = 2; (i < number) && flag ; i++){ flag = number % i; }
+    return flag; 
+}
 
-const uint N = 10;
-
-void char_draw_data(char *arr, uint n){
-    for(uint i = 0; i < n*n; i++){
-        uint row = i / n; // 1 / 4 = 0
-        uint col = i % n; // 1 % 4 = 1
-        if (!col) { printf("%d ", row);} // print 0
-        printf("%c ",  arr[i]);
-        if (col + 1 == n) { printf("\n"); }
+void diffusion(uint num){
+    uint n = 2; 
+    while(num / n){
+        while(!(num % n)){ 
+            num /= n;
+            arr[i] = n;
+            ++i;
+        }
+        ++n;
     }
 }
 
-void char_draw_pretty(char *arr, uint n){
-    uint i;
-    printf(" _");
-    for(i = 0; i < n; i++){ printf("__"); }
-    printf("\n");
-    for(i = 0; i < n*n; i++){
-        uint row = i / n;
-        uint col = i % n;
-        if (!col) { printf("| ", row);} // print 0
-        printf("%c ", arr[i]);
-        if (col + 1 == n){ printf("|\n"); }
-    }
-    printf(" -");
-    for(i = 0; i < n; i++){printf("--"); }
-    printf("\n");
-}
-
-
-void walls(uint m, uint len){
-    if(m < len){ printf("|"); walls(++m, len); }
-}
-
-void roof_bott(uint m, uint len){
-    if(m < len){ printf("__"); roof_bott(++m, len); }
-}
-
-void up_rec(uint i, uint n){
-    if(i){
-        uint m = 0;
-        walls(m, n - i);
-        printf(" ");
-        roof_bott(m, i);
-        printf(" ");
-        walls(m, n - i);
-        printf("\n");
-        up_rec(--i, n);
-    }
-}
-void down_rec(uint i, uint n){
-    if(i < n){
-        uint m = 0;
-        walls(m, n + 1 - i);
-        roof_bott(m, i);
-        walls(m, n + 1 - i);
-        printf("\n");
-        down_rec(++i, n);
-    }
-}
 
 int main(){
-    uint n = 4, i = 0;
+    uint n, num, c;
     scanf("%u", &n);
-    i = n;
-    up_rec(i, n);
-    i = 1;
-    down_rec(i, n);
+    while(n--){
+        scanf("%u", &num);
+        for(c = 0; c < i; c++){ 
+            if(!(num % arr[c])){ 
+                num /= arr[c]; 
+            } 
+        }
+        if(!c){ diffusion(num); continue; }
+        arr[i++] = num;
+    }
+    for(num = 1, c = 0; c < i; c++){ num *= arr[c]; }
+    printf("%u", num);
 }
-
-
-// void f1(){ printf("int"); }
-// void f2(){ printf("double"); }
-
-// void* my_if(int cond, void* (*true_cond_func)(), void* (*false_cond_func)()){
-//     cond = !(!cond); // 1; 0
-//     void* t = true_cond_func; // convert function pointer to data pointer
-//     void* f = false_cond_func;
-//     int big = cond << (sizeof(int) << 1); // 0/0010000....
-//     int r = (~0) >> big; // 00000000... | 11111111......
-//     void* result = (void*)((r & (long long int)t) | (r & (long long int)f)); // leave only one data pointer according to IF/OR logic, based on cond value
-//     void* (*resulting_function)() = (void* (*)())result; // convert back to the function pointer
-//     resulting_function(); // call a function
-// }
