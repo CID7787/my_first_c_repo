@@ -44,40 +44,23 @@ void* my_if(int cond, void* (*true_cond_func)(), void* (*false_cond_func)()){
 
 #include <stdio.h>
 #define uint unsigned int
-uint arr[200000] = { 0 }, i = 0;
-uint is_primer(uint number){
-    uint flag = 1, i;
-    if(number <= 1){ return 0;}
-    for(i = 2; (i < number) && flag ; i++){ flag = number % i; }
-    return flag; 
-}
+#define llint long long int
 
-void diffusion(uint num){
-    uint n = 2; 
-    while(num / n){
-        while(!(num % n)){ 
-            num /= n;
-            arr[i] = n;
-            ++i;
-        }
-        ++n;
+llint n_elem_comb_max_sum(llint *elem_arr, uint k, uint n){
+    llint i, c, storage, max = 1llu << 63;
+    for(i = 0; i < n; i++){ for(c = storage = 0; c < k; c++){ storage += elem_arr[i + c - ((i + c) >= n) * n]; }
+        if(storage > max){ max = storage; }
     }
+    return max;
 }
 
 
 int main(){
-    uint n, num, c;
+    uint n, i;
     scanf("%u", &n);
-    while(n--){
-        scanf("%u", &num);
-        for(c = 0; c < i; c++){ 
-            if(!(num % arr[c])){ 
-                num /= arr[c]; 
-            } 
-        }
-        if(!c){ diffusion(num); continue; }
-        arr[i++] = num;
-    }
-    for(num = 1, c = 0; c < i; c++){ num *= arr[c]; }
-    printf("%u", num);
+    llint elem_arr[n], max_comb_arr[n + 1], max_sum = 1llu << 63;
+    for(i = 0; i < n; i++){ scanf("%lld", elem_arr + i); }
+    for(i = 1; i <= n; i++){ max_comb_arr[i] = n_elem_comb_max_sum(elem_arr, i, n); }
+    for(i = 1; i <= n; i++){ if(max_comb_arr[i] > max_sum){ max_sum = max_comb_arr[i]; } }
+    printf("%lld", max_sum);    
 }
