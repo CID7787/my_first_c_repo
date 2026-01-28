@@ -45,35 +45,16 @@ void* my_if(int cond, void* (*true_cond_func)(), void* (*false_cond_func)()){
 #include <stdio.h>
 #define uint unsigned int
 #define llui long long unsigned int
-
-/*1143
+/*1096
 Description
 
 向标准输出上打印一些用ASCII字符组成的图形。
-
------------------------------------------------------------------------------
-
-编写一个函数用于输出ASCII图形。
-
-用C语言实现：append.c中函数原型为
-
-int print_graphic(int n, char c);
-
-用C++实现：append.cc中函数原型为
-
-int printGraphic(int n, char c);
-
-功能：输出n层有字符c组成的图形。
-
-函数的调用格式见“Append Code”。
-
 Input
 
-输入为一个整数n和一个字符c，0<n<100。
-
+输入为多个整数n，0<n<100。当n为0时结束输入。
 Output
 
-输出一个n层等腰三角形，由字符c组成，格式见sample。
+若n为偶数，则输出一个正向的n层等腰三角形；n为奇数，则输出一个倒向的n层等腰三角形。三角形由“+”组成。任意两个图形之间有一个空行分隔，格式见sample。
 */
 
 void print_char(int i1, char c){
@@ -81,23 +62,34 @@ void print_char(int i1, char c){
     if(--i1 > 0){ print_char(i1, c); }
 }
 
-void print(uint i, uint n, char c){
+void print_triangle_from_up_to_down(uint i, uint n, char c){
     print_char(n - i,' ');
     print_char(i, c);
     print_char(i - 1, c);
     printf("\n");
-    if(i++ < n){ print(i, n, c); }
+    if(i++ < n){ print_triangle_from_up_to_down(i, n, c); }
 }
 
-void print_graphic(uint n, char c){
-    print(1, n, c);
+void print_triangle_from_down_to_up(uint i, uint n, char c){
+    print_char(n - i, ' ');
+    print_char(i, c);
+    print_char(i ? i - 1 : 0, c);
+    printf("\n");
+    if(--i){ print_triangle_from_down_to_up(i, n, c);}
+}
+
+void up_down_tri_handler(uint n){
+    if(n & 1){ print_triangle_from_down_to_up(n, n, '+'); }
+    else{ print_triangle_from_up_to_down(1, n, '+'); }
 }
 
 int main()
 {
-    char c;
-    int num;
-    scanf("%d %c", &num, &c);
-    print_graphic(num, c);
-    return 0;
+    uint n;
+    scanf("%u", &n);
+    while(n){
+        up_down_tri_handler(n);
+        printf("\n");
+        scanf("%u", &n);
+    }
 }
