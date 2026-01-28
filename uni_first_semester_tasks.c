@@ -44,23 +44,23 @@ void* my_if(int cond, void* (*true_cond_func)(), void* (*false_cond_func)()){
 
 #include <stdio.h>
 #define uint unsigned int
-#define llint long long int
+#define llui long long unsigned int
 
-llint n_elem_comb_max_sum(llint *elem_arr, uint k, uint n){
-    llint i, c, storage, max = 1llu << 63;
-    for(i = 0; i < n; i++){ for(c = storage = 0; c < k; c++){ storage += elem_arr[i + c - ((i + c) >= n) * n]; }
-        if(storage > max){ max = storage; }
+llui num, i=0;
+
+llui cat_num(uint n){
+    llui cat_arr[n + 1];
+    cat_arr[0] = cat_arr[1] = 1;
+    for(int i = 2; i <= n; i++){
+        cat_arr[i] = 0; 
+        for(int i1 = 0; i1 < i; i1++){ cat_arr[i] += cat_arr[i1] * cat_arr[i - i1 - 1]; }
     }
-    return max;
+    return cat_arr[n];
 }
 
 
 int main(){
-    uint n, i;
+    unsigned n;
     scanf("%u", &n);
-    llint elem_arr[n], max_comb_arr[n + 1], max_sum = 1llu << 63;
-    for(i = 0; i < n; i++){ scanf("%lld", elem_arr + i); }
-    for(i = 1; i <= n; i++){ max_comb_arr[i] = n_elem_comb_max_sum(elem_arr, i, n); }
-    for(i = 1; i <= n; i++){ if(max_comb_arr[i] > max_sum){ max_sum = max_comb_arr[i]; } }
-    printf("%lld", max_sum);    
+    printf("%llu", cat_num(n));
 }
