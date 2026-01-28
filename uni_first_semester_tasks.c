@@ -46,21 +46,35 @@ void* my_if(int cond, void* (*true_cond_func)(), void* (*false_cond_func)()){
 #define uint unsigned int
 #define llui long long unsigned int
 
-llui num, i=0;
-
-llui cat_num(uint n){
-    llui cat_arr[n + 1];
-    cat_arr[0] = cat_arr[1] = 1;
-    for(int i = 2; i <= n; i++){
-        cat_arr[i] = 0; 
-        for(int i1 = 0; i1 < i; i1++){ cat_arr[i] += cat_arr[i1] * cat_arr[i - i1 - 1]; }
-    }
-    return cat_arr[n];
+llui my_pow(llui b, llui pow){
+    llui r = 1;
+    while(pow--)
+        r *= b;
+    return r;
 }
 
+/*2422
+Description:
+ 求1*2*3*……*n的乘积以多少个0结尾。
+
+Input:
+
+输入为多行，至EOF结束。每行为一个整数n，n<=100000。
+
+Output:
+
+输出每个n对应的结尾0的个数。
+*/
 
 int main(){
-    unsigned n;
-    scanf("%u", &n);
-    printf("%llu", cat_num(n));
+    llui n, p, r, num;
+    while(scanf("%llu", &n) ^ EOF){
+        r = 0, p = 1;
+        num = my_pow(5, p);
+        while(n / num){
+            r += n / num; 
+            num = my_pow(5, ++p);
+        }
+        printf("%llu\n", r);
+    }
 }
