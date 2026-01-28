@@ -46,35 +46,58 @@ void* my_if(int cond, void* (*true_cond_func)(), void* (*false_cond_func)()){
 #define uint unsigned int
 #define llui long long unsigned int
 
-llui my_pow(llui b, llui pow){
-    llui r = 1;
-    while(pow--)
-        r *= b;
-    return r;
-}
+/*1143
+Description
 
-/*2422
-Description:
- 求1*2*3*……*n的乘积以多少个0结尾。
+向标准输出上打印一些用ASCII字符组成的图形。
 
-Input:
+-----------------------------------------------------------------------------
 
-输入为多行，至EOF结束。每行为一个整数n，n<=100000。
+编写一个函数用于输出ASCII图形。
 
-Output:
+用C语言实现：append.c中函数原型为
 
-输出每个n对应的结尾0的个数。
+int print_graphic(int n, char c);
+
+用C++实现：append.cc中函数原型为
+
+int printGraphic(int n, char c);
+
+功能：输出n层有字符c组成的图形。
+
+函数的调用格式见“Append Code”。
+
+Input
+
+输入为一个整数n和一个字符c，0<n<100。
+
+Output
+
+输出一个n层等腰三角形，由字符c组成，格式见sample。
 */
 
-int main(){
-    llui n, p, r, num;
-    while(scanf("%llu", &n) ^ EOF){
-        r = 0, p = 1;
-        num = my_pow(5, p);
-        while(n / num){
-            r += n / num; 
-            num = my_pow(5, ++p);
-        }
-        printf("%llu\n", r);
-    }
+void print_char(int i1, char c){
+    if(i1 > 0){ printf("%c", c); }
+    if(--i1 > 0){ print_char(i1, c); }
+}
+
+void print(uint i, uint n, char c){
+    print_char(n - i,' ');
+    print_char(i, c);
+    print_char(i - 1, c);
+    printf("\n");
+    if(i++ < n){ print(i, n, c); }
+}
+
+void print_graphic(uint n, char c){
+    print(1, n, c);
+}
+
+int main()
+{
+    char c;
+    int num;
+    scanf("%d %c", &num, &c);
+    print_graphic(num, c);
+    return 0;
 }
