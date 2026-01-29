@@ -45,51 +45,58 @@ void* my_if(int cond, void* (*true_cond_func)(), void* (*false_cond_func)()){
 #include <stdio.h>
 #define uint unsigned int
 #define llui long long unsigned int
-/*1096
+/*1456
 Description
 
-向标准输出上打印一些用ASCII字符组成的图形。
+验证“每个不小于6的偶数都是两个奇素数之和”，输入一个不小于6的偶数n，找出两个奇素数，使它们的和为n。
+
 Input
 
-输入为多个整数n，0<n<100。当n为0时结束输入。
+输入一个不小于6的偶数n，n<10000。
+
 Output
 
-若n为偶数，则输出一个正向的n层等腰三角形；n为奇数，则输出一个倒向的n层等腰三角形。三角形由“+”组成。任意两个图形之间有一个空行分隔，格式见sample。
+找出两个奇素数，使它们的和为n。如果有多种答案，则每个答案占一行。注意：在输出时，第一个数不能大于第二个数。比如对于10，输出的答案只有3 + 7 = 10，没有7 + 3 =10。
+
+每行的输出格式为：
+
+a + b = c
+
+a和b是满足条件的两个数，a<=b，c为输入的数。
+
+多个答案的输出顺序，要按照第一个数递增的顺序输出。
 */
 
-void print_char(int i1, char c){
-    if(i1 > 0){ printf("%c", c); }
-    if(--i1 > 0){ print_char(i1, c); }
+
+uint bit_arr[350] = {0};
+
+uint is_prime(uint n){
+    if(n < 2){ return 0; }
+    uint i = 2, f = 1;
+    while(((i * i) <= n) && f){
+        f = n % i;
+        ++i;
+    }
+    return f;
 }
 
-void print_triangle_from_up_to_down(uint i, uint n, char c){
-    print_char(n - i,' ');
-    print_char(i, c);
-    print_char(i - 1, c);
-    printf("\n");
-    if(i++ < n){ print_triangle_from_up_to_down(i, n, c); }
+void sorted_prime_arr(uint n, uint *primes){
+    uint c = 1, i = 0, f = 1;
+    while((++c < n) && f){
+        if(is_prime(c))
+            if(is_prime(n - c) && (n - c >= c))
+            primes[i++] = c; 
+    }
+    primes[i] = 0;
 }
 
-void print_triangle_from_down_to_up(uint i, uint n, char c){
-    print_char(n - i, ' ');
-    print_char(i, c);
-    print_char(i ? i - 1 : 0, c);
-    printf("\n");
-    if(--i){ print_triangle_from_down_to_up(i, n, c);}
-}
 
-void up_down_tri_handler(uint n){
-    if(n & 1){ print_triangle_from_down_to_up(n, n, '+'); }
-    else{ print_triangle_from_up_to_down(1, n, '+'); }
-}
-
-int main()
-{
-    uint n;
+int main(){
+    uint n, i;
     scanf("%u", &n);
-    while(n){
-        up_down_tri_handler(n);
-        printf("\n");
-        scanf("%u", &n);
+    uint sol_arr[n >> 1];
+    sorted_prime_arr(n, sol_arr);
+    for(i = 0; sol_arr[i]; i++){
+        printf("%u + %u = %u\n", sol_arr[i], n - sol_arr[i], n);
     }
 }
