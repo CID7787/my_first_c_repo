@@ -29,45 +29,44 @@ lluint comb(int n, int k){
 #include <stdio.h>
 #include <stdlib.h>
 #define uint unsigned int
+/*2599
+Description
 
-void matrix_mult(int *a, int *b, int *c, uint ar, uint cr, uint bc){
-    uint i, i1, i2;
-    for(i = 0; i < bc; i++)
-        for(i1 = 0; i1 < ar; ++i1){
-            c[i1 * cr + i] = 0;
-            for(i2 = 0; i2 < cr; ++i2){
-                printf("%d + ", c[i1 * cr + i]);
-                c[i1 * cr + i] += a[i1 * cr + i2] * b[i2 * bc + i];
-                printf("%d * %d = %d\n", a[i1 * cr + i2], b [i2 * bc + i], c[i1 * cr + i]);
-            }
-        }
-}
+有一楼梯共M级，若每次只能跨上一级或二级，要走上第M级，共有多少种走法？
 
-void print(int *mat, uint r, uint c){
-    uint i1, i2;
-    for(i1= 0; i1 < r; i1++){
-        for(i2 = 0; i2 < c; i2++)
-            printf("%d ", mat[i1 * c + i2]);
-        printf("\n");
-    }
+-----------------------------------------------------------------------------
+
+Invalid Word（禁用单词）错误：在解决这个题目时，某些关键词是不允许被使用的。如果提交的程序中包含了下列的关键词之一，就会产生这个错误。
+
+被禁用的关键字：for, while, do, break, continue, goto。
+
+Input
+
+输入数据每行包含一个整数M（1<=M<=30）,表示楼梯的级数，至EOF结束。
+
+Output
+
+对于每个测试实例，请输出不同走法的数量
+
+Sample Input
+1
+2
+3
+Sample Output
+1
+2
+3
+*/
+
+uint steps(uint n){
+    return n < 4 ? n : steps(n - 1) + steps(n - 2);
 }
 
 int main(){
-    uint dim[2], rc, i, i1, c;
-    while(scanf("%u%u%u", dim, &rc, dim + 1) ^ EOF){
-        int *matrix[3] = { calloc(dim[0] * rc, sizeof(int)), calloc(dim[1] * rc, sizeof(int)), calloc(dim[0] * dim[1], sizeof(int))};
-        for(i = 0; i < 2; ++i){
-            c = dim[i] * rc;
-            for(i1 = 0; i1 < c; ++i1)
-                scanf("%d", matrix[i] + i1);
-        }
-        matrix_mult(matrix[0], matrix[1], matrix[2], dim[0], rc, dim[1]);
-        print(matrix[2], dim[0], dim[1]);
-        free(matrix[0]);
-        free(matrix[1]);
-        free(matrix[2]);
+    uint n;
+    while(scanf("%u", &n) ^ EOF){
+        printf("%u\n", steps(n));
     }
-    return 0;
 }
 
 /*
