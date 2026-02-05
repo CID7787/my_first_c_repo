@@ -26,45 +26,55 @@ lluint comb(int n, int k){
 }
 */
 
-// very important: memory layout, virtual machine, c99 compiler either on comp or online(source that will be available no matter where or through what use it), how to compile and execute program in Windows
-
-/*
-void* my_if(int cond, void* (*true_cond_func)(), void* (*false_cond_func)()){
-    cond = !(!cond); // 1; 0
-    void* t = true_cond_func; // convert function pointer to data pointer
-    void* f = false_cond_func;
-    int big = cond << (sizeof(int) << 1); // 0/0010000....
-    int r = (~0) >> big; // 00000000... | 11111111......
-    void* result = (void*)((r & (long long int)t) | (r & (long long int)f)); // leave only one data pointer according to IF/OR logic, based on cond value
-    void* (*resulting_function)() = (void* (*)())result; // convert back to the function pointer
-    resulting_function(); // call a function
-}
-*/
-
-
 #include <stdio.h>
 #include <stdlib.h>
-
 #define uint unsigned int
-#define llui long long unsigned int
-/*2292
-Description
-输入15个整数和两个整数p、q，统计有多少个整数位于区间p～q（或q～p）之内。
 
-Input
-输入分为两部分，第一部分是15个整数，第二部分是p和q。
+void matrix_mult(int *a, int *b, int *c, uint ar, uint cr, uint bc){
+    uint i, i1, i2;
+    for(i = 0; i < bc; i++)
+        for(i1 = 0; i1 < ar; ++i1){
+            c[i1 * cr + i] = 0;
+            for(i2 = 0; i2 < cr; ++i2){
+                printf("%d + ", c[i1 * cr + i]);
+                c[i1 * cr + i] += a[i1 * cr + i2] * b[i2 * bc + i];
+                printf("%d * %d = %d\n", a[i1 * cr + i2], b [i2 * bc + i], c[i1 * cr + i]);
+            }
+        }
+}
 
-Output
-输出在区间p和q之内（含p、q）的整数个数。
-*/
-int main(){    
-    int arr[15], p, q, i, c = 0;    
-    for(i = 0; i < 15; ++i)         
-        scanf("%d", arr + i);    
-    scanf("%d%d", &p, &q);    
-    if(p > q){ i = p; p = q; q = i; }    
-    for(i = 0; i < 15; ++i)        
-        c += (arr[i] >= p) & (arr[i] <= q);    
-    printf("%d", c);   
+void print(int *mat, uint r, uint c){
+    uint i1, i2;
+    for(i1= 0; i1 < r; i1++){
+        for(i2 = 0; i2 < c; i2++)
+            printf("%d ", mat[i1 * c + i2]);
+        printf("\n");
+    }
+}
+
+int main(){
+    uint dim[2], rc, i, i1, c;
+    while(scanf("%u%u%u", dim, &rc, dim + 1) ^ EOF){
+        int *matrix[3] = { calloc(dim[0] * rc, sizeof(int)), calloc(dim[1] * rc, sizeof(int)), calloc(dim[0] * dim[1], sizeof(int))};
+        for(i = 0; i < 2; ++i){
+            c = dim[i] * rc;
+            for(i1 = 0; i1 < c; ++i1)
+                scanf("%d", matrix[i] + i1);
+        }
+        matrix_mult(matrix[0], matrix[1], matrix[2], dim[0], rc, dim[1]);
+        print(matrix[2], dim[0], dim[1]);
+        free(matrix[0]);
+        free(matrix[1]);
+        free(matrix[2]);
+    }
     return 0;
 }
+
+/*
+how were hyperbolic functions derived
+https://www.ms.uky.edu/~droyster/courses/fall11/MA341/Classnotes/Lecture%2027%20Handouts.pdf
+https://www.cuemath.com/calculus/hyperbolic-functions/
+https://math.stackexchange.com/questions/718863/geometric-meanings-of-hyperbolic-cosine-and-sine
+https://math.stackexchange.com/questions/455480/how-were-hyperbolic-functions-derived-discovered
+https://www.cuemath.com/geometry/latus-rectum/
+*/
