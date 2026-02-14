@@ -6,6 +6,7 @@ const float NEG_MAX_FLOAT = -85070586659632214952926045871129231360.0;
 typedef enum all_unsigned_and_signed_constants{
 	MAX_CHAR = 0x7f,
 	MIN_CHAR = ~MAX_CHAR,
+	MAX_UCHAR = 0xff,
 	MAX_INT = 0x7fffffff,
 	MIN_INT = ~MAX_INT,
 	MAX_UINT = ~0u,

@@ -33,7 +33,7 @@ unsigned int amount_of_type_bytes(datatype t){
 }
 
 
-vecN vector_creation(datatype type, unsigned int n, alldatapointer elements){// TESTED
+vecN vector_creation(datatype type, unsigned int n, alldatapointer elements){
     unsigned int r_element_size = amount_of_type_bytes(type);
     vecN r = {type, n, malloc(n * r_element_size), NO_ERROR};
     int* ptr = (int*)elements.b1.i;
@@ -47,54 +47,52 @@ vecN vector_creation(datatype type, unsigned int n, alldatapointer elements){// 
             case LINT:  r.elements.b8.i[n]  = elements.b8.i[n]; break;
             case LUINT: r.elements.b8.ui[n] = elements.b8.ui[n]; break;
             case DOUBLE:r.elements.b8.d[n]  = elements.b8.d[n]; break;
-            case -1:    switch(r_element_size){
-                            case 1:   r.elements.b1.i[n] = 0; break;
-                            case 4:   r.elements.b4.i[n] = 0; break;
-                            case 8:   r.elements.b8.i[n] = 0; break;
-                        }
+            case -1:    
+                switch(r_element_size){
+                    case 1:   r.elements.b1.i[n] = 0; break;
+                    case 4:   r.elements.b4.i[n] = 0; break;
+                    case 8:   r.elements.b8.i[n] = 0; break;
+                }
             break; 
-        }    }
+        }    
+    }
     return r;
 }   
 
-vecN vector_negation(vecN a){// TESTED
+vecN vector_negation(vecN a){
+    int cond;
     vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type)), NO_ERROR};
     while(a.n-- ){
         switch(r.type){
             case CHAR: 
-                r.v_error = ternary(a.elements.b1.i[a.n] == MIN_CHAR, POSITIVE_OVERFLOW, r.v_error); // TODO: replace ternary function call with bitwise and logical operators
+                cond = a.elements.b1.i[a.n] == MIN_CHAR;
+                r.v_error = (-cond & POSITIVE_OVERFLOW) | (-cond & r.v_error); 
                 r.elements.b1.i[a.n] = -a.elements.b1.i[a.n];
             break;
-            case UCHAR:
-                r.elements.b1.ui[a.n] = a.elements.b1.ui[a.n]; 
-            break;
             case INT: 
-                r.v_error = ternary(a.elements.b4.i[a.n] == MIN_INT, POSITIVE_OVERFLOW, r.v_error); // TODO: replace ternary function call with bitwise and logical operators
-                r.elements.b4.i[a.n] =  -a.elements.b4.i[a.n]; 
-            break;
-            case UINT: 
-                r.elements.b4.ui[a.n] = a.elements.b4.ui[a.n]; 
+            cond = a.elements.b1.i[a.n] == MIN_INT;
+            r.v_error = (-cond & POSITIVE_OVERFLOW) | (-cond & r.v_error);
+            r.elements.b4.i[a.n] =  -a.elements.b4.i[a.n]; 
             break;
             case FLOAT: 
-                r.elements.b4.f[a.n] = -a.elements.b4.f[a.n]; 
+            r.elements.b4.f[a.n] = -a.elements.b4.f[a.n]; 
             break;
             case LINT: 
-                r.v_error = ternary(a.elements.b8.i[a.n] == MIN_LINT, POSITIVE_OVERFLOW, r.v_error); // TODO: replace ternary function call with bitwise and logical operators
-                r.elements.b8.i[a.n] = -a.elements.b8.i[a.n]; 
-            break;
-            case LUINT: 
-                r.elements.b8.ui[a.n] = a.elements.b8.ui[a.n]; 
+            cond = a.elements.b1.i[a.n] == MIN_LINT;
+            r.v_error = (-cond & POSITIVE_OVERFLOW) | (-cond & r.v_error);
+            r.elements.b8.i[a.n] = -a.elements.b8.i[a.n]; 
             break;
             case DOUBLE: 
-                r.elements.b8.d[a.n] = -a.elements.b8.d[a.n]; 
+            r.elements.b8.d[a.n] = -a.elements.b8.d[a.n]; 
             break;
+            default: return r;
         }
     }
     return r;
 }
 
-vecN vector_addition(vecN a, vecN b){//TESTED
-    if(a.type != b.type){ return a; }// TODO: some types should be able to multiply with each other
+vecN vector_addition(vecN a, vecN b){
+    if(a.type != b.type){ return a; }// TODO: some types should be able to add up
     vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type)), NO_ERROR};
     while(a.n--){
         switch(a.type){
@@ -122,16 +120,13 @@ vecN vector_addition(vecN a, vecN b){//TESTED
             case DOUBLE:
                 r.elements.b8.d[a.n] = safe_double_addition((dbits){ .d = a.elements.b8.d[a.n] }, (dbits){ .d = b.elements.b8.d[a.n]}, &r.v_error);
             break;
-            default: 
-                r.elements.b1.i[a.n] = a.elements.b1.i[a.n]; 
-            break;
+            default: return r;
         }
     }
-
     return r;
 }
 
-vecN vector_multiplication(vecN a, vecN b){//TESTED
+vecN vector_multiplication(vecN a, vecN b){
     if(a.type != b.type){ return a; }// TODO: some types should be able to multiply with each other
     vecN r = {a.type, a.n, malloc(amount_of_type_bytes(a.type) * a.n), NO_ERROR};
     while(a.n--){
@@ -169,7 +164,7 @@ vecN vector_multiplication(vecN a, vecN b){//TESTED
     return r;
 }
  
-vecN vector_exponentiation(vecN a, vecN b){//TEST
+vecN vector_exponentiation(vecN a, vecN b){
     unsigned char a_elem_size = amount_of_type_bytes(a.type), b_elem_size = amount_of_type_bytes(b.type), r_elem_size = -(a_elem_size > b_elem_size);
     r_elem_size = (r_elem_size & a_elem_size) | (~r_elem_size & b_elem_size);
     vecN r = {a.type, a.n, malloc(a.n * r_elem_size), NO_ERROR};

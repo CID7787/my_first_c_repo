@@ -444,7 +444,7 @@ double safe_double_division_with_rounding(dbits a, dbits b, error* err){// quoti
 
 // FUNCTION: factorial(unsigned int, error*)
 
-#define factorial_lookup_table_size 11
+#define factorial_lookup_table_size 13
 const unsigned int factorial_lookup_table[factorial_lookup_table_size] = {1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 43545600};  // DESCRIPTION: factorial values list of numbers from 0 to 10
 
 long unsigned int factorial(long unsigned int a, error* err){
