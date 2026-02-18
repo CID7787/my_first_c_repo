@@ -16,6 +16,6 @@
 #include "print_binary.c"
 
 int main(){
-    float f = 0.32;
-    printf("%f", --(--f));
+    long unsigned int l = MAX_FLOAT - 2 * MAX_LINT;
+    printf("%f", MAX_FLOAT);
 }

@@ -4,9 +4,15 @@ unsigned int random_uint(unsigned int v, unsigned int u){
     return (v << 16) + (u & 65535);
 }
 
-int int_absolute_value(int condition){ 
+unsigned int int_absolute_value(int condition){ 
     int the_original_value = condition;
     condition = *((unsigned int*)&condition) >> ((sizeof(int) << 3) - 1);// condition if last bit of arg is 1(if number is negative) 
+    return (1 - (condition << 1)) * the_original_value;
+}
+
+long unsigned int lint_absolute_value(int condition){ 
+    long int the_original_value = condition;
+    condition = *((long unsigned int*)&condition) >> ((sizeof(long int) << 3) - 1);// condition if last bit of arg is 1(if number is negative) 
     return (1 - (condition << 1)) * the_original_value;
 }
 

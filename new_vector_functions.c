@@ -7,6 +7,7 @@
     #include "logical_functions_of_decision.c"
     #include "bitwise_functions.c"
     #include "safe_arithmetic_functions.c"
+    #include "additional_functions.c"
 #endif
 
 #define B1type_i_elements(...) (alldatapointer){ .b1 = (B1type){ .i = __VA_ARGS__}}
@@ -101,63 +102,311 @@ vecN vector_negation(vecN a){
     return r;
 }
 
-vecNv2 vector_addition(vecNv2 a, vecNv2 b){// adjustments: a, b different types; r optional type
-    unsigned int i, r_n = ternary(a.n > b.n, a.n, b.n);
-    vecNv2 r = {a.type, a.n, malloc(r.n * amount_of_type_bytes(a.type)), NO_ERROR};
+vecN vector_addition_of_arg1type(vecN a, vecN b){
+    unsigned int i, r_n = ternary(a.n > b.n, a.n, b.n), ai, bi, cond;
+    vecN r = {a.type, r_n, malloc(r_n * amount_of_type_bytes(a.type)), NO_ERROR};
+    vecN *vec_arr[3] = {&(vecN){CHAR, 1, B8type_i_elements((long int[]){0}), NO_ERROR}};
     for(i = 0; i < r_n; i++){
+        ai = i < a.n;
+        bi = i < b.n;
         switch(a.type){
-            case CHAR: 
-                if((i < a.n) & i < (b.n)){ r.elements.b1.integ.i[i] = safe_char_addition(a.elements.b1.integ.i[i], b.elements.b1.integ.i[i], &r.v_error); }
-                else{
-                    if(i < a.n){ r.elements.b1.integ.i[i] = a.elements.b1.integ.i[i]; }
-                    else{ r.elements.b1.integ.i[i] = b.elements.b1.integ.i[i]; }
-                }
+            case CHAR:
+                switch(b.type){
+                    case CHAR: 
+                        r.elements.b1.i[i] = safe_char_addition(vec_arr[ai]->elements.b1.i[ai * i], vec_arr[bi << 1]->elements.b1.i[bi * i], &r.v_error);
+                    break;
+                    case UCHAR:
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b1.ui[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b1.i[i] = safe_char_addition(vec_arr[ai]->elements.b1.i[ai * i], vec_arr[bi << 1]->elements.b1.ui[bi * i], &r.v_error);
+                    break;
+                    case INT:
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b4.i[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b4.i[bi * i] < MIN_CHAR, NEGATIVE_OVERFLOW, r.v_error);
+                        r.elements.b1.i[i] = safe_char_addition(vec_arr[ai]->elements.b1.i[ai * i], vec_arr[bi << 1]->elements.b4.i[bi * i], &r.v_error);                      
+                    break;
+                    case UINT:
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b4.ui[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b1.i[i] = safe_char_addition(vec_arr[ai]->elements.b1.i[ai * i], vec_arr[bi << 1]->elements.b4.ui[bi * i], &r.v_error);
+                      break;
+                    case LINT:
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b8.i[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b8.i[bi * i] < MIN_CHAR, NEGATIVE_OVERFLOW, r.v_error);
+                        r.elements.b1.i[i] = safe_char_addition(vec_arr[ai]->elements.b1.i[ai * i], vec_arr[bi << 1]->elements.b8.i[bi * i], &r.v_error);                      
+                    break;
+                    case LUINT:
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b8.ui[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b1.i[i] = safe_char_addition(vec_arr[ai]->elements.b1.i[ai * i], vec_arr[bi << 1]->elements.b8.ui[bi * i], &r.v_error);
+                    break;
+                    case FLOAT:
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b4.f[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b4.f[bi * i] < MIN_CHAR, NEGATIVE_OVERFLOW, r.v_error);
+                        r.elements.b1.i[i] = safe_char_addition(vec_arr[ai]->elements.b1.i[ai * i], (vec_arr[bi << 1]->elements.b4.f[bi * i]), &r.v_error);                      
+                    break; 
+                    case DOUBLE:
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b8.d[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b8.d[bi * i] < MIN_CHAR, NEGATIVE_OVERFLOW, r.v_error);
+                        r.elements.b1.i[i] = safe_char_addition(vec_arr[ai]->elements.b1.i[ai * i], (vec_arr[bi << 1]->elements.b8.d[bi * i]), &r.v_error);                      
+                } 
             break;
             case UCHAR:
-                if((i < a.n) & i < (b.n)){ r.elements.b1.integ.ui[i] = safe_uchar_addition(a.elements.b1.integ.ui[i], b.elements.b1.integ.ui[i], &r.v_error); }
-                else{
-                    if(i < a.n){ r.elements.b1.integ.ui[i] = a.elements.b1.integ.ui[i]; }
-                    else{ r.elements.b1.integ.ui[i] = b.elements.b1.integ.ui[i]; }
-                }
+                switch(b.type){
+                    case CHAR: 
+                        cond = vec_arr[bi << 1]->elements.b1.i[bi * i] < 0;
+                        cond &= int_absolute_value(vec_arr[bi << 1]->elements.b1.i[bi * i]) > vec_arr[ai]->elements.b1.ui[ai * i];
+                        r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
+                        r.elements.b1.ui[i] = safe_uchar_addition(vec_arr[ai]->elements.b1.ui[ai * i] + (char)(vec_arr[bi << 1]->elements.b1.i[bi * i] & (char)-cond), 
+                                                                  vec_arr[bi << 1]->elements.b1.i[bi * i] & (char)-(!cond), &r.v_error);
+                    break;
+                    case UCHAR:
+                        r.elements.b1.ui[i] = safe_uchar_addition(vec_arr[ai]->elements.b1.ui[ai * i], vec_arr[bi << 1]->elements.b1.ui[bi * i], &r.v_error);
+                    break;
+                    case INT:
+                        cond = vec_arr[bi << 1]->elements.b4.i[bi * i] < 0;
+                        cond &= int_absolute_value(vec_arr[bi << 1]->elements.b4.i[bi * i]) > vec_arr[ai]->elements.b1.ui[ai * i];
+                        r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b4.i[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b1.ui[i] = safe_uchar_addition(vec_arr[ai]->elements.b1.ui[ai * i] + (int)(vec_arr[bi << 1]->elements.b4.i[bi * i] & (int)-cond), 
+                                                                  vec_arr[bi << 1]->elements.b4.i[bi * i] & (int)-(!cond), &r.v_error);
+                    break;
+                    case UINT:
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b4.ui[bi * i] > MAX_UCHAR, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b1.ui[i] = safe_uchar_addition(vec_arr[ai]->elements.b1.ui[i], vec_arr[bi << 1]->elements.b4.ui[i], &r.v_error);
+                    break;
+                    case LINT:
+                        cond = vec_arr[bi << 1]->elements.b8.i[bi * i] < 0;
+                        cond &= lint_absolute_value(vec_arr[bi << 1]->elements.b8.i[bi * i]) > vec_arr[ai]->elements.b1.ui[ai * i];
+                        r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b8.i[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b1.ui[i] = safe_uchar_addition(vec_arr[ai]->elements.b1.ui[ai * i] + (long int)(vec_arr[bi << 1]->elements.b8.i[bi * i] & (long int)-cond),
+                                                                  vec_arr[bi << 1]->elements.b8.i[bi * i] & (long int)-(!cond), &r.v_error);
+                    break;
+                    case LUINT:
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b8.ui[bi * i] > MAX_UCHAR, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b1.ui[i] = safe_uchar_addition(vec_arr[ai]->elements.b1.ui[i], vec_arr[bi << 1]->elements.b8.ui[i], &r.v_error);
+                    break;
+                    case FLOAT:
+                        cond = vec_arr[bi << 1]->elements.b4.f[bi * i] < 0;
+                        cond &= double_absolute_value((dbits){ .d = vec_arr[bi << 1]->elements.b4.f[bi * i] }) > vec_arr[ai]->elements.b1.ui[ai * i];
+                        r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b4.f[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b1.ui[i] = safe_uchar_addition(vec_arr[ai]->elements.b1.ui[ai * i] + vec_arr[bi << 1]->elements.b4.f[bi * i] * cond, 
+                                                                  vec_arr[bi << 1]->elements.b4.f[bi * i] * !cond, &r.v_error);
+                    break; 
+                    case DOUBLE:
+                        cond = vec_arr[bi << 1]->elements.b8.d[bi * i] < 0;
+                        cond &= double_absolute_value((dbits){ .d = vec_arr[bi]->elements.b8.d[bi * i] }) > vec_arr[ai]->elements.b1.ui[ai * i];
+                        r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary((double)vec_arr[bi << 1]->elements.b8.d[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b1.ui[i] = safe_uchar_addition(vec_arr[ai]->elements.b1.ui[ai * i] + vec_arr[bi << 1]->elements.b8.d[bi * i] * cond, 
+                                                                  vec_arr[bi << 1]->elements.b8.d[bi * i] * !cond, &r.v_error);
+                } 
             break;
             case INT:
-                if((i < a.n) & i < (b.n)){ r.elements.b4.integ.i[i] = safe_int_addition(a.elements.b4.integ.i[i], b.elements.b4.integ.i[i], &r.v_error); }
-                else{
-                    if(i < a.n){ r.elements.b4.integ.i[i] = a.elements.b4.integ.i[i]; }
-                    else{ r.elements.b4.integ.i[i] = b.elements.b4.integ.i[i]; }
+                switch(b.type){
+                    case CHAR: 
+                        r.elements.b4.i[i] = safe_int_addition(vec_arr[ai]->elements.b4.i[ai * i], vec_arr[bi << 1]->elements.b1.i[bi * i], &r.v_error);
+                    break;
+                    case UCHAR:
+                        r.elements.b4.i[i] = safe_int_addition(vec_arr[ai]->elements.b4.i[ai * i], vec_arr[bi << 1]->elements.b1.ui[bi * i], &r.v_error);
+                    break;
+                    case INT:
+                        r.elements.b4.i[i] = safe_int_addition(vec_arr[ai]->elements.b4.i[ai * i], vec_arr[bi << 1]->elements.b4.i[bi * i], &r.v_error);                      
+                    break;
+                    case UINT:
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b4.ui[bi * i] > MAX_INT, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b4.i[i] = safe_int_addition(vec_arr[ai]->elements.b4.i[ai * i], vec_arr[bi << 1]->elements.b4.ui[bi * i], &r.v_error);
+                        break;
+                    case LINT:
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b8.i[bi * i] > MAX_INT, POSITIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b8.i[bi * i] < MIN_INT, NEGATIVE_OVERFLOW, r.v_error);
+                        r.elements.b4.i[i] = safe_int_addition(vec_arr[ai]->elements.b4.i[ai * i], vec_arr[bi << 1]->elements.b8.i[bi * i], &r.v_error);                      
+                    break;
+                    case LUINT:
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b8.ui[bi * i] > MAX_INT, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b4.i[i] = safe_int_addition(vec_arr[ai]->elements.b4.i[ai * i], vec_arr[bi << 1]->elements.b8.ui[bi * i], &r.v_error);
+                    break;
+                    case FLOAT:
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b4.f[bi * i] > MAX_INT, POSITIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b4.f[bi * i] < MIN_INT, NEGATIVE_OVERFLOW, r.v_error);
+                        r.elements.b4.i[i] = safe_int_addition(vec_arr[ai]->elements.b4.i[ai * i], (vec_arr[bi << 1]->elements.b4.f[bi * i]), &r.v_error);                      
+                    break; 
+                    case DOUBLE:
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b8.d[bi * i] > MAX_INT, POSITIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b8.d[bi * i] < MIN_INT, NEGATIVE_OVERFLOW, r.v_error);
+                        r.elements.b4.i[i] = safe_int_addition(vec_arr[ai]->elements.b4.i[ai * i], (vec_arr[bi << 1]->elements.b8.d[bi * i]), &r.v_error);                      
                 }
             break;
             case UINT:
-                if((i < a.n) & i < (b.n)){ r.elements.b4.integ.ui[i] = safe_uint_addition(a.elements.b4.integ.ui[i], b.elements.b4.integ.ui[i], &r.v_error); }
-                else{
-                    if(i < a.n){ r.elements.b4.integ.ui[i] = a.elements.b4.integ.ui[i]; }
-                    else{ r.elements.b4.integ.ui[i] = b.elements.b4.integ.ui[i]; }
+                switch(b.type){
+                    case CHAR: 
+                        cond = vec_arr[bi << 1]->elements.b1.i[bi * i] < 0;
+                        cond &= int_absolute_value(vec_arr[bi << 1]->elements.b1.i[bi * i]) > vec_arr[ai]->elements.b4.ui[ai * i];
+                        r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
+                        r.elements.b4.ui[i] = safe_uint_addition(vec_arr[ai]->elements.b4.ui[ai * i] + (char)(vec_arr[bi << 1]->elements.b1.i[bi * i] & (char)-cond), 
+                                                                vec_arr[bi << 1]->elements.b1.i[bi * i] & (char)-(!cond), &r.v_error);
+                    break;
+                    case UCHAR:
+                        r.elements.b4.ui[i] = safe_uint_addition(vec_arr[ai]->elements.b4.ui[ai * i], vec_arr[bi << 1]->elements.b1.ui[bi * i], &r.v_error);
+                    break;
+                    case INT:
+                        cond = vec_arr[bi << 1]->elements.b4.i[bi * i] < 0;
+                        cond &= int_absolute_value(vec_arr[bi << 1]->elements.b4.i[bi * i]) > vec_arr[ai]->elements.b4.ui[ai * i];
+                        r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b4.i[bi * i] > MAX_UINT, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b4.ui[i] = safe_uint_addition(vec_arr[ai]->elements.b4.ui[ai * i] + (int)(vec_arr[bi << 1]->elements.b4.i[bi * i] & (int)-cond), 
+                                                                vec_arr[bi << 1]->elements.b4.i[bi * i] & (int)-(!cond), &r.v_error);
+                    break;
+                    case UINT:
+                        r.elements.b1.ui[i] = safe_uint_addition(vec_arr[ai]->elements.b4.ui[i], vec_arr[bi << 1]->elements.b4.ui[i], &r.v_error);
+                    break;
+                    case LINT:
+                        cond = vec_arr[bi << 1]->elements.b8.i[bi * i] < 0;
+                        cond &= lint_absolute_value(vec_arr[bi << 1]->elements.b8.i[bi * i]) > vec_arr[ai]->elements.b4.ui[ai * i];
+                        r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b8.i[bi * i] > MAX_UINT, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b4.ui[i] = safe_uint_addition(vec_arr[ai]->elements.b4.ui[ai * i] + (long int)(vec_arr[bi << 1]->elements.b8.i[bi * i] & (long int)-cond),
+                                                                vec_arr[bi << 1]->elements.b8.i[bi * i] & (long int)-(!cond), &r.v_error);
+                    break;
+                    case LUINT:
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b8.ui[bi * i] > MAX_UINT, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b4.ui[i] = safe_uint_addition(vec_arr[ai]->elements.b4.ui[i], vec_arr[bi << 1]->elements.b8.ui[i], &r.v_error);
+                    break;
+                    case FLOAT:
+                        cond = vec_arr[bi << 1]->elements.b4.f[bi * i] < 0;
+                        cond &= double_absolute_value((dbits){ .d = vec_arr[bi << 1]->elements.b4.f[bi * i] }) > vec_arr[ai]->elements.b4.ui[ai * i];
+                        r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b4.f[bi * i] > MAX_UINT, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b4.ui[i] = safe_uint_addition(vec_arr[ai]->elements.b4.ui[ai * i] + vec_arr[bi << 1]->elements.b4.f[bi * i] * cond, 
+                                                                vec_arr[bi << 1]->elements.b4.f[bi * i] * !cond, &r.v_error);
+                    break; 
+                    case DOUBLE:
+                        cond = vec_arr[bi << 1]->elements.b8.d[bi * i] < 0;
+                        cond &= double_absolute_value((dbits){ .d = vec_arr[bi]->elements.b8.d[bi * i] }) > vec_arr[ai]->elements.b4.ui[ai * i];
+                        r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary((double)vec_arr[bi << 1]->elements.b8.d[bi * i] > MAX_UINT, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b4.ui[i] = safe_uint_addition(vec_arr[ai]->elements.b4.ui[ai * i] + vec_arr[bi << 1]->elements.b8.d[bi * i] * cond, 
+                                                                vec_arr[bi << 1]->elements.b8.d[bi * i] * !cond, &r.v_error);
                 }
             break;
             case LINT:
-                if((i < a.n) & i < (b.n)){ r.elements.b8.integ.i[i] = safe_lint_addition(a.elements.b8.integ.i[i], b.elements.b8.integ.i[i], &r.v_error); }
-                    else{
-                        if(i < a.n){ r.elements.b8.integ.i[i] = a.elements.b8.integ.i[i]; }
-                        else{ r.elements.b8.integ.i[i] = b.elements.b8.integ.i[i]; }
-                } 
+                switch(b.type){
+                    case CHAR: 
+                        r.elements.b8.i[i] = safe_lint_addition(vec_arr[ai]->elements.b8.i[ai * i], vec_arr[bi << 1]->elements.b1.i[bi * i], &r.v_error);
+                    break;
+                    case UCHAR:
+                        r.elements.b8.i[i] = safe_lint_addition(vec_arr[ai]->elements.b8.i[ai * i], vec_arr[bi << 1]->elements.b1.ui[bi * i], &r.v_error);
+                    break;
+                    case INT:
+                        r.elements.b8.i[i] = safe_lint_addition(vec_arr[ai]->elements.b8.i[ai * i], vec_arr[bi << 1]->elements.b4.i[bi * i], &r.v_error);                      
+                    break;
+                    case UINT:
+                        r.elements.b8.i[i] = safe_lint_addition(vec_arr[ai]->elements.b8.i[ai * i], vec_arr[bi << 1]->elements.b4.ui[bi * i], &r.v_error);
+                        break;
+                    case LINT:
+                        r.elements.b8.i[i] = safe_lint_addition(vec_arr[ai]->elements.b8.i[ai * i], vec_arr[bi << 1]->elements.b8.i[bi * i], &r.v_error);                      
+                    break;
+                    case LUINT:
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b8.ui[bi * i] > MAX_LINT, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b8.i[i] = safe_lint_addition(vec_arr[ai]->elements.b8.i[ai * i], vec_arr[bi << 1]->elements.b8.ui[bi * i], &r.v_error);
+                    break;
+                    case FLOAT:
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b4.f[bi * i] > MAX_LINT, POSITIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b4.f[bi * i] < MIN_LINT, NEGATIVE_OVERFLOW, r.v_error);
+                        r.elements.b8.i[i] = safe_lint_addition(vec_arr[ai]->elements.b8.i[ai * i], (vec_arr[bi << 1]->elements.b4.f[bi * i]), &r.v_error);                      
+                    break; 
+                    case DOUBLE:
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b8.d[bi * i] > MAX_LINT, POSITIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b8.d[bi * i] < MIN_LINT, NEGATIVE_OVERFLOW, r.v_error);
+                        r.elements.b8.i[i] = safe_lint_addition(vec_arr[ai]->elements.b8.i[ai * i], (vec_arr[bi << 1]->elements.b8.d[bi * i]), &r.v_error);                      
+                }
             break;
             case LUINT:
-                if((i < a.n) & i < (b.n)){ r.elements.b8.integ.ui[i] = safe_luint_addition(a.elements.b8.integ.ui[i], b.elements.b8.integ.ui[i], &r.v_error); }
-                else{
-                    if(i < a.n){ r.elements.b8.integ.ui[i] = a.elements.b8.integ.ui[i]; }
-                    else{ r.elements.b8.integ.ui[i] = b.elements.b8.integ.ui[i]; }
-                }            break;            
+                switch(b.type){
+                    case CHAR: 
+                        cond = vec_arr[bi << 1]->elements.b1.i[bi * i] < 0;
+                        cond &= int_absolute_value(vec_arr[bi << 1]->elements.b1.i[bi * i]) > vec_arr[ai]->elements.b8.ui[ai * i];
+                        r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
+                        r.elements.b8.ui[i] = safe_luint_addition(vec_arr[ai]->elements.b8.ui[ai * i] + (char)(vec_arr[bi << 1]->elements.b1.i[bi * i] & (char)-cond), 
+                                                                vec_arr[bi << 1]->elements.b1.i[bi * i] & (char)-(!cond), &r.v_error);
+                    break;
+                    case UCHAR:
+                        r.elements.b8.ui[i] = safe_luint_addition(vec_arr[ai]->elements.b4.ui[ai * i], vec_arr[bi << 1]->elements.b1.ui[bi * i], &r.v_error);
+                    break;
+                    case INT:
+                        cond = vec_arr[bi << 1]->elements.b4.i[bi * i] < 0;
+                        cond &= int_absolute_value(vec_arr[bi << 1]->elements.b4.i[bi * i]) > vec_arr[ai]->elements.b8.ui[ai * i];
+                        r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b4.i[bi * i] > MAX_UINT, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b8.ui[i] = safe_luint_addition(vec_arr[ai]->elements.b8.ui[ai * i] + (int)(vec_arr[bi << 1]->elements.b4.i[bi * i] & (int)-cond), 
+                                                                vec_arr[bi << 1]->elements.b4.i[bi * i] & (int)-(!cond), &r.v_error);
+                    break;
+                    case UINT:
+                        r.elements.b1.ui[i] = safe_luint_addition(vec_arr[ai]->elements.b4.ui[i], vec_arr[bi << 1]->elements.b4.ui[i], &r.v_error);
+                    break;
+                    case LINT:
+                        cond = vec_arr[bi << 1]->elements.b8.i[bi * i] < 0;
+                        cond &= lint_absolute_value(vec_arr[bi << 1]->elements.b8.i[bi * i]) > vec_arr[ai]->elements.b8.ui[ai * i];
+                        r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b8.i[bi * i] > MAX_UINT, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b8.ui[i] = safe_luint_addition(vec_arr[ai]->elements.b8.ui[ai * i] + (long int)(vec_arr[bi << 1]->elements.b8.i[bi * i] & (long int)-cond),
+                                                                vec_arr[bi << 1]->elements.b8.i[bi * i] & (long int)-(!cond), &r.v_error);
+                    break;
+                    case LUINT:
+                        r.elements.b8.ui[i] = safe_luint_addition(vec_arr[ai]->elements.b4.ui[i], vec_arr[bi << 1]->elements.b8.ui[i], &r.v_error);
+                    break;
+                    case FLOAT:
+                        cond = vec_arr[bi << 1]->elements.b4.f[bi * i] < 0;
+                        cond &= double_absolute_value((dbits){ .d = vec_arr[bi << 1]->elements.b4.f[bi * i] }) > vec_arr[ai]->elements.b8.ui[ai * i];
+                        r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary(vec_arr[bi << 1]->elements.b4.f[bi * i] > MAX_UINT, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b8.ui[i] = safe_luint_addition(vec_arr[ai]->elements.b8.ui[ai * i] + vec_arr[bi << 1]->elements.b4.f[bi * i] * cond, 
+                                                                vec_arr[bi << 1]->elements.b4.f[bi * i] * !cond, &r.v_error);
+                    break; 
+                    case DOUBLE:
+                        cond = vec_arr[bi << 1]->elements.b8.d[bi * i] < 0;
+                        cond &= double_absolute_value((dbits){ .d = vec_arr[bi]->elements.b8.d[bi * i] }) > vec_arr[ai]->elements.b8.ui[ai * i];
+                        r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
+                        r.v_error = ternary((double)vec_arr[bi << 1]->elements.b8.d[bi * i] > MAX_UINT, POSITIVE_OVERFLOW, r.v_error);
+                        r.elements.b8.ui[i] = safe_luint_addition(vec_arr[ai]->elements.b8.ui[ai * i] + vec_arr[bi << 1]->elements.b8.d[bi * i] * cond, 
+                                                                vec_arr[bi << 1]->elements.b8.d[bi * i] * !cond, &r.v_error);
+                }
+            break;
             case FLOAT: 
-                if((i < a.n) & i < (b.n)){ r.elements.b4.flt[i] = safe_float_addition((fbits){ .f = a.elements.b4.flt[i] }, (fbits){ .f = b.elements.b4.flt[i] }, &r.v_error); }
-                else{
-                    if(i < a.n){ r.elements.b4.flt[i] = a.elements.b4.flt[i]; }
-                    else{ r.elements.b4.flt[i] = b.elements.b4.flt[i]; }
-                }            break;
+                switch(b.type){
+                    case CHAR: r.elements.b4.f[i] = safe_float_addition((fbits){ .f = vec_arr[ai]->elements.b4.f[i] }, (fbits){ .f = vec_arr[bi << 1]->elements.b1.i[i] }, &r.v_error);
+                    break;
+                    case UCHAR: r.elements.b4.f[i] = safe_float_addition((fbits){ .f = vec_arr[ai]->elements.b4.f[i] }, (fbits){ .f = vec_arr[bi << 1]->elements.b1.ui[i] }, &r.v_error);
+                    break;
+                    case INT: r.elements.b4.f[i] = safe_float_addition((fbits){ .f = vec_arr[ai]->elements.b4.f[i] }, (fbits){ .f = vec_arr[bi << 1]->elements.b4.i[i] }, &r.v_error);
+                    break;
+                    case UINT: r.elements.b4.f[i] = safe_float_addition((fbits){ .f = vec_arr[ai]->elements.b4.f[i] }, (fbits){ .f = vec_arr[bi << 1]->elements.b4.ui[i] }, &r.v_error);
+                    break;
+                    case LINT: r.elements.b4.f[i] = safe_float_addition((fbits){ .f = vec_arr[ai]->elements.b4.f[i] }, (fbits){ .f = vec_arr[bi << 1]->elements.b8.i[i] }, &r.v_error);
+                    break;
+                    case LUINT: r.elements.b4.f[i] = safe_float_addition((fbits){ .f = vec_arr[ai]->elements.b4.f[i] }, (fbits){ .f = vec_arr[bi << 1]->elements.b8.ui[i] }, &r.v_error);
+                    break;
+                    case FLOAT: r.elements.b4.f[i] = safe_float_addition((fbits){ .f = vec_arr[ai]->elements.b4.f[i] }, (fbits){ .f = vec_arr[bi << 1]->elements.b4.f[i] }, &r.v_error);
+                    break;
+                    case DOUBLE: r.elements.b4.f[i] = safe_float_addition((fbits){ .f = vec_arr[ai]->elements.b4.f[i] }, (fbits){ .f = vec_arr[bi << 1]->elements.b8.d[i] }, &r.v_error);
+                }
+            break;
             case DOUBLE:
-                if((i < a.n) & i < (b.n)){ r.elements.b8.flt[i] = safe_double_addition((dbits){ .d = a.elements.b8.flt[i] }, (dbits){ .d = b.elements.b8.flt[i]}, &r.v_error); }
-                    else{
-                        if(i < a.n){ r.elements.b8.flt[i] = a.elements.b8.flt[i]; }
-                        else{ r.elements.b8.flt[i] = b.elements.b8.flt[i]; }
+                switch(b.type){
+                    case CHAR: r.elements.b8.d[i] = safe_double_addition((dbits){ .d = vec_arr[ai]->elements.b8.d[i] }, (dbits){ .d = vec_arr[bi << 1]->elements.b1.i[i] }, &r.v_error);
+                    break;
+                    case UCHAR: r.elements.b8.d[i] = safe_double_addition((dbits){ .d = vec_arr[ai]->elements.b8.d[i] }, (dbits){ .d = vec_arr[bi << 1]->elements.b1.ui[i] }, &r.v_error);
+                    break;
+                    case INT: r.elements.b8.d[i] = safe_double_addition((dbits){ .d = vec_arr[ai]->elements.b8.d[i] }, (dbits){ .d = vec_arr[bi << 1]->elements.b4.i[i] }, &r.v_error);
+                    break;
+                    case UINT: r.elements.b8.d[i] = safe_double_addition((dbits){ .d = vec_arr[ai]->elements.b8.d[i] }, (dbits){ .d = vec_arr[bi << 1]->elements.b4.ui[i] }, &r.v_error);
+                    break;
+                    case LINT: r.elements.b8.d[i] = safe_double_addition((dbits){ .d = vec_arr[ai]->elements.b8.d[i] }, (dbits){ .d = vec_arr[bi << 1]->elements.b8.i[i] }, &r.v_error);
+                    break;
+                    case LUINT: r.elements.b8.d[i] = safe_double_addition((dbits){ .d = vec_arr[ai]->elements.b8.d[i] }, (dbits){ .d = vec_arr[bi << 1]->elements.b8.ui[i] }, &r.v_error);
+                    break;
+                    case FLOAT: r.elements.b8.d[i] = safe_double_addition((dbits){ .d = vec_arr[ai]->elements.b8.d[i] }, (dbits){ .d = vec_arr[bi << 1]->elements.b4.f[i] }, &r.v_error);
+                    break;
+                    case DOUBLE: r.elements.b8.d[i] = safe_double_addition((dbits){ .d = vec_arr[ai]->elements.b8.d[i] }, (dbits){ .d = vec_arr[bi << 1]->elements.b8.d[i] }, &r.v_error);
                 }
             break;
             default: return r;
