@@ -18,7 +18,7 @@ void print_binary_actual_best_version_with_one_variable(all x, all stop_where_bi
     }
 }
 
-void print_binary_actual_best_version_with_one_variable(all x, unsigned int byte_amount, all mask){
+void print_binary_my_first_best_version_with_one_variable(all x, unsigned int byte_amount, all mask){
     if(!byte_amount){ return; }
     unsigned int i = sizeof(all);
     if(byte_amount <= i){ i = byte_amount; } else { printf("The number of bytes is larger than there are bytes in the variable \n"); }

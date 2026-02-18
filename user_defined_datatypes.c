@@ -22,12 +22,13 @@ union union_name2{
 } union_var;
 
 
-typedef struct long_long_int {
-  long unsigned int high;
-  long unsigned int low;
+typedef struct long_long_unsigned_int {
+  long unsigned int high, low;
 } lluint;
 
-
+typedef struct long_long_int{
+  long int high, low;
+} llint;
 
 typedef struct double_bitfields_sign_exponent_mantissa{
   long unsigned int mantissa: 52;
@@ -120,14 +121,14 @@ enum DATATYPES { // enumeration
 } typedef datatype;
 
 union POINTERS {
-  char* c;
-  unsigned char* uc;
-  int* i;
-  unsigned int* ui;
-  float* f;
-  double* d;
-  long unsigned int* lui;
-  long int* li;
+  int16_t* i16;
+  uint16_t* ui16;
+  int32_t* i32;
+  uint32_t* ui32;
+  float* f32;
+  double* f64;
+  uint64_t* ui64;
+  int64_t* i64;
 } typedef datapointer;
   
 struct vector_n {
@@ -149,3 +150,46 @@ typedef enum function_state{
   F_OVERFLOW,
   F_UNDERFLOW,
 }f_error;
+
+union one_byte_integral_types{
+  uint16_t* ui;
+  int16_t* i;
+}typedef b1integ;
+
+union four_byte_integral_types{
+  uint32_t* ui;
+  int32_t* i;
+}typedef b4integ;
+
+union eight_byte_integral_types{
+  uint64_t* ui;
+  int64_t* i;
+}typedef b8integ;
+
+union b1_type_union{
+  b1integ integ;
+}typedef b1type;
+
+union b4_type_union{
+  b4integ integ;
+  float* flt;
+}typedef b4type;
+
+union b8_type_union{
+  b8integ integ;
+  double* flt;
+}typedef b8type;
+
+union data_pointers_union{
+  b1type b1;
+  b4type b4;
+  b8type b8;
+} typedef dataptr;
+
+struct my_vecN{
+  datatype type;
+  unsigned int n;
+  dataptr elements;
+  error v_error;
+}typedef vecNv2;
+

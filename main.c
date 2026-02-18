@@ -13,7 +13,9 @@
 #include "safe_arithmetic_functions.c"
 #include "new_vector_functions.c"
 #include "test_file.c"
+#include "print_binary.c"
 
 int main(){
-    vec_creation_t();
+    float f = 0.32;
+    printf("%f", --(--f));
 }
