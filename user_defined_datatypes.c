@@ -9,18 +9,12 @@ typedef union variable_all_types{
   unsigned int ui;
 } all;
 
-union union_name1{
-  double d;
-  long unsigned int luint;
-} v1;
-union union_name2{
-  double d;
-  struct struct_name{
-    long unsigned int luint1: 63;
-    long unsigned int luint2:  1; 
-  } luint;
-} union_var;
-
+typedef enum function_state{
+  NO_PROBLEM = 0,
+  ROUNDING,
+  F_OVERFLOW,
+  F_UNDERFLOW,
+}f_error;
 
 typedef struct long_long_unsigned_int {
   long unsigned int high, low;
@@ -121,6 +115,9 @@ enum DATATYPES { // enumeration
 } typedef datatype;
 
 union POINTERS {
+  void* ptr;
+  int8_t* i8;
+  uint8_t* ui8;
   int16_t* i16;
   uint16_t* ui16;
   int32_t* i32;
@@ -136,17 +133,16 @@ struct vector_n {
   unsigned int n; // this "n" is amount of elements
   alldatapointer elements;
   error v_error;
-  //  type       n               elements
-  //  datatype   unsigned int    int* i
-  //                             char* c
-  //                             float* f
-  //                             unsigned int* u
-  //                             double *d
 } typedef vecN;
 
-typedef enum function_state{
-  NO_PROBLEM = 0,
-  ROUNDING,
-  F_OVERFLOW,
-  F_UNDERFLOW,
-}f_error;
+union row_col_dimension{
+  unsigned int row, col;
+}typedef dimensions;
+
+struct m_n_matrix{
+  datatype type;
+  dimensions dim;
+  alldatapointer elements ;
+  error m_err;
+} typedef matrix_t;
+

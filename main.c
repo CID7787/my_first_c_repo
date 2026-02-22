@@ -15,7 +15,7 @@
 #include "test_file.c"
 #include "print_binary.c"
 
+
 int main(){
-    long unsigned int l = MAX_FLOAT - 2 * MAX_LINT;
-    printf("%f", MAX_FLOAT);
+
 }

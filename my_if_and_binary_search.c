@@ -21,7 +21,7 @@ description: This function checks w
 hether the last bit is 0
 
 */
-void* conditional_operator(int cond, void* (*true_cond_func)(), void* (*false_cond_func)()){
+/* void* conditional_operator(int cond, void* (*true_cond_func)(), void* (*false_cond_func)()){
   cond = !(!cond); // 1; 0
   void* t = true_cond_func; // convert function pointer to data pointer
   void* f = false_cond_func;
@@ -31,8 +31,17 @@ void* conditional_operator(int cond, void* (*true_cond_func)(), void* (*false_co
   void* (*resulting_function)() = (void* (*)())result; // convert back to the function pointer
   resulting_function(); // call a function
   return result;
+} */
+void* my_if(int cond, void* (*true_cond_func)(), void* (*false_cond_func)()){
+  cond = !(!cond); // 1; 0
+  void* t = true_cond_func; // convert function pointer to data pointer
+  void* f = false_cond_func;
+  int big = cond << (sizeof(int) << 1); // 0/0010000....
+  int r = (~0) >> big; // 00000000... | 11111111......
+  void* result = (void*)((r & (long long int)t) | (r & (long long int)f)); // leave only one data pointer according to IF/OR logic, based on cond value
+  void* (*resulting_function)() = (void* (*)())result; // convert back to the function pointer
+  resulting_function(); // call a function
 }
-
 
 unsigned int dist_uint(unsigned int a, unsigned int b){
   if(b > a){ swap_in_place(&a, &b); }
