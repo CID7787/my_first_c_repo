@@ -15,7 +15,7 @@
 #include "test_file.c"
 #include "print_binary.c"
 
-
 int main(){
-
+    // matrix_t m = matrix_creation(INT, 23, 3, B4type_i_elements(0), (datapointer){ .ptr = 0 } );
+    // print_matrix(m);
 }

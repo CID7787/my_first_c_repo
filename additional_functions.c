@@ -29,7 +29,7 @@ void print_uint64(datapointer data) { printf("%lu", *data.ui64); }
 void print_float32(datapointer data){ printf("%f",  *data.f32);  }
 void print_float64(datapointer data){ printf("%lf", *data.f64);  }
 
-void (*print_fund_type_func_arr[8])(datapointer) = {print_int8, print_uint8, print_int32, print_float32, print_int64, print_int64, print_uint64, print_float64}; 
+void (*print_fund_type_func_arr[8])(datapointer) = {print_int8, print_uint8, print_int32, print_uint32, print_float32, print_int64, print_uint64, print_float64}; 
 char *fund_types_sting_arr[8] = {"char", "unsigned char", "int", "unsigned int", "float", "long int", "long unsigned int", "double"};
 char *errors_sting_arr[16] = { "no error", "positive overflow", "negative overflow", "underflow", "division by zero", "exponentiation of zero to zero", 
                             "undefined behavior", "square root of negative number", "positive infinity", "negative infinity", "return real part",

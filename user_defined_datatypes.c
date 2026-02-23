@@ -135,14 +135,39 @@ struct vector_n {
   error v_error;
 } typedef vecN;
 
-union row_col_dimension{
-  unsigned int row, col;
-}typedef dimensions;
-
 struct m_n_matrix{
   datatype type;
-  dimensions dim;
+  uint32_t row, col;
   alldatapointer elements ;
   error m_err;
 } typedef matrix_t;
 
+struct int_8_bit_parts{
+  int8_t mang: 7;
+  int8_t sign: 1;
+}typedef int8_parts;
+
+union int_8_bit_construction{
+  int8_parts parts;
+  int8_t val;
+}typedef int8_constr;
+
+struct int_32_bit_parts{
+  int32_t mang: 31;
+  int32_t sign: 1;
+}typedef int32_parts;
+
+union int_32_bit_construction{
+  int32_parts parts;
+  int32_t val;
+}typedef int32_constr;
+
+struct int_64_bit_parts{
+  int64_t sign: 63;
+  int64_t mang: 1;
+}typedef int64_parts;
+
+union int_64_bit_construction{
+  int64_parts parts;
+  int64_t val;
+}typedef int64_constr;

@@ -10,8 +10,6 @@
     #include "additional_functions.c"
 #endif
 
-#define matrix_elem(m, n, col) col * m + n
-
 #define B1type_i_elements(...) (alldatapointer){ .b1 = (B1type){ .i = __VA_ARGS__}}
 #define B1type_ui_elements(...) (alldatapointer){ .b1 = (B1type){ .ui = __VA_ARGS__}}
 #define B4type_i_elements(...) (alldatapointer){ .b4 = (B4type){ .i = __VA_ARGS__}} 
@@ -20,6 +18,28 @@
 #define B8type_i_elements(...) (alldatapointer){ .b8 = (B8type){ .i = __VA_ARGS__}} 
 #define B8type_ui_elements(...) (alldatapointer){ .b8 = (B8type){ .ui = __VA_ARGS__}} 
 #define B8type_d_elements(...) (alldatapointer){ .b8 = (B8type){ .d = __VA_ARGS__}} 
+
+unsigned char amount_of_type_bytes(datatype t){
+    switch(t) {
+    case CHAR:   return sizeof(int8_t); break;
+    case UCHAR:  return sizeof(int8_t); break;
+    case INT:    return sizeof(int32_t); break;
+    case UINT:   return sizeof(int32_t); break;
+    case FLOAT:  return sizeof(float); break;
+    case LINT:   return sizeof(int64_t); break;
+    case LUINT:  return sizeof(int64_t); break;
+    case DOUBLE: return sizeof(double); break;
+    default:     return sizeof(datatype);
+    }
+}
+
+unsigned char is_integral(datatype type){
+    return !((type == FLOAT) | (type == DOUBLE));
+}
+
+unsigned char is_unsigned(datatype type){
+    return (type == UCHAR) | (type == UINT) | (type == LUINT);
+}
 
 void print_vector(vecN a){
     unsigned int i = 0;
@@ -33,35 +53,13 @@ void print_vector(vecN a){
 
 void print_matrix(matrix_t a){
     unsigned int i = 0;
-    printf("Matrix type: %s, size: %ux%u, matrix error: %s\nmatrix elements:\n", fund_types_sting_arr[a.type], a.dim.row, a.dim.col, errors_sting_arr[a.m_err]);
-    while(i < a.dim.row * a.dim.col){
-        if(!(i % a.dim.col)){ printf("\n"); }
-        print_fund_type_func_arr[a.type]((datapointer){ .i8 = a.elements.b1.i + ((i / a.dim.col) * a.dim.col + (i % a.dim.col)) * amount_of_type_bytes(a.type) } );
+    printf("Matrix type: %s, size: %ux%u, matrix error: %s\nmatrix elements:\n", fund_types_sting_arr[a.type], a.row, a.col, errors_sting_arr[a.m_err]);
+    while(i < a.row * a.col){
+        if(!(i % a.col)){ printf("\n"); }
+        print_fund_type_func_arr[a.type]((datapointer){ .i8 = a.elements.b1.i + ((i / a.col) * a.col + (i % a.col)) * amount_of_type_bytes(a.type) } );
         printf(" ");
         i++;
     }    
-}
-
-unsigned char amount_of_type_bytes(datatype t){
-    switch(t) {
-      case CHAR:   return sizeof(int8_t); break;
-      case UCHAR:  return sizeof(int8_t); break;
-      case INT:    return sizeof(int32_t); break;
-      case UINT:   return sizeof(int32_t); break;
-      case FLOAT:  return sizeof(float); break;
-      case LINT:   return sizeof(int64_t); break;
-      case LUINT:  return sizeof(int64_t); break;
-      case DOUBLE: return sizeof(double); break;
-      default:     return sizeof(datatype);
-    }
-}
-
-unsigned char is_integral(datatype type){
-    return !((type == FLOAT) | (type == DOUBLE));
-}
-
-unsigned char is_unsigned(datatype type){
-    return (type == UCHAR) | (type == UINT) | (type == LUINT);
 }
 
 vecN vector_creation(datatype type, unsigned int n, alldatapointer elements){
@@ -84,11 +82,99 @@ vecN vector_creation(datatype type, unsigned int n, alldatapointer elements){
                     case 4:   r.elements.b4.i[n] = 0; break;
                     case 8:   r.elements.b8.i[n] = 0; break;
                 }
-            break; 
-        }    
+        }
     }
     return r;
 }   
+
+matrix_t matrix_creation(datatype type, unsigned int row, unsigned int col, alldatapointer elements, datapointer lambda){
+    col = ternary(!!(uint64_t)elements.b1.i, col, row);
+    unsigned int n = row * col, r_elem_size = amount_of_type_bytes(type);
+    matrix_t r = {type, row, col, malloc(row * col * r_elem_size), NO_ERROR};
+    int32_t *ptr1 = elements.b4.i, *ptr2 = lambda.i32;
+    while(n--){
+        switch(type | -(!ptr1)){
+            case CHAR:   r.elements.b1.i [n] = elements.b1.i [n]; break;
+            case UCHAR:  r.elements.b1.ui[n] = elements.b1.ui[n]; break;
+            case INT:    r.elements.b4.ui[n] = elements.b4.i [n]; break;
+            case UINT:   r.elements.b4.ui[n] = elements.b4.ui[n]; break;
+            case LINT:   r.elements.b8.i [n] = elements.b8.i [n]; break;
+            case LUINT:  r.elements.b8.ui[n] = elements.b8.ui[n]; break;
+            case FLOAT:  r.elements.b4.f [n] = elements.b4.f [n]; break;
+            case DOUBLE: r.elements.b8.d [n] = elements.b8.d [n]; break;
+            default:
+                switch(type | -(!ptr2)){
+                    case CHAR:   r.elements.b1.i [n] = !(n % (row + 1)) * *(lambda.i8  ); break;
+                    case UCHAR:  r.elements.b1.ui[n] = !(n % (row + 1)) * *(lambda.ui8 ); break;
+                    case INT:    r.elements.b4.i [n] = !(n % (row + 1)) * *(lambda.i32 ); break;
+                    case UINT:   r.elements.b4.ui[n] = !(n % (row + 1)) * *(lambda.ui32); break;
+                    case LINT:   r.elements.b1.i [n] = !(n % (row + 1)) * *(lambda.i64 ); break;
+                    case LUINT:  r.elements.b8.ui[n] = !(n % (row + 1)) * *(lambda.ui64); break;
+                    case FLOAT:  r.elements.b4.f [n] = !(n % (row + 1)) * *(lambda.f32 ); break;
+                    case DOUBLE: r.elements.b8.d [n] = !(n % (row + 1)) * *(lambda.f64 ); break;
+                    default: 
+                        switch(type){
+                            case CHAR:   r.elements.b1.i [n] = !(n % (row + 1)) * 1; break;
+                            case UCHAR:  r.elements.b1.ui[n] = !(n % (row + 1)) * 1; break;
+                            case INT:    r.elements.b4.i [n] = !(n % (row + 1)) * 1; break;
+                            case UINT:   r.elements.b4.ui[n] = !(n % (row + 1)) * 1; break;
+                            case LINT:   r.elements.b1.i [n] = !(n % (row + 1)) * 1; break;
+                            case LUINT:  r.elements.b8.ui[n] = !(n % (row + 1)) * 1; break;
+                            case FLOAT:  r.elements.b4.f [n] = !(n % (row + 1)) * 1; break;
+                            case DOUBLE: r.elements.b8.d [n] = !(n % (row + 1)) * 1;   
+                        }
+                }
+        }
+    }
+    return r;
+}
+
+matrix_t matrix_negation(matrix_t matr){
+    unsigned int n = matr.col * matr.row;
+    matrix_t r = {matr.type, matr.row, matr.col, malloc(matr.col * matr.row * amount_of_type_bytes(matr.type)), NO_ERROR};
+    while(n--){
+        switch(matr.type){
+            case CHAR: 
+            matr.m_err = ternary(matr.elements.b1.i[n] == MIN_CHAR, POSITIVE_OVERFLOW, matr.m_err);
+            r.elements.b1.i[n] = -matr.elements.b1.i[n]; 
+            break;
+            case UCHAR: 
+                r.elements.b1.ui[n] = matr.elements.b1.ui[n]; 
+            break;
+            case INT: 
+                r.elements.b1.i[n] = -matr.elements.b1.i[n]; 
+            break;
+            case UINT: 
+                r.elements.b4.ui[n] = matr.elements.b4.ui[n]; 
+            break;
+            case LINT: 
+            r.elements.b1.i[n] = -matr.elements.b1.i[n]; 
+            break;
+            case LUINT: 
+                r.elements.b8.ui[n] = matr.elements.b8.ui[n]; 
+            break;
+            case FLOAT: 
+                r.elements.b4.f[n] = -matr.elements.b4.f[n]; 
+            break;
+            case DOUBLE: 
+                r.elements.b8.d[n] = -matr.elements.b8.d[n]; 
+            break;
+            default: return r;
+        }
+    }
+    return r;
+}
+
+// matrix_t matrix_addition(matrix_t a, matrix_t b){
+//     matrix_t *m_arr[3] = { &(matrix_t){ a.type, 1, 1, B1type_i_elements((int8_t[]){ 0 }), NO_ERROR }, &a, &b }, 
+//                 r = { a.type, ternary(a.row > b.row, a.row, b.row), ternary(a.col > b.col, a.col, b.col), malloc( r.col * r.row * amount_of_type_bytes(a.type) ), NO_ERROR };
+//     uint32_t n = r.col * r.row, i, ai, bi;
+//     while(n--){
+//         ai = 
+//     }
+// }
+
+matrix_t matrix_multiplication(matrix_t a, matrix_t b){}
 
 vecN vector_negation(vecN a){
     vecN r = {a.type, a.n, malloc(a.n * amount_of_type_bytes(a.type)), NO_ERROR};
@@ -150,7 +236,7 @@ vecN vector_addition_of_arg1type(vecN a, vecN b){
                     case UINT:
                         r.v_error = ternary(vec_arr[bi << 1]->elements.b4.ui[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.v_error);
                         r.elements.b1.i[i] = safe_char_addition(vec_arr[ai]->elements.b1.i[ai * i], vec_arr[bi << 1]->elements.b4.ui[bi * i], &r.v_error);
-                      break;
+                    break;
                     case LINT:
                         r.v_error = ternary(vec_arr[bi << 1]->elements.b8.i[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.v_error);
                         r.v_error = ternary(vec_arr[bi << 1]->elements.b8.i[bi * i] < MIN_CHAR, NEGATIVE_OVERFLOW, r.v_error);
@@ -178,7 +264,7 @@ vecN vector_addition_of_arg1type(vecN a, vecN b){
                         cond &= int_absolute_value(vec_arr[bi << 1]->elements.b1.i[bi * i]) > vec_arr[ai]->elements.b1.ui[ai * i];
                         r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
                         r.elements.b1.ui[i] = safe_uchar_addition(vec_arr[ai]->elements.b1.ui[ai * i] + (int8_t)(vec_arr[bi << 1]->elements.b1.i[bi * i] & (char)-cond), 
-                                                                  vec_arr[bi << 1]->elements.b1.i[bi * i] & (int8_t)-(!cond), &r.v_error);
+                                                                vec_arr[bi << 1]->elements.b1.i[bi * i] & (int8_t)-(!cond), &r.v_error);
                     break;
                     case UCHAR:
                         r.elements.b1.ui[i] = safe_uchar_addition(vec_arr[ai]->elements.b1.ui[ai * i], vec_arr[bi << 1]->elements.b1.ui[bi * i], &r.v_error);
@@ -189,7 +275,7 @@ vecN vector_addition_of_arg1type(vecN a, vecN b){
                         r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
                         r.v_error = ternary(vec_arr[bi << 1]->elements.b4.i[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.v_error);
                         r.elements.b1.ui[i] = safe_uchar_addition(vec_arr[ai]->elements.b1.ui[ai * i] + (int32_t)(vec_arr[bi << 1]->elements.b4.i[bi * i] & (int)-cond), 
-                                                                  vec_arr[bi << 1]->elements.b4.i[bi * i] & (int32_t)-(!cond), &r.v_error);
+                                                                vec_arr[bi << 1]->elements.b4.i[bi * i] & (int32_t)-(!cond), &r.v_error);
                     break;
                     case UINT:
                         r.v_error = ternary(vec_arr[bi << 1]->elements.b4.ui[bi * i] > MAX_UCHAR, POSITIVE_OVERFLOW, r.v_error);
@@ -201,7 +287,7 @@ vecN vector_addition_of_arg1type(vecN a, vecN b){
                         r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
                         r.v_error = ternary(vec_arr[bi << 1]->elements.b8.i[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.v_error);
                         r.elements.b1.ui[i] = safe_uchar_addition(vec_arr[ai]->elements.b1.ui[ai * i] + (int64_t)(vec_arr[bi << 1]->elements.b8.i[bi * i] & (long int)-cond),
-                                                                  vec_arr[bi << 1]->elements.b8.i[bi * i] & (int64_t)-(!cond), &r.v_error);
+                                                                vec_arr[bi << 1]->elements.b8.i[bi * i] & (int64_t)-(!cond), &r.v_error);
                     break;
                     case LUINT:
                         r.v_error = ternary(vec_arr[bi << 1]->elements.b8.ui[bi * i] > MAX_UCHAR, POSITIVE_OVERFLOW, r.v_error);
@@ -213,7 +299,7 @@ vecN vector_addition_of_arg1type(vecN a, vecN b){
                         r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
                         r.v_error = ternary(vec_arr[bi << 1]->elements.b4.f[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.v_error);
                         r.elements.b1.ui[i] = safe_uchar_addition(vec_arr[ai]->elements.b1.ui[ai * i] + vec_arr[bi << 1]->elements.b4.f[bi * i] * cond, 
-                                                                  vec_arr[bi << 1]->elements.b4.f[bi * i] * !cond, &r.v_error);
+                                                                vec_arr[bi << 1]->elements.b4.f[bi * i] * !cond, &r.v_error);
                     break; 
                     case DOUBLE:
                         cond = vec_arr[bi << 1]->elements.b8.d[bi * i] < 0;
@@ -221,7 +307,7 @@ vecN vector_addition_of_arg1type(vecN a, vecN b){
                         r.v_error = ternary(cond, NEGATIVE_OVERFLOW, r.v_error);
                         r.v_error = ternary((double)vec_arr[bi << 1]->elements.b8.d[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.v_error);
                         r.elements.b1.ui[i] = safe_uchar_addition(vec_arr[ai]->elements.b1.ui[ai * i] + vec_arr[bi << 1]->elements.b8.d[bi * i] * cond, 
-                                                                  vec_arr[bi << 1]->elements.b8.d[bi * i] * !cond, &r.v_error);
+                                                                vec_arr[bi << 1]->elements.b8.d[bi * i] * !cond, &r.v_error);
                 } 
             break;
             case INT:
@@ -437,36 +523,6 @@ vecN vector_addition_of_arg1type(vecN a, vecN b){
     }
     return r;
 }
-
-struct int_8_bit_parts{
-    int8_t mang: 7;
-    int8_t sign: 1;
-}typedef int8_parts;
-
-union int_8_bit_construction{
-    int8_parts parts;
-    int8_t val;
-}typedef int8_constr;
-
-struct int_32_bit_parts{
-    int32_t mang: 31;
-    int32_t sign: 1;
-}typedef int32_parts;
-
-union int_32_bit_construction{
-    int32_parts parts;
-    int32_t val;
-}typedef int32_constr;
-
-struct int_64_bit_parts{
-    int64_t sign: 63;
-    int64_t mang: 1;
-}typedef int64_parts;
-
-union int_64_bit_construction{
-    int64_parts parts;
-    int64_t val;
-}typedef int64_constr;
 
 vecN vector_multiplication_of_arg1type(vecN a, vecN b){
     vecN r = {a.type, a.n, malloc(amount_of_type_bytes(a.type) * a.n), NO_ERROR};
@@ -882,47 +938,8 @@ vecN vector_exponentiation(vecN a, vecN b){
     return r;
 }
 
-/* 
-switch(a.type){
-    case INT:
-    switch(b.type){
-            case INT:
-                operation_between_INT_and_INT(a, b);
-            break;
-            case UINT:
-                operation_between_INT_and_UINT(a, b);
-            break;
-        }
-    break;
-    case UINT:
-        switch(b.type){
-            case INT:
-                // ,,,
-                operation_between_UINT_and_INT(a,b);
-                // ..
-            break;
-            case UINT:
-                operation_between_UINT_and_UINT(a,b);
-            break;
-        }
-    break;
-}
-
-figure out what are advantages of realization of above switch and switch below with size, integral type, float type etc.
-why did I picked up the realization of switch as is above?
-
-switch(a.type.size):
-    case 4:
-    case 8:
-        switch(b.type.size):
-            case 4: operation_between_8_and_4(a, b);
-            case 8: operation_between_8_and_8(a, b);
-            case 16: operation_between_8_and_16(a, b);
-    case 16:  
-*/
 
 /*sample
-
 error {
     const char* function_of_origin: ...;
     error_type errT: ...;
