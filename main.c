@@ -11,11 +11,18 @@
 #include "logical_functions_of_decision.c"
 #include "bitwise_functions.c"
 #include "safe_arithmetic_functions.c"
-#include "new_vector_functions.c"
-#include "test_file.c"
+// #include "new_vector_functions.c"
+// #include "test_file.c"
 #include "print_binary.c"
 
-int main(){
-    // matrix_t m = matrix_creation(INT, 23, 3, B4type_i_elements(0), (datapointer){ .ptr = 0 } );
-    // print_matrix(m);
-}
+void main(int argc, char *argv[] )  {  
+  
+    printf("Program name is: %s\n", argv[0]);  
+    
+    if(argc < 2){  
+       printf("No argument passed through command line.\n");  
+    }  
+    else{  
+       printf("First argument is: %s\n", argv[1]);  
+    }  
+ }  
