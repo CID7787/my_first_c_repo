@@ -38,16 +38,14 @@ char safe_char_addition(char a, char b, error* err){
 
 char safe_char_multiplication(char a, char b, error* err){
   if(!err){ return a; }
-  char sign = (a ^ b) & MIN_CHAR;
-  a &= MAX_CHAR;
-  b &= MAX_CHAR; 
-  char result = 0;
+  char result = 0, sign = (a < 0) & (b < 0);
+  a = -(a < 0) * a + (a > 0) * a;
+  b = -(b < 0) * b + (b > 0) * b; 
   while(b-- && !(*err)){
     result = safe_char_addition(result, a, err);
   }
   *err = ternary((*err == POSITIVE_OVERFLOW) && sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW);
-  result |= sign; 
-  return result;
+  return -sign * result + !sign * result;
 }
 
 
@@ -84,16 +82,15 @@ int safe_int_addition(int a, int b, error* err){
 // FUNCTION: integer_multiplication(int, error*)
 
 int safe_int_multiplication(int a, int b, error* err){
-  if(!err){ return a; }
-  int result = 0, sign = (a ^ b) & MIN_INT;
-  a &= MAX_INT;
-  b &= MAX_INT; 
+  if(!(err && a && b)){ return 0; }
+  int result = 0, sign = (a < 0) ^ (b < 0);
+  a = (-(a < 0) * a) + ((a > 0) * a);
+  b = (-(b < 0) * b) + ((b > 0) * b);
   while(b-- && !(*err)){
     result = safe_int_addition(result, a, err);
   }
-  *err = ternary((*err == POSITIVE_OVERFLOW) && sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW);
-  result |= sign; 
-  return result;
+  *err = ternary(*err == POSITIVE_OVERFLOW, ternary(sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err); 
+  return -sign * result + (!sign * result);
 }
 
 
@@ -132,16 +129,14 @@ long int safe_lint_addition(long int a, long int b, error* err){
 
 long int safe_lint_multiplication(long int a, long int b, error* err){
   if(!err){ return a; }
-  long int sign = (a ^ b) & MIN_LINT;
-  a &= MAX_LINT;
-  a &= MAX_LINT;
-  long int result = 0;
-  while(b--){
-      if(*err){ *err = ternary((*err == POSITIVE_OVERFLOW) && sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW); return a; }
-      result = safe_lint_addition(result, a, err);
+  long int result = 0, sign = (a < 0) ^ (b < 0);
+  a = (-(a < 0) * a) + ((a > 0) * a);
+  b = (-(b < 0) * b) + ((b > 0) * b);
+  while(b-- && !(*err)){
+    result = safe_lint_addition(result, a, err);
   }
-  result |= sign;
-  return result;
+  *err = ternary(*err == POSITIVE_OVERFLOW, ternary(sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err); 
+  return -sign * result + !sign * result;
 }
 
 

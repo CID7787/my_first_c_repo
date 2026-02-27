@@ -17,7 +17,7 @@ long unsigned int else0(long unsigned int condition, long unsigned int x){
     // return -!!condition & x;
 }
 
-long unsigned int ternary(unsigned char condition, long unsigned int true_value, long unsigned int false_value){
+long unsigned int ternary(long unsigned int condition, long unsigned int true_value, long unsigned int false_value){
     return (-condition & true_value) | (-!condition & false_value);
 }
 
