@@ -22,4 +22,4 @@ void main()  {
             c = matrix_multiplication(a, a), 
             b = matrix_multiplication(c, a);
    print_matrix(b);
-}  
+}

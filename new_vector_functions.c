@@ -164,6 +164,35 @@ vecN vector_negation(vecN a){
     return r;
 }
 
+vecN vector_negation_in_place(vecN a){
+    uint32_t i = a.n;
+    while(i-- ){
+        switch(a.type){
+            case CHAR: 
+                a.v_error = ternary(a.elements.b1.i[i] == MIN_CHAR, POSITIVE_OVERFLOW, a.v_error);  
+                a.elements.b1.i[i] = -a.elements.b1.i[i];
+            break;
+            case INT: 
+                a.v_error = ternary(a.elements.b4.i[i] == MIN_INT, POSITIVE_OVERFLOW, a.v_error);
+                a.elements.b4.i[i] =  -a.elements.b4.i[i]; 
+                break;
+            case FLOAT: 
+                a.elements.b4.f[i] = -a.elements.b4.f[i]; 
+                break;
+            case LINT: 
+                a.v_error = ternary(a.elements.b8.i[i] == MIN_LINT, POSITIVE_OVERFLOW, a.v_error);
+                a.elements.b8.i[i] = -a.elements.b8.i[i]; 
+                break;
+            case DOUBLE: 
+                a.elements.b8.d[i] = -a.elements.b8.d[i]; 
+                break;
+            default: 
+                return a;
+        }
+    }
+    return a;
+}
+
 matrix_t matrix_negation(matrix_t matr){
     unsigned int n = matr.col * matr.row;
     matrix_t r = {matr.type, matr.row, matr.col, malloc(matr.col * matr.row * amount_of_type_bytes(matr.type)), NO_ERROR};
@@ -200,6 +229,34 @@ matrix_t matrix_negation(matrix_t matr){
     return r;
 }
 
+matrix_t matrix_negation_in_place(matrix_t matr){
+    unsigned int n = matr.col * matr.row;
+    while(n--){
+        switch(matr.type){
+            case CHAR: 
+                matr.m_err = ternary(matr.elements.b1.i[n] == MIN_CHAR, POSITIVE_OVERFLOW, matr.m_err);
+                matr.elements.b1.i[n] = -matr.elements.b1.i[n]; 
+            break;
+            case INT: 
+                matr.elements.b1.i[n] = -matr.elements.b1.i[n]; 
+            break;
+            break;
+            case LINT: 
+                matr.elements.b1.i[n] = -matr.elements.b1.i[n]; 
+            break;
+            break;
+            case FLOAT: 
+                matr.elements.b4.f[n] = -matr.elements.b4.f[n]; 
+            break;
+            case DOUBLE: 
+                matr.elements.b8.d[n] = -matr.elements.b8.d[n]; 
+            break;
+            default: return matr;
+        }
+    }
+    return matr;
+}
+
 vecN vector_addition_of_arg1type(vecN a, vecN b){
     uint32_t i, r_n = ternary(a.n > b.n, a.n, b.n);
     vecN r = {a.type, r_n, malloc(r_n * amount_of_type_bytes(a.type)), NO_ERROR};
@@ -212,7 +269,7 @@ vecN vector_addition_of_arg1type(vecN a, vecN b){
             case CHAR:
                 switch(b.type){
                     case CHAR: 
-                        r.elements.b1.i[i] = safe_char_addition(vec_arr[ai]->elements.b1.i[ai * i], vec_arr[bi << 1]->elements.b1.i[bi * i], &r.v_error);
+                        r.elements.b1.i[i] = safe_char_addition(vec_arr[ai]->elements.b1.i[ai * i], vec_arr[bi << 1]->elements.b1.i[bi * i], &a.v_error);
                     break;
                     case UCHAR:
                         r.v_error = ternary(vec_arr[bi << 1]->elements.b1.ui[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.v_error);
@@ -1863,7 +1920,6 @@ vecN vector_exponentiation(vecN a, vecN b){
     return r;
 }
 
-/* this approach has problem related with Endianness 
 uint8_t int_uint_float_t(datatype type){
     switch(type){
         case CHAR:
@@ -1895,7 +1951,8 @@ matrix_t matrix_addition(matrix_t a, matrix_t b){
     uint32_t row = r.row, col, ai, bi;
     datapointer data_ptr = { .ptr = malloc(8) };
     while(row--){
-        for(col = r.col; col--; ){
+        col = r.col;
+        while(col--){
             ai = (row < a.row) & (col < a.col);
             bi = (row < b.row) & (col < b.col);
             switch(int_uint_float_t(a.type)){
@@ -1935,7 +1992,7 @@ matrix_t matrix_addition(matrix_t a, matrix_t b){
     free(data_ptr.ptr);
     return r;
 }
-*/
+
 
 /*sample
 error {
