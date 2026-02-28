@@ -41,6 +41,10 @@ unsigned char is_unsigned(datatype type){
     return (type == UCHAR) | (type == UINT) | (type == LUINT);
 }
 
+uint8_t int_uint_float_t(datatype type){
+    return ternary(is_integral(type), ternary(is_unsigned(type), 1, 0), 2);
+}
+
 void print_vector(vecN a){
     unsigned int i = 0;
     printf("Vector type: %s, elements amount: %u, vector error: %s\nvector elements:\n", fund_types_sting_arr[a.type], a.n, errors_sting_arr[a.v_error]);
@@ -1920,35 +1924,52 @@ vecN vector_exponentiation(vecN a, vecN b){
     return r;
 }
 
-uint8_t int_uint_float_t(datatype type){
-    switch(type){
-        case CHAR:
-        case INT:
-        case LINT: return 0;
-        case UCHAR:
-        case UINT:
-        case LUINT: return 1;
-        case FLOAT:
-        case DOUBLE: return 2;
-    }
+void* int_n_type_to_int_k_type_big_endian(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ 
+
 }
 
+void* int_n_type_to_int_k_type_small_endian(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ 
+    
+}
 
-void* int_n_type_to_int_k_type(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
-void* uint_n_type_to_int_k_type(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
-void* float_n_type_to_int_k_type(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
-void* int_n_type_to_uint_k_type(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
-void* uint_n_type_to_uint_k_type(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
-void* float_n_type_to_uint_k_type(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
-void* uint_to_uiint_n_type_to_float_k_typent(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
-void* uint_n_type_to_float_k_type(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
-void* uint_tofloat_n_type_to_float_k_type_uint(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
+void* float_n_type_to_int_k_type_big_endian(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
+void* float_n_type_to_int_k_type_small_endian(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
+void* uint_n_type_to_uint_k_type_big_endian(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
+void* uint_n_type_to_uint_k_type_small_endian(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
+void* int_n_type_to_float_k_type_big_endian(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
+void* int_n_type_to_float_k_type_small_endian(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
+void* float_n_type_to_float_k_type_big_endian(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
+void* float_n_type_to_float_k_type_small_endian(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
 
+void* uint_n_type_to_int_k_type_big_endian(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
+void* uint_n_type_to_int_k_type_small_endian(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
+void* int_n_type_to_uint_k_type_big_endian(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
+void* int_n_type_to_uint_k_type_small_endian(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
+void* float_n_type_to_uint_k_type_big_endian(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
+void* float_n_type_to_uint_k_type_small_endian(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
+void* uint_n_type_to_float_k_type_big_endian(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
+void* uint_n_type_to_float_k_type_small_endian(int8_t* from_ptr, void* to_ptr, uint32_t from_s, uint32_t to_s, error* err){ }
 
-matrix_t matrix_addition(matrix_t a, matrix_t b){
+void* (*int_n_type_to_int_k_type_endian_arr[2])(int8_t*, void*, uint32_t, uint32_t, error*) = { int_n_type_to_int_k_type_small_endian, int_n_type_to_int_k_type_big_endian };
+void* (*uint_n_type_to_int_k_type_endian_arr[2])(int8_t*, void*, uint32_t, uint32_t, error*) = { uint_n_type_to_int_k_type_small_endian, uint_n_type_to_int_k_type_big_endian };
+void* (*float_n_type_to_int_k_type_endian_arr[2])(int8_t*, void*, uint32_t, uint32_t, error*) = { float_n_type_to_int_k_type_small_endian, float_n_type_to_int_k_type_big_endian };
+void* (*int_n_type_to_uint_k_type_endian_arr[2])(int8_t*, void*, uint32_t, uint32_t, error*) = { int_n_type_to_uint_k_type_small_endian, int_n_type_to_uint_k_type_big_endian };
+void* (*uint_n_type_to_uint_k_type_endian_arr[2])(int8_t*, void*, uint32_t, uint32_t, error*) = { uint_n_type_to_uint_k_type_small_endian, uint_n_type_to_uint_k_type_big_endian };
+void* (*float_n_type_to_uint_k_type_endian_arr[2])(int8_t*, void*, uint32_t, uint32_t, error*) = { float_n_type_to_uint_k_type_small_endian, float_n_type_to_uint_k_type_big_endian };
+void* (*int_n_type_to_float_k_type_endian_arr[2])(int8_t*, void*, uint32_t, uint32_t, error*) = { int_n_type_to_float_k_type_small_endian, int_n_type_to_float_k_type_big_endian };
+void* (*uint_n_type_to_float_k_type_endian_arr[2])(int8_t*, void*, uint32_t, uint32_t, error*) = { uint_n_type_to_float_k_type_small_endian, uint_n_type_to_float_k_type_big_endian };
+void* (*float_n_type_to_float_k_type_endian_arr[2])(int8_t*, void*, uint32_t, uint32_t, error*) = { float_n_type_to_float_k_type_small_endian, float_n_type_to_float_k_type_big_endian };
+
+uint8_t system_uses_small_endian(void){
+    uint32_t v = 1;
+    return *(uint8_t*)&v;
+}
+
+matrix_t matrix_addition_v2(matrix_t a, matrix_t b){
     matrix_t *m_arr[3] = { &(matrix_t){ a.type, 1, 1, B8type_i_elements((int64_t[]){ 0 }), NO_ERROR }, &a, &b }, 
                 r = { a.type, ternary(a.row > b.row, a.row, b.row), ternary(a.col > b.col, a.col, b.col), malloc( r.col * r.row * amount_of_type_bytes(a.type) ), NO_ERROR };
     uint32_t row = r.row, col, ai, bi;
+    uint8_t end = system_uses_small_endian();
     datapointer data_ptr = { .ptr = malloc(8) };
     while(row--){
         col = r.col;
@@ -1958,23 +1979,23 @@ matrix_t matrix_addition(matrix_t a, matrix_t b){
             switch(int_uint_float_t(a.type)){
                 case 0:
                     switch(int_uint_float_t(b.type)){
-                        case 0: int_n_type_to_int_k_type( m_arr[bi << 1]->elements.b1.i + (bi * (row * r.col + col)), data_ptr.ptr, amount_of_type_bytes(a.type), amount_of_type_bytes(b.type), &r.m_err ); break;
-                        case 1: uint_n_type_to_int_k_type( m_arr[bi << 1]->elements.b1.i + (bi * (row * r.col + col)), data_ptr.ptr, amount_of_type_bytes(a.type), amount_of_type_bytes(b.type), &r.m_err ); break;
-                        case 2: float_n_type_to_int_k_type( m_arr[bi << 1]->elements.b1.i + (bi * (row * r.col + col)), data_ptr.ptr, amount_of_type_bytes(a.type), amount_of_type_bytes(b.type), &r.m_err ); break;
+                        case 0: int_n_type_to_int_k_type_endian_arr[end]  ( m_arr[bi << 1]->elements.b1.i + (bi * (row * r.col + col)), data_ptr.ptr, amount_of_type_bytes(a.type), amount_of_type_bytes(b.type), &r.m_err ); break;
+                        case 1: uint_n_type_to_int_k_type_endian_arr[end] ( m_arr[bi << 1]->elements.b1.i + (bi * (row * r.col + col)), data_ptr.ptr, amount_of_type_bytes(a.type), amount_of_type_bytes(b.type), &r.m_err ); break;
+                        case 2: float_n_type_to_int_k_type_endian_arr[end]( m_arr[bi << 1]->elements.b1.i + (bi * (row * r.col + col)), data_ptr.ptr, amount_of_type_bytes(a.type), amount_of_type_bytes(b.type), &r.m_err ); break;
                     }
                 break;
                 case 1:
                     switch(int_uint_float_t(b.type)){
-                        case 0: int_n_type_to_uint_k_type( m_arr[bi << 1]->elements.b1.i + (bi * (row * r.col + col)), data_ptr.ptr, amount_of_type_bytes(a.type), amount_of_type_bytes(b.type), &r.m_err ); break;
-                        case 1: uint_n_type_to_uint_k_type( m_arr[bi << 1]->elements.b1.i + (bi * (row * r.col + col)), data_ptr.ptr, amount_of_type_bytes(a.type), amount_of_type_bytes(b.type), &r.m_err ); break;
-                        case 2: float_n_type_to_uint_k_type( m_arr[bi << 1]->elements.b1.i + (bi * (row * r.col + col)), data_ptr.ptr, amount_of_type_bytes(a.type), amount_of_type_bytes(b.type), &r.m_err ); break;
+                        case 0: int_n_type_to_uint_k_type_endian_arr[end]  ( m_arr[bi << 1]->elements.b1.i + (bi * (row * r.col + col)), data_ptr.ptr, amount_of_type_bytes(a.type), amount_of_type_bytes(b.type), &r.m_err ); break;
+                        case 1: uint_n_type_to_uint_k_type_endian_arr[end] ( m_arr[bi << 1]->elements.b1.i + (bi * (row * r.col + col)), data_ptr.ptr, amount_of_type_bytes(a.type), amount_of_type_bytes(b.type), &r.m_err ); break;
+                        case 2: float_n_type_to_uint_k_type_endian_arr[end]( m_arr[bi << 1]->elements.b1.i + (bi * (row * r.col + col)), data_ptr.ptr, amount_of_type_bytes(a.type), amount_of_type_bytes(b.type), &r.m_err ); break;
                     }
                 break;
                 case 2:
                     switch(int_uint_float_t(b.type)){
-                        case 0: int_n_type_to_float_k_type( m_arr[bi << 1]->elements.b1.i + (bi * (row * r.col + col)), data_ptr.ptr, amount_of_type_bytes(a.type), amount_of_type_bytes(b.type), &r.m_err ); break;
-                        case 1: uint_n_type_to_float_k_type( m_arr[bi << 1]->elements.b1.i + (bi * (row * r.col + col)), data_ptr.ptr, amount_of_type_bytes(a.type), amount_of_type_bytes(b.type), &r.m_err ); break;
-                        case 2: float_n_type_to_float_k_type( m_arr[bi << 1]->elements.b1.i + (bi * (row * r.col + col)), data_ptr.ptr, amount_of_type_bytes(a.type), amount_of_type_bytes(b.type), &r.m_err ); break;
+                        case 0: int_n_type_to_float_k_type_endian_arr[end]  ( m_arr[bi << 1]->elements.b1.i + (bi * (row * r.col + col)), data_ptr.ptr, amount_of_type_bytes(a.type), amount_of_type_bytes(b.type), &r.m_err ); break;
+                        case 1: uint_n_type_to_float_k_type_endian_arr[end] ( m_arr[bi << 1]->elements.b1.i + (bi * (row * r.col + col)), data_ptr.ptr, amount_of_type_bytes(a.type), amount_of_type_bytes(b.type), &r.m_err ); break;
+                        case 2: float_n_type_to_float_k_type_endian_arr[end]( m_arr[bi << 1]->elements.b1.i + (bi * (row * r.col + col)), data_ptr.ptr, amount_of_type_bytes(a.type), amount_of_type_bytes(b.type), &r.m_err ); break;
                     }
             }
             switch(a.type){
