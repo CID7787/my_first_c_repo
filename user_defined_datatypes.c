@@ -135,9 +135,9 @@ struct vector_n {
   error v_error;
 } typedef vecN;
 
-struct m_n_matrix{
+struct matrix_m_n{
   datatype type;
-  uint32_t row, col;
+  uint32_t rows, cols;
   alldatapointer elements ;
   error m_err;
 } typedef matrix_t;
