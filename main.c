@@ -1,7 +1,7 @@
-#include <stdio.h>
-#include <time.h>
+#include <stdio.h> 
+#include <time.h>  
 #include <stdlib.h>
-#include <math.h>
+#include <math.h>  
 #include <stdint.h>
 #define headerfile 1
 
@@ -18,11 +18,30 @@
 
 
 void main(){  
-    time_t start = clock();
-    vecN a = {DOUBLE, 4, B8type_d_elements((double[]){1,2,3,4}), NO_ERROR};
-    vector_negation_in_place_v2(a);
-    print_vector(a);
-    printf("\ntime%llu", clock() - start);
+    int width  = 10,
+        height = 10,
+        size = width * height * 12;
+    char image_data[size + 1];
+    printf("P3\n%d %d\n255\n", width, height);
+    for(int i = 0; i < size; i += 12){
+        image_data[i + 0] = '0';
+        image_data[i + 1] = '5';
+        image_data[i + 2] = '5';
+        image_data[i + 3] = ' ';
+
+        image_data[i + 4] = '1';
+        image_data[i + 5] = '2';
+        image_data[i + 6] = '0';
+        image_data[i + 7] = ' ';
+        
+        image_data[i + 8] = ' ';
+        image_data[i + 9] = ' ';
+        image_data[i +10] = '0';
+        image_data[i +11] = '\n';
+        // off by 1 error  https://en.wikipedia.org/wiki/Off-by-one_error
+    }
+    image_data[size] = 0;
+    printf("%s", image_data);
 }
 
 /*

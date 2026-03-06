@@ -32,13 +32,13 @@ hether the last bit is 0
   resulting_function(); // call a function
   return result;
 } */
+
 void* my_if(int cond, void* (*true_cond_func)(), void* (*false_cond_func)()){
-  cond = !(!cond); // 1; 0
   void* t = true_cond_func; // convert function pointer to data pointer
   void* f = false_cond_func;
-  int big = cond << (sizeof(int) << 1); // 0/0010000....
-  int r = (~0) >> big; // 00000000... | 11111111......
-  void* result = (void*)((r & (long long int)t) | (r & (long long int)f)); // leave only one data pointer according to IF/OR logic, based on cond value
+  int big1 = ~0 >> (!(!cond) << (sizeof(int) << 1)); // 0/0010000....
+  int big2 = ~0 >> (!cond << (sizeof(int) << 1)); // 00000000... | 11111111......
+  void* result = (void*)((big1 & (long long int)t) | (big2 & (long long int)f)); // leave only one data pointer according to IF/OR logic, based on cond value
   void* (*resulting_function)() = (void* (*)())result; // convert back to the function pointer
   resulting_function(); // call a function
 }

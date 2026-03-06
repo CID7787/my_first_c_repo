@@ -35,7 +35,7 @@ unsigned char amount_of_type_bytes(datatype t){
     }
 }
 
-unsigned char is_integral(datatype type){ 
+unsigned char is_integer(datatype type){ 
     return !((type == FLOAT) | (type == DOUBLE));
 }
 
@@ -44,7 +44,7 @@ unsigned char is_unsigned(datatype type){
 }
 
 uint8_t int_uint_float_t(datatype type){
-    return ternary(is_integral(type), ternary(is_unsigned(type), 1, 0), 2);
+    return ternary(is_integer(type), ternary(is_unsigned(type), 1, 0), 2);
 }
 
 void print_vector(vecN a){
@@ -123,13 +123,13 @@ matrix_t matrix_creation(datatype type, unsigned int row, unsigned int col, alld
     return r;
 }
 
-vecN vector_negation(vecN a){
+vecN vec_neg(vecN a){
     uint32_t r_size = amount_of_type_bytes(a.type);
     int* ptr;
+    ptr = (int*)(a.elements.b1.i + (a.n - 1) * r_size);
     switch(a.type){
         case CHAR:
             vecN r = {CHAR, a.n, malloc(a.n * r_size), a.v_error};
-            ptr = (int*)(a.elements.b1.i + (a.n - 1) * r_size);
             while(ptr && a.n--){
                 r.v_error = ternary(a.elements.b1.i[a.n] == MIN_CHAR, POSITIVE_OVERFLOW, r.v_error);
                 r.elements.b1.i[a.n] = -a.elements.b1.i[a.n];
@@ -138,7 +138,6 @@ vecN vector_negation(vecN a){
             return r;
         case UCHAR:
             vecN b = {INT, a.n, malloc(a.n * amount_of_type_bytes(INT)), a.v_error};
-            ptr = (int*)(a.elements.b1.i + (a.n - 1) * r_size);
             while(ptr && a.n--){
                 b.elements.b4.i[a.n] = -a.elements.b1.ui[a.n];
                 ptr = (int*)(a.elements.b1.i + (a.n - 1) * r_size);
@@ -146,7 +145,6 @@ vecN vector_negation(vecN a){
             return b;
         case INT:
             vecN c = {INT, a.n, malloc(a.n * r_size), a.v_error};
-            ptr = (int*)(a.elements.b1.i + (a.n - 1) * r_size);
             while(ptr && a.n--){
                 c.v_error = ternary(a.elements.b4.i[a.n] == MIN_INT, POSITIVE_OVERFLOW, r.v_error);
                 c.elements.b4.i[a.n] = -a.elements.b4.i[a.n];
@@ -155,7 +153,6 @@ vecN vector_negation(vecN a){
             return c;
         case UINT:
             vecN d = {LINT, a.n, malloc(a.n * amount_of_type_bytes(LINT)), a.v_error};
-            ptr = (int*)(a.elements.b1.i + (a.n - 1) * r_size);
             while(ptr && a.n--){
                 d.elements.b8.i[a.n] = -a.elements.b4.ui[a.n];
                 ptr = (int*)(a.elements.b1.i + (a.n - 1) * r_size);
@@ -163,7 +160,6 @@ vecN vector_negation(vecN a){
             return d;
         case LINT:
             vecN e = {LINT, a.n, malloc(a.n * r_size), a.v_error};
-            ptr = (int*)(a.elements.b1.i + (a.n - 1) * r_size);
             while(ptr && a.n--){
                 e.v_error = ternary(a.elements.b8.i[a.n] == MIN_LINT, POSITIVE_OVERFLOW, r.v_error);
                 e.elements.b8.i[a.n] = -a.elements.b8.i[a.n];
@@ -171,18 +167,16 @@ vecN vector_negation(vecN a){
             }
             return e;
         case LUINT:
-            uint64_t v = MAX_LINT + 1;
+            uint64_t max_negatiable_luint = MAX_LINT + 1;
             vecN f = {LINT, a.n, malloc(a.n * r_size), a.v_error};
-            ptr = (int*)(a.elements.b1.i + (a.n - 1) * r_size);
             while(ptr && a.n--){
-                f.v_error = ternary(a.elements.b8.ui[a.n] > v, NEGATIVE_OVERFLOW, r.v_error);
+                f.v_error = ternary(a.elements.b8.ui[a.n] > max_negatiable_luint, NEGATIVE_OVERFLOW, r.v_error);
                 f.elements.b8.i[a.n] = -a.elements.b8.ui[a.n];
                 ptr = (int*)(a.elements.b1.i + (a.n - 1) * r_size);
             }
             return f;
         case FLOAT:
             vecN g = {FLOAT, a.n, malloc(a.n * r_size), a.v_error};
-            ptr = (int*)(a.elements.b1.i + (a.n - 1) * r_size);
             while(ptr && a.n--){
                 g.elements.b4.f[a.n] = -a.elements.b4.f[a.n];
                 ptr = (int*)(a.elements.b1.i + (a.n - 1) * r_size);
@@ -190,7 +184,6 @@ vecN vector_negation(vecN a){
             return g;           
         case DOUBLE:
             vecN h = {DOUBLE, a.n, malloc(a.n * r_size), a.v_error};
-            ptr = (int*)(a.elements.b1.i + (a.n - 1) * r_size);
             while(ptr && a.n--){
                 h.elements.b8.d[a.n] = -a.elements.b8.d[a.n];
                 ptr = (int*)(a.elements.b1.i + (a.n - 1) * r_size);
@@ -200,12 +193,12 @@ vecN vector_negation(vecN a){
     return a;
 }
 
-vecN vector_negation_in_place(vecN a){
+vecN vec_neg_in_place_sys_call(vecN a){
     uint32_t a_size = amount_of_type_bytes(a.type);
     int* ptr;
+    ptr = (int*)(a.elements.b1.i + (a.n - 1) * a_size); 
     switch(a.type){
         case CHAR:
-            ptr = (int*)(a.elements.b1.i + (a.n - 1) * a_size); 
             while(ptr && a.n--){
                 a.v_error = ternary(a.elements.b1.i[a.n] == MIN_CHAR, POSITIVE_OVERFLOW, a.v_error);
                 a.elements.b1.i[a.n] = -a.elements.b1.i[a.n];
@@ -213,71 +206,74 @@ vecN vector_negation_in_place(vecN a){
             }
             return a;
         case UCHAR:
-            vecN b = {INT, a.n, malloc(a.n * amount_of_type_bytes(INT)), NO_ERROR};
-            ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
+            a.type = INT;
+            alldatapointer mem_b = B4type_i_elements( malloc(a.n * amount_of_type_bytes(INT)) );
             while(ptr && a.n--){
-                b.elements.b4.i[a.n] = -a.elements.b1.ui[a.n];
-                ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
+                mem_b.b4.i[a.n] = -a.elements.b1.ui[a.n];
+                ptr = (int*)(a.elements.b1.i + (a.n - 1) * a_size);
             }
-            return b;
-        case INT:
-            ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
+            free(a.elements.b1.ui);
+            a.elements = mem_b;
+            return a;
+        case INT: 
             while(ptr && a.n--){
-                a.v_error = ternary(a.elements.b1.i[a.n] == MIN_INT, POSITIVE_OVERFLOW, a.v_error);
+                a.v_error = ternary(a.elements.b4.i[a.n] == MIN_INT, POSITIVE_OVERFLOW, a.v_error);
                 a.elements.b4.i[a.n] = -a.elements.b4.i[a.n];
-                ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
+                ptr = (int*)(a.elements.b1.i + (a.n - 1) * a_size);
             }
             return a;
         case UINT:
-            vecN c = {LINT, a.n, malloc(a.n * amount_of_type_bytes(LINT)), NO_ERROR};
-            ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
+            a.type = LINT;
+            alldatapointer mem_c = B8type_i_elements( malloc(a.n * amount_of_type_bytes(LINT)) );
             while(ptr && a.n--){
-                c.elements.b8.i[a.n] = -a.elements.b4.ui[a.n];
-                ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
+                mem_c.b8.i[a.n] = -a.elements.b4.ui[a.n];
+                ptr = (int*)(a.elements.b1.i + (a.n - 1) * a_size);
             }
-            return c;
+            free(a.elements.b4.ui);
+            a.elements = mem_c;
+            return a;
         case LINT:
-            ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
             while(ptr && a.n--){
+                a.v_error = ternary(a.elements.b8.i[a.n] == MIN_LINT, POSITIVE_OVERFLOW, a.v_error);
                 a.elements.b8.i[a.n] = -a.elements.b8.i[a.n];
-                ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
+                ptr = (int*)(a.elements.b1.i + (a.n - 1) * a_size);
             }
             return a;
         case LUINT:
-            vecN d = {LINT, a.n, malloc(a.n * amount_of_type_bytes(LINT)), NO_ERROR};
-            ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
-            uint64_t v = MAX_LINT + 1; 
+            a.type = LINT;
+            uint64_t max_negatiable_luint = MAX_LINT + 1;
+            alldatapointer mem_d = B8type_i_elements( malloc(a.n * amount_of_type_bytes(LINT)) );
             while(ptr && a.n--){
-                d.v_error = (a.elements.b8.ui[a.n] > v, NEGATIVE_OVERFLOW, d.v_error);
-                d.elements.b8.i[a.n] = -a.elements.b8.ui[a.n];
-                ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
+                a.v_error = ternary(a.elements.b8.ui[a.n] > max_negatiable_luint, NEGATIVE_OVERFLOW, a.v_error);
+                mem_d.b8.i[a.n] = -a.elements.b8.ui[a.n];
+                ptr = (int*)(a.elements.b1.i + (a.n - 1) * a_size);
             }
-            return d;
+            free(a.elements.b8.ui);
+            a.elements = mem_d;
+            return a;
         case FLOAT:
-            ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
             while(ptr && a.n--){
                 a.elements.b4.f[a.n] = -a.elements.b4.f[a.n];
-                ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
+                ptr = (int*)(a.elements.b1.i + (a.n - 1) * a_size);
             }
             return a;
         case DOUBLE:
-            ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
             while(ptr && a.n--){
                 printf("%u\n", a.n--);
                 a.elements.b8.d[a.n] = -a.elements.b8.d[a.n];
-                ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
+                ptr = (int*)(a.elements.b1.i + (a.n - 1) * a_size);
             }
             return a;
     }
     return a;
 }
 
-vecN vector_negation_in_place_v2(vecN a){
+vecN vec_neg_in_place_no_sys_call(vecN a){
     uint32_t a_size = amount_of_type_bytes(a.type);
     int* ptr;
+    ptr = (int*)(a.elements.b1.i + (a.n - 1) * a_size); 
     switch(a.type){
         case CHAR:
-            ptr = (int*)(a.elements.b1.i + (a.n - 1) * a_size); 
             while(ptr && a.n--){
                 a.v_error = ternary(a.elements.b1.i[a.n] == MIN_CHAR, POSITIVE_OVERFLOW, a.v_error);
                 a.elements.b1.i[a.n] = -a.elements.b1.i[a.n];
@@ -286,52 +282,48 @@ vecN vector_negation_in_place_v2(vecN a){
             return a;
         case UCHAR:
             a.type = CHAR;
-            ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
             while(ptr && a.n--){
                 a.elements.b1.i[a.n] = -a.elements.b1.ui[a.n];
                 ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
             }
             return a;
         case INT:
-            ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
             while(ptr && a.n--){
-                a.v_error = ternary(a.elements.b1.i[a.n] == MIN_INT, POSITIVE_OVERFLOW, a.v_error);
+                a.v_error = ternary(a.elements.b4.i[a.n] == MIN_INT, POSITIVE_OVERFLOW, a.v_error);
                 a.elements.b4.i[a.n] = -a.elements.b4.i[a.n];
                 ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
             }
             return a;
         case UINT:
-            ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
+            a.type = INT;
             while(ptr && a.n--){
                 a.elements.b4.i[a.n] = -a.elements.b4.ui[a.n];
                 ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
             }
             return a;
         case LINT:
-            ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
             while(ptr && a.n--){
+                a.v_error = ternary(a.elements.b8.i[a.n] == MIN_LINT, POSITIVE_OVERFLOW, a.v_error);
                 a.elements.b8.i[a.n] = -a.elements.b8.i[a.n];
                 ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
             }
             return a;
         case LUINT:
-            ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
-            uint64_t v = MAX_LINT + 1; 
+            a.type = LINT;
+            uint64_t max_negatiable_luint = MAX_LINT + 1; 
             while(ptr && a.n--){
-                a.v_error = (a.elements.b8.ui[a.n] > v, NEGATIVE_OVERFLOW, a.v_error);
+                a.v_error = (a.elements.b8.ui[a.n] > max_negatiable_luint, NEGATIVE_OVERFLOW, a.v_error);
                 a.elements.b8.i[a.n] = -a.elements.b8.ui[a.n];
                 ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
             }
             return a;
         case FLOAT:
-            ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
             while(ptr && a.n--){
                 a.elements.b4.f[a.n] = -a.elements.b4.f[a.n];
                 ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
             }
             return a;
         case DOUBLE:
-            ptr = (int*)(a.elements.b1.ui + (a.n - 1) * a_size);
             while(ptr && a.n--){
                 printf("%u\n", a.n--);
                 a.elements.b8.d[a.n] = -a.elements.b8.d[a.n];
@@ -342,80 +334,87 @@ vecN vector_negation_in_place_v2(vecN a){
     return a;
 }
 
-matrix_t matrix_negation(matrix_t matr){
+matrix_t matrix_neg(matrix_t matr){
     switch(matr.type){
         case CHAR: 
-            vecN vec_a = vector_negation((vecN){CHAR, matr.rows * matr.cols, matr.elements, matr.m_err});
+            vecN vec_a = vec_neg_in_place_sys_call((vecN){CHAR, matr.rows * matr.cols, matr.elements, matr.m_err});
             matrix_t a = {vec_a.type, matr.rows, matr.cols, vec_a.elements, vec_a.v_error};
             return a;
         case UCHAR: 
-            vecN vec_b = vector_negation((vecN){UCHAR, matr.rows * matr.cols, matr.elements, matr.m_err});
+            vecN vec_b = vec_neg_in_place_sys_call((vecN){UCHAR, matr.rows * matr.cols, matr.elements, matr.m_err});
             matrix_t b = {vec_b.type, matr.rows, matr.cols, vec_b.elements, vec_b.v_error};
             return b;
         case INT: 
-            vecN vec_c = vector_negation((vecN){INT, matr.rows * matr.cols, matr.elements, matr.m_err});
+            vecN vec_c = vec_neg_in_place_sys_call((vecN){INT, matr.rows * matr.cols, matr.elements, matr.m_err});
             matrix_t c = {vec_c.type, matr.rows, matr.cols, vec_c.elements, vec_c.v_error};
             return c;
         case UINT:
-            vecN vec_d = vector_negation((vecN){UINT, matr.rows * matr.cols, matr.elements, matr.m_err});
+            vecN vec_d = vec_neg_in_place_sys_call((vecN){UINT, matr.rows * matr.cols, matr.elements, matr.m_err});
             matrix_t d = {vec_d.type, matr.rows, matr.cols, vec_d.elements, vec_d.v_error};
             return d;
         case LINT: 
-            vecN vec_e = vector_negation((vecN){LINT, matr.rows * matr.cols, matr.elements, matr.m_err});
+            vecN vec_e = vec_neg_in_place_sys_call((vecN){LINT, matr.rows * matr.cols, matr.elements, matr.m_err});
             matrix_t e = {vec_e.type, matr.rows, matr.cols, vec_e.elements, vec_e.v_error};
             return e;
         case LUINT: 
-            vecN vec_f = vector_negation((vecN){LUINT, matr.rows * matr.cols, matr.elements, matr.m_err});
+            vecN vec_f = vec_neg_in_place_sys_call((vecN){LUINT, matr.rows * matr.cols, matr.elements, matr.m_err});
             matrix_t f = {vec_f.type, matr.rows, matr.cols, vec_f.elements, vec_f.v_error};
             return f;
         case FLOAT: 
-            vecN vec_g = vector_negation((vecN){FLOAT, matr.rows * matr.cols, matr.elements, matr.m_err});
+            vecN vec_g = vec_neg_in_place_sys_call((vecN){FLOAT, matr.rows * matr.cols, matr.elements, matr.m_err});
             matrix_t g = {vec_g.type, matr.rows, matr.cols, vec_g.elements, vec_g.v_error};
             return g;
         case DOUBLE: 
-            vecN vec_h = vector_negation((vecN){DOUBLE, matr.rows * matr.cols, matr.elements, matr.m_err});
+            vecN vec_h = vec_neg_in_place_sys_call((vecN){DOUBLE, matr.rows * matr.cols, matr.elements, matr.m_err});
             matrix_t h = {vec_h.type, matr.rows, matr.cols, vec_h.elements, vec_h.v_error};
             return h;
     }
     return matr;
 }
 
-matrix_t matrix_negation_in_place(matrix_t matr){
+matrix_t matrix_neg_in_place(matrix_t matr){
     switch(matr.type){
-        case CHAR: 
-            vecN vec_a = vector_negation_in_place((vecN){CHAR, matr.rows * matr.cols, matr.elements, matr.m_err});
+        case CHAR:    
+            vecN vec_a = vec_neg_in_place_sys_call((vecN){CHAR, matr.rows * matr.cols, matr.elements, matr.m_err});
             matrix_t a = {vec_a.type, matr.rows, matr.cols, vec_a.elements, vec_a.v_error};
             return a;
         case UCHAR: 
-            vecN vec_b = vector_negation_in_place((vecN){UCHAR, matr.rows * matr.cols, matr.elements, matr.m_err});
+            vecN vec_b = vec_neg_in_place_sys_call((vecN){UCHAR, matr.rows * matr.cols, matr.elements, matr.m_err});
             matrix_t b = {vec_b.type, matr.rows, matr.cols, vec_b.elements, vec_b.v_error};
             return b;
         case INT: 
-            vecN vec_c = vector_negation_in_place((vecN){INT, matr.rows * matr.cols, matr.elements, matr.m_err});
+            vecN vec_c = vec_neg_in_place_sys_call((vecN){INT, matr.rows * matr.cols, matr.elements, matr.m_err});
             matrix_t c = {vec_c.type, matr.rows, matr.cols, vec_c.elements, vec_c.v_error};
             return c;
         case UINT:
-            vecN vec_d = vector_negation_in_place((vecN){UINT, matr.rows * matr.cols, matr.elements, matr.m_err});
+            vecN vec_d = vec_neg_in_place_sys_call((vecN){UINT, matr.rows * matr.cols, matr.elements, matr.m_err});
             matrix_t d = {vec_d.type, matr.rows, matr.cols, vec_d.elements, vec_d.v_error};
             return d;
         case LINT: 
-            vecN vec_e = vector_negation_in_place((vecN){LINT, matr.rows * matr.cols, matr.elements, matr.m_err});
+            vecN vec_e = vec_neg_in_place_sys_call((vecN){LINT, matr.rows * matr.cols, matr.elements, matr.m_err});
             matrix_t e = {vec_e.type, matr.rows, matr.cols, vec_e.elements, vec_e.v_error};
             return e;
         case LUINT: 
-            vecN vec_f = vector_negation_in_place((vecN){LUINT, matr.rows * matr.cols, matr.elements, matr.m_err});
+            vecN vec_f = vec_neg_in_place_sys_call((vecN){LUINT, matr.rows * matr.cols, matr.elements, matr.m_err});
             matrix_t f = {vec_f.type, matr.rows, matr.cols, vec_f.elements, vec_f.v_error};
             return f;
         case FLOAT: 
-            vecN vec_g = vector_negation_in_place((vecN){FLOAT, matr.rows * matr.cols, matr.elements, matr.m_err});
+            vecN vec_g = vec_neg_in_place_sys_call((vecN){FLOAT, matr.rows * matr.cols, matr.elements, matr.m_err});
             matrix_t g = {vec_g.type, matr.rows, matr.cols, vec_g.elements, vec_g.v_error};
             return g;
         case DOUBLE: 
-            vecN vec_h = vector_negation_in_place((vecN){DOUBLE, matr.rows * matr.cols, matr.elements, matr.m_err});
+            vecN vec_h = vec_neg_in_place_sys_call((vecN){DOUBLE, matr.rows * matr.cols, matr.elements, matr.m_err});
             matrix_t h = {vec_h.type, matr.rows, matr.cols, vec_h.elements, vec_h.v_error};
             return h;
     }
     return matr;
+}
+
+void image_data_int(char* mem_ptr, char c1, char c2, char c3, char c4){
+    mem_ptr[0] = c1;
+    mem_ptr[1] = c2;
+    mem_ptr[2] = c3;
+    mem_ptr[3] = c4;
 }
 
 
