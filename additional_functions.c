@@ -37,3 +37,51 @@ char *fund_types_sting_arr[8] = {"char", "unsigned char", "int", "unsigned int",
 char *errors_sting_arr[16] = { "no error", "positive overflow", "negative overflow", "underflow", "division by zero", "exponentiation of zero to zero", 
                             "undefined behavior", "square root of negative number", "positive infinity", "negative infinity", "return real part",
                             "null pointer", "quite NaN", "signaling NaN", "incompatible", "attempt to get root of the number" };
+
+
+unsigned char amount_of_type_bytes(datatype t){
+    switch(t) {
+    case INT8:   return sizeof(int8_t); break;
+    case UINT8:  return sizeof(int8_t); break;
+    case INT32:    return sizeof(int32_t); break;
+    case UINT32:   return sizeof(int32_t); break;
+    case FLOAT32:  return sizeof(float); break;
+    case INT64:   return sizeof(int64_t); break;
+    case UINT64:  return sizeof(int64_t); break;
+    case FLOAT64: return sizeof(double); break;
+    default:     return sizeof(datatype);
+    }
+}
+
+unsigned char is_integer(datatype type){ 
+    return !((type == FLOAT32) | (type == FLOAT64));
+}
+
+unsigned char is_unsigned(datatype type){
+    return (type == UINT8) | (type == UINT32) | (type == UINT64);
+}
+
+uint8_t int_uint_float_t(datatype type){
+    return ternary(is_integer(type), ternary(is_unsigned(type), 1, 0), 2);
+}
+
+void print_vector(vecN a){
+    unsigned int i = 0;
+    printf("Vector type: %s, elements amount: %u, vector error: %s\nvector elements:\n", fund_types_sting_arr[a.type], a.n, errors_sting_arr[a.v_error]);
+    while(i < a.n){
+        print_fund_type_func_arr[a.type]((datapointer){ .i8 = a.elements.b1.i + i * amount_of_type_bytes(a.type) } );
+        printf(", ");
+        i++;
+    }    
+}
+
+void print_matrix(matrix_t a){
+    unsigned int i = 0;
+    printf("Matrix type: %s, size: %ux%u, matrix error: %s\nmatrix elements:\n", fund_types_sting_arr[a.type], a.rows, a.cols, errors_sting_arr[a.m_err]);
+    while(i < a.rows * a.cols){
+        if(!(i % a.cols)){ printf("\n"); }
+        print_fund_type_func_arr[a.type]((datapointer){ .i8 = a.elements.b1.i + ((i / a.cols) * a.cols + (i % a.cols)) * amount_of_type_bytes(a.type) } );
+        printf(" ");
+        i++;
+    }    
+}

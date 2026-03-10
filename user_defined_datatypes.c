@@ -104,14 +104,14 @@ union POINTERS_TO_ALL_DATA_TYPES {
 } typedef alldatapointer;
 
 enum DATATYPES { // enumeration
-  CHAR = 0,
-  UCHAR,
-  INT,
-  UINT,
-  FLOAT,
-  LINT,
-  LUINT,
-  DOUBLE,
+  INT8 = 0,
+  UINT8,
+  INT32,
+  UINT32,
+  FLOAT32,
+  INT64,
+  UINT64,
+  FLOAT64,
 } typedef datatype;
 
 union POINTERS {
@@ -127,13 +127,14 @@ union POINTERS {
   uint64_t* ui64;
   int64_t* i64;
 } typedef datapointer;
-  
+
 struct vector_n {
   datatype type;
   unsigned int n; // this "n" is amount of elements
   alldatapointer elements;
   error v_error;
 } typedef vecN;
+
 
 struct matrix_m_n{
   datatype type;

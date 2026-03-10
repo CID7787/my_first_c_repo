@@ -2,7 +2,7 @@
 #include <time.h>  
 #include <stdlib.h>
 #include <math.h>  
-#include <stdint.h>
+#include <stdint.h> 
 #define headerfile 1
 
 #include "user_defined_datatypes.c"
@@ -11,84 +11,83 @@
 #include "logical_functions_of_decision.c"
 #include "bitwise_functions.c"
 #include "safe_arithmetic_functions.c"
+#include "matrix_functions.c"
+#include "image_functions.c"
 #include "new_vector_functions.c"
-// #include "test_file.c"
 #include "print_binary.c"
 
 
 
-void main(){  
-    int width  = 10,
-        height = 10,
-        size = width * height * 12;
-    char image_data[size + 1];
-    printf("P3\n%d %d\n255\n", width, height);
-    for(int i = 0; i < size; i += 12){
-        image_data[i + 0] = '0';
-        image_data[i + 1] = '5';
-        image_data[i + 2] = '5';
-        image_data[i + 3] = ' ';
-
-        image_data[i + 4] = '1';
-        image_data[i + 5] = '2';
-        image_data[i + 6] = '0';
-        image_data[i + 7] = ' ';
-        
-        image_data[i + 8] = ' ';
-        image_data[i + 9] = ' ';
-        image_data[i +10] = '0';
-        image_data[i +11] = '\n';
-        // off by 1 error  https://en.wikipedia.org/wiki/Off-by-one_error
-    }
-    image_data[size] = 0;
-    printf("%s", image_data);
+int main(){
+    int* arr = malloc(20 * sizeof(int));
+    for(int i = 0; i < 20; i++)
+        arr[i] = i + 1;
+    arr = realloc(arr, 10 * sizeof(int));
+    for(int i = 0; i < 20; i++)
+        printf("%d\n", arr[i]);
+    return 0; 
 }
 
 /*
+RGB CMBK ....
 
-safe_int_addition(void* a, negation(b));
+char* internal_memory_buffer = "P6\n10 10\n255\n000000";
+
+pointer = malloc(4 + 4 + elements*type)
+N TYPE ERROR elements
+pointer2 = pointer1
+
+
+enum vecN_structure {
+    N = 0,
+    TYPE,
+    ERROR,
+    ELEMENTS,
+}
+pointer a, b;
+
+(_______________)
+
+
+
+#define ACCESS(TYPE, ARRAY, INDEX) ((TYPE*)(ARRAY+INDEX))
+ACCESS(int, a, ELEMENTS);
+(int*)(a + ELEMENTS);
+b[ELEMENTS];
+sizeof()
+a.elements
+
+void*
+N TYPE ERROR element_pointer actual_elements
+vecN a = *((vecN*)malloc(1 + 1 + 1 + elements_size));
+
+
 
 tagged_union negatiation(b){
     alldatapointer = ...; // you have put long int* into the data pointer
     tagged_union.tag = LINT;
     tagged_union.data = alldatapointer;
     return tagged_union;
-}
-
-both matrix and vector operations are equivalent:
+    }
+    
+    both matrix and vector operations are equivalent:
     negation
     addition
     elementwise_multiplication
     exponentiation
-
-only Matrix:
+    
+    only Matrix:
     matrix multiplication
-
-
-vector_method(){
-    // ...
-}
-
+    
+    
+    vector_method(){
+        // ...
+        }
+        
 matrix_method(){
    // a bit of preparation
    vector_method(M)
 }
-
-// 0 0 0 0 0 0 0 0 0
-// MEMORY   INTERPRETATION
-              VECTOR
-              MATRIX
-              ...
-// 0 0 0 0 0 0 0 0 0
-
-
-   MEMORY    INTERPRETATION
-// 0101        INT
-               UINT
-               FLOAT
-               ...
-// 
-
 
 1. They show me how
 2. I copy
@@ -116,21 +115,6 @@ matrix_method(M){
     error_rerouting
 }
 
-only matrix:
-    matrix_multiplication
-
-
-
-unsigned int l = len([3505050505, 45050500505]); // = sqrt(3505050505*3505050505 + 45050500505*45050500505) = MAX_UINT > x > MAX_INT
-
-addition(v, negation(l));
-            // -x?
-v - l;
-j - l;
-hello
-
-
-
 memory allocation          create_matrix(type, rows, cols, pointer)   allocate memory
 memory initialization      populate_matrix()    filling the allocated memory with values
 
@@ -146,31 +130,4 @@ Option #2: group initalization and processing
                             multiply(M, 2)
 
 
-create_matrix(type, rows, cols, pointer, int (*initialization_function_pointer)(matrix_t M))
-
-int fill_with_zeros(matrix_t M){    
-    uint32_t size = M.rows * M.cols;
-    while(size--){
-        // M[i] = 0;
-    }
-}
-
-
-matrix_t A = create_matrix(int, 10, 10, ptr, &fill_with_zeros);
-matrix_t B = create_matrix(int, 10, 10, ptr);
-
-matrix_t B = create_matrix(int, 10, 10, fill_with_identity_diagonal(10, 10));
-
-
-matrix_t C = create_matrix(int, 10, 10, NULL); zigzag_fill_matrix(C, 10, 20, 'A', '*');
-
-
-int fill_with_identity_diagonal(matrix_t M){
-    uint32_t size = M.rows * M.cols;
-    while(size--){
-        // M[size] = !(i % (Math.min(M.rows, M.cols) + 1));
-    }
-}
-
-matrix_t C = create_matrix(int, 10, 10, NULL, &func);
 */
