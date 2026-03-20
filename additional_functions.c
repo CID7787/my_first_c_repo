@@ -1,5 +1,6 @@
 #ifndef headerfile
     #include "user_defined_datatypes.c"
+    #include "logical_functions_of_decision.c"
 #endif
 unsigned int random_uint(unsigned int v, unsigned int u){
     v = 36969*(v & 65535) + (v >> 16);
@@ -22,6 +23,13 @@ long unsigned int lint_absolute_value(int condition){
 long int lint_negation(long int a){// 0011 --> 1101   
     return ~a + 1;
 }
+
+// FUNCTION: double_absolute_value(double)
+
+double double_absolute_value(dbits value){
+    value.bits.sign = 0;
+    return value.d;
+  }
 
 void print_int8(datapointer data)   { printf("%4d",  *data.i8);   }
 void print_uint8(datapointer data)  { printf("%4u",  *data.ui8);  }
@@ -62,7 +70,7 @@ unsigned char is_unsigned(datatype type){
 }
 
 uint8_t int_uint_float_t(datatype type){
-    return ternary(is_integer(type), ternary(is_unsigned(type), 1, 0), 2);
+    return ternary(is_integer(type), ternary(is_unsigned(type), 1, 0), 2); // function returns 0 when type is integer, 1 for unsigned int and 2 for float type
 }
 
 void print_vector(vecN a){
@@ -85,3 +93,4 @@ void print_matrix(matrix_t a){
         i++;
     }    
 }
+

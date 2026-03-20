@@ -544,3 +544,29 @@ sNaNs, are special forms of a NaN that, when consumed by most operations, should
         A representation of a number that has overflowed
         Number in a higher precision format
         A complex number
+
+```
+What if memory is smaller than N? Then, we access it out of bounds. That's a problem. What do we do?
+A) Do not touch, make sure logic is airtight
+B) Write checks
+    1) every time, within your program, you re-write checks
+    2.1) you write checks 1 time, put them in a set of structs and functions
+    2.2) just use it everywhere
+
+Memory safety is a big, unsolved problem. Different languages have different approaches:
+    Rust - Borrow Checker
+    JS, Python, ... - automatic memory management
+    Swift, Zig - compiler checks
+    Fil-C  - C library
+
+
+```
+    Extreme modeling
+        Minimum
+            0 elements
+            1 elements
+        Middle
+            ???
+        Maximum
+            UNIT_MAX
+            INT_MAX

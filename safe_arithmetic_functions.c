@@ -19,15 +19,17 @@ double my_fmod(dbits x, dbits y, error* err){
     y.bits.sign = 0; // we set the sign bit of y to 0
     dbits ux = x, uy = y; // we copy x and y to new variables, which will become unsigned
     ux.bits.sign = 0; // we set ux sign to 0, and uy already has its sign set to 0
-    while((uy.d <= ux.d) && !(*err)){ uy.d += y.d; } // we are exiting as soon as uy > ux.  (uy - ux) shows us how much we overflow 
+    while(uy.d <= ux.d){ uy.d += y.d; } // we are exiting as soon as uy > ux.  (uy - ux) shows us how much we overflow 
     y.d -= uy.d - ux.d; // we subtract (uy - ux) from y to find a remainder
     x.bits.positive = y.bits.positive; // here we set only positive x, so that we preserve the sign of x
     return x.d;
 }
 
+
 // FUNCTION: char_addition(char, error*)
 
 char safe_char_addition(char a, char b, error* err){
+  if(!err){ return 0; }
   *err = ternary((a < 0) & (a < (int)MIN_CHAR - (int)b), NEGATIVE_OVERFLOW, *err);
   *err = ternary((a > 0) & (a > (int)MAX_CHAR - (int)b), POSITIVE_OVERFLOW, *err);
   return a + b;
@@ -37,35 +39,13 @@ char safe_char_addition(char a, char b, error* err){
 // FUNCTION: char_multiplication(char, error*)
 
 char safe_char_multiplication(char a, char b, error* err){
-  if(!err){ return a; }
-  char result = 0, sign = (a < 0) & (b < 0);
-  a = -(a < 0) * a + (a > 0) * a;
-  b = -(b < 0) * b + (b > 0) * b; 
-  while(b-- && !(*err)){
-    result = safe_char_addition(result, a, err);
-  }
-  *err = ternary((*err == POSITIVE_OVERFLOW) && sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW);
-  return -sign * result + !sign * result;
-}
-
-
-// FUNCTION: unsigned_char_addition(unsigned char, error*)
-
-unsigned char safe_uchar_addition(unsigned char a, unsigned char b, error* err){
-  *err = ternary(a > MIN_CHAR - b, POSITIVE_OVERFLOW, *err);
-  return a + b; 
-}
-
-
-// FUNCTION: unsigned_char_multiplication(unsigned char, error*)
-
-unsigned char safe_uchar_multiplication(unsigned char a, unsigned char b, error* err){
-  if(!err){ return a; }
-  char result = 0;
-  while(b-- && !(*err)){
-      result = safe_uchar_addition(result, a, err);
-  }
-  return result;
+  if(!err || ((a == 1) & (b == MIN_CHAR))){ return b; }
+  char result = 0, sign = b < 0;
+  *err = ternary(b == MIN_CHAR, ternary(a < 0, POSITIVE_OVERFLOW, NEGATIVE_OVERFLOW), *err);
+  b = ternary(!a, 0, b);
+  b = ternary(sign, lint_negation(b), b); 
+  while(b-- > 0){ result = safe_char_addition(result, a, err); }
+  return ternary(sign, lint_negation(result), result);
 }
 
 
@@ -82,36 +62,13 @@ int safe_int_addition(int a, int b, error* err){
 // FUNCTION: integer_multiplication(int, error*)
 
 int safe_int_multiplication(int a, int b, error* err){
-  if(!(err && a && b)){ return 0; }
-  int result = 0, sign = (a < 0) ^ (b < 0);
-  a = (-(a < 0) * a) + ((a > 0) * a);
-  b = (-(b < 0) * b) + ((b > 0) * b);
-  while(b-- && !(*err)){
-    result = safe_int_addition(result, a, err);
-  }
-  *err = ternary(*err == POSITIVE_OVERFLOW, ternary(sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err); 
-  return -sign * result + (!sign * result);
-}
-
-
-// FUNCTION: unsigned_int_addition(unsigned int, error*)
-
-unsigned int safe_uint_addition(unsigned int arg1, unsigned int arg2, error* err){
-  if(!err){ return arg1; }
-  *err = ternary(arg2 > (MAX_UINT - arg1), POSITIVE_OVERFLOW, *err);
-  return arg1 + arg2;
-}
-
-
-// FUNCTION: unsigned_int_multiplication(unsigned int, error*)
-
-unsigned int safe_uint_multiplication(unsigned int arg1, unsigned int arg2, error* err){
-  if(!err){ return arg1; }
-  unsigned int result = 0;
-  while(arg2-- && !(*err)){
-    result = safe_uint_addition(result, arg1, err);
-  }
-  return result;
+  if(!err || ((a == 1) & (b == MIN_INT))){ return b; }
+  int result = 0, sign = b < 0;
+  *err = ternary(b == MIN_INT, ternary(a < 0, POSITIVE_OVERFLOW, NEGATIVE_OVERFLOW), *err);
+  b = tenary(!a, 0, b);
+  b = ternary(sign, lint_negation(b), b);
+  while(b-- > 0){ result = safe_int_addition(result, a, err); }
+  return ternary(sign, lint_negation(result), result);
 }
 
 
@@ -128,15 +85,49 @@ long int safe_lint_addition(long int a, long int b, error* err){
 // FUNCTION: long_int_multiplication(long int, error*)
 
 long int safe_lint_multiplication(long int a, long int b, error* err){
+  if(!err || ((a == 1) & (b == MIN_LINT))){ return b; }
+  long int result = 0, sign = b < 0;
+  *err = ternary(b == MIN_LINT, ternary(a < 0, POSITIVE_OVERFLOW, NEGATIVE_OVERFLOW), *err);
+  b = tenary(!a, 0, b);
+  b = ternary(sign, lint_negation(b), b);
+  while(b-- > 0){ result = safe_lint_addition(result, a, err); }
+  return ternary(sign, lint_negation(result), result);
+}
+
+
+// FUNCTION: unsigned_char_addition(unsigned char, error*)
+
+unsigned char safe_uchar_addition(unsigned char a, unsigned char b, error* err){
   if(!err){ return a; }
-  long int result = 0, sign = (a < 0) ^ (b < 0);
-  a = (-(a < 0) * a) + ((a > 0) * a);
-  b = (-(b < 0) * b) + ((b > 0) * b);
-  while(b-- && !(*err)){
-    result = safe_lint_addition(result, a, err);
-  }
-  *err = ternary(*err == POSITIVE_OVERFLOW, ternary(sign, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err); 
-  return -sign * result + !sign * result;
+  *err = ternary(a > MIN_CHAR - b, POSITIVE_OVERFLOW, *err);
+  return a + b; 
+}
+
+
+// FUNCTION: unsigned_char_multiplication(unsigned char, error*)
+
+unsigned char safe_uchar_multiplication(unsigned char a, unsigned char b, error* err){
+  char result = 0;
+  while(b-- > 0){ result = safe_uchar_addition(result, a, err); }
+  return result;
+}
+
+
+// FUNCTION: unsigned_int_addition(unsigned int, error*)
+
+unsigned int safe_uint_addition(unsigned int arg1, unsigned int arg2, error* err){
+  if(!err){ return arg1; }
+  *err = ternary(arg2 > (MAX_UINT - arg1), POSITIVE_OVERFLOW, *err);
+  return arg1 + arg2;
+}
+
+
+// FUNCTION: unsigned_int_multiplication(unsigned int, error*)
+
+unsigned int safe_uint_multiplication(unsigned int arg1, unsigned int arg2, error* err){
+  unsigned int result = 0;
+  while(arg2-- > 0){ result = safe_uint_addition(result, arg1, err); }
+  return result;
 }
 
 
@@ -149,41 +140,13 @@ long unsigned int safe_luint_addition(long unsigned int addend1, long unsigned i
   return addend1 + addend2;
 }
 
-long unsigned int safe_luint_addition_optim_v_prot(long unsigned int addend1, long unsigned int addend2, error* err){
-  if(!err){ return addend1; }
-  unsigned int r_leftmost8b;
-
-
-  return addend1 + addend2;
-}
 
 // FUNCTION: long_unsigned_int_multiplication(long unsigned int, error*)
 
 long unsigned int safe_luint_multiplication(long unsigned int a, long unsigned int b, error* err){
-  if(!err){ return a; }
   long unsigned int result = 0;
-  while(b--){
-      if(*err){ return a; }
-      result = safe_luint_addition(result, a, err);
-  }
+  while(b-- > 0){ result = safe_luint_addition(result, a, err); }
   return result;
-}
-
-
-long unsigned int safe_luint_multiplication_optim_v_prot(long unsigned int a, long unsigned int b, error* err){
-  if(!err){ return a; }
-  long unsigned int result;
-  
-
-  return result;
-}
-
-
-// FUNCTION: double_absolute_value(double)
-
-double double_absolute_value(dbits value){
-  value.bits.sign = 0;
-  return value.d;
 }
   
 
@@ -192,7 +155,6 @@ double double_absolute_value(dbits value){
 float safe_float_addition(fbits a, fbits b, error* err){
   //checking for errors
     if(!err){ return a.f; }
-    if(*err){ return a.f; }
     if((a.parts.exp > MAX_NORM_FLOAT_EXP) & a.parts.mantissa){ *err = SNAN; return a.f; }
     if((b.parts.exp > MAX_NORM_FLOAT_EXP) & b.parts.mantissa){ *err = SNAN; return b.f; }
     if((a.parts.exp > MAX_NORM_FLOAT_EXP) | (b.parts.exp > MAX_NORM_FLOAT_EXP)){ *err = QNAN; return a.f; }
@@ -275,7 +237,6 @@ float safe_float_division_with_rounding(fbits a, fbits b, error* err){// quotien
 double safe_double_addition(dbits a, dbits b, error* err){
   //checking for errors
     if(!err){ return a.d; }
-    if(*err){ return a.d; }
     if((a.parts.exp > MAX_NORM_DOUBLE_EXP) & a.parts.mantissa){ *err = SNAN; return a.d; }
     if((b.parts.exp > MAX_NORM_DOUBLE_EXP) & b.parts.mantissa){ *err = SNAN; return b.d; }
     if((a.parts.exp > MAX_NORM_DOUBLE_EXP) | (b.parts.exp > MAX_NORM_DOUBLE_EXP)){ *err = QNAN; return a.d; }

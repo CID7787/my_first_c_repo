@@ -1,4 +1,7 @@
 // this file contain all datatypes that was created from struct, union and enms
+#ifndef headerfile
+  #include <stdint.h>
+#endif
 typedef union variable_all_types{
   double d;
   long int li;
@@ -76,32 +79,9 @@ typedef enum error_code{
   QNAN,
   SNAN,
   INCOMPATIBLE,
-  ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER
+  ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER,
+  MEMORY_LIMIT_EXCESS
 }error;
-
-typedef union one_byte_all_types{
-  int8_t* i;
-  uint8_t* ui;
-}B1type;
-
-typedef union four_byte_all_types{
-  int32_t* i;
-  uint32_t* ui;
-  float* f;
-}B4type;
-
-typedef union eight_byte_all_types{
-  int64_t* i;
-  uint64_t* ui;
-  double* d;
-}B8type;
-
-
-union POINTERS_TO_ALL_DATA_TYPES {
-  B1type b1;
-  B4type b4;
-  B8type b8;
-} typedef alldatapointer;
 
 enum DATATYPES { // enumeration
   INT8 = 0,
@@ -115,7 +95,7 @@ enum DATATYPES { // enumeration
 } typedef datatype;
 
 union POINTERS {
-  void* ptr;
+  void* vptr;
   int8_t* i8;
   uint8_t* ui8;
   int16_t* i16;
@@ -128,19 +108,19 @@ union POINTERS {
   int64_t* i64;
 } typedef datapointer;
 
-struct vector_n {
-  datatype type;
-  unsigned int n; // this "n" is amount of elements
-  alldatapointer elements;
-  error v_error;
-} typedef vecN;
-
+typedef struct vector_type{
+  datatype* type;
+  uint32_t* n;
+  error* err;
+  datapointer elements;
+} vecN;
 
 struct matrix_m_n{
-  datatype type;
-  uint32_t rows, cols;
-  alldatapointer elements ;
-  error m_err;
+  datatype* type;
+  uint32_t* row;
+  uint32_t* col;
+  error* err;
+  datapointer elements;
 } typedef matrix_t;
 
 struct int_8_bit_parts{
