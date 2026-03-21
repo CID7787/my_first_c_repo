@@ -17,8 +17,10 @@
 // #include "print_binary.c"
 
 
+inline int add(int a){ return a + 1; }
+
 int main(){
-    
+    printf("%d", add(4));
     return 0;
 }
 

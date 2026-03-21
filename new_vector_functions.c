@@ -22,14 +22,14 @@
 #define VECTOR_MAX_ELEM_SIZE MAX_UINT
 
 
-vecN vec_create(datatype type, datapointer elements, uint64_t n){
+vecN vec_create(datatype type, uint64_t n){
     uint32_t condition = (n <= VECTOR_MAX_ELEM_SIZE);
     n = ((n & -condition) + !condition);
 
     void* r = malloc(sizeof(datatype) 
                 + sizeof(uint32_t) 
                 + sizeof(error) 
-                + (n * amount_of_type_bytes(type)));
+                + (n * amount_of_type_bytes(type)) );
 
     vecN result;
         result.type     = (datatype*)   r;
@@ -40,85 +40,380 @@ vecN vec_create(datatype type, datapointer elements, uint64_t n){
     result.type[0] = type;
     result.n   [0] = n;
     result.err [0] = ternary(condition, MEMORY_LIMIT_EXCESS, NO_ERROR);
-    
-    n *= amount_of_type_bytes(type); // potentially check for n exceeding bounds. 2 * 2147483647 / 8 ~= 547483647 ~= 0.5GB
-    if(!elements.i32){ 
-        result.err[0] = NULL_POINTER;
-        while(n--){ result.elements.i8[n] = elements.i8[n]; } // TODO: what if elements points to less objects then n amount
-    }
 
     return result;
 }
 
-vecN vec_filler(vecN vec, datapointer arr){
-    if(vec.n && vec.type && vec.err && vec.elements.i32 && arr.i32){
-        uint64_t i = vec.n[0];
-        switch(vec.type[0]){
-            case INT8:    while(i--){ vec.elements.i8  [i] = arr.i8[i]; } break;// TODO: what to do in scale have different type, and error handling
-            case UINT8:   while(i--){ vec.elements.ui8 [i] = arr.ui8[i]; } break;
-            case INT32:   while(i--){ vec.elements.i32 [i] = arr.i32[i]; } break;
-            case UINT32:  while(i--){ vec.elements.ui32[i] = arr.ui32[i]; } break;
-            case INT64:   while(i--){ vec.elements.i64 [i] = arr.i64[i]; } break;
-            case UINT64:  while(i--){ vec.elements.ui64[i] = arr.ui64[i]; } break;
-            case FLOAT32: 
-                int8_t cond;
-                fbits fv;
-                while(i--){
-                    fv = (fbits){ .f = arr.f32[i] }; 
-                    cond = fv.parts.exp > MAX_NORM_FLOAT_EXP;
-                    vec.err[0] = ternary(cond, ternary(fv.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), vec.err[0]);// check for infinity value
-                    vec.err[0] = ternary(cond && fv.parts.mantissa, QNAN, vec.err[0]);// check for NaN
-                    vec.elements.f32 [i] = arr.f32[i]; 
-                } 
+error check_float_type_elem_for_err(datapointer data, datatype type, uint32_t n, error* err){ // TODO: what if amount of elements in data is less than n 
+    if(!(data.i32 && err)){ return NULL_POINTER; }
+    switch(type){
+        case FLOAT32:
+            fbits fb;
+            int8_t cond;
+            while(n--){
+                fb = (fbits){ .f = data.f32[n] };
+                cond = fb.parts.exp > MAX_NORM_FLOAT_EXP;
+                *err = ternary(cond, ternary(fb.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), *err);// check for infinity value
+                *err = ternary(cond && fb.parts.mantissa, QNAN, *err);// check for NaN
+            }
             break;
-            case FLOAT64: 
-                int8_t cond;
-                dbits dv;
-                while(i--){ 
-                    dv = (dbits){ .d = arr.f64[i] };
-                    cond = dv.parts.exp > MAX_NORM_DOUBLE_EXP;
-                    vec.err[0] = ternary(cond, ternary(dv.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), vec.err[0]);// check for infinity value
-                    vec.err[0] = ternary(cond && dv.parts.mantissa, QNAN, vec.err[0]);// check for NaN
-                    vec.elements.f64 [i] = arr.f64[i]; 
-                }
+        case FLOAT64:
+        dbits db;
+        int8_t cond;
+        while(n--){
+            db = (dbits){ .d = data.f64[n] };
+            cond = db.parts.exp > MAX_NORM_DOUBLE_EXP;
+            *err = ternary(cond, ternary(db.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), *err);// check for infinity value
+            *err = ternary(cond && db.parts.mantissa, QNAN, *err);// check for NaN
         }
+    }
+    return *err;
+}
+
+vecN vec_filler(vecN vec, datapointer arr){// TODO: what if amount of elements in data is less than n
+    if(!(vec.n && vec.type && vec.err && vec.elements.i32 && arr.i32)){  return vec; }
+    uint64_t i = vec.n[0] * amount_of_type_bytes(vec.type);
+    while(i--){
+        vec.elements.i8[i] = arr.i8[i];
     }
     return vec;
 }
 
-vecN vec_scalar_in_place(vecN vec, datapointer scale){
+datapointer elem_type_cast(datapointer elem, datatype from, datatype to, uint32_t n, error* err){// TODO: there is an option to convert negative int type to positve unsigned the same way as C does
+    // TODO: what if amount of elements in data is less than n
+    if(!(elem.i32 && err)){ return elem; }
+    datapointer r;
+    switch(from){
+            r.vptr = malloc(amount_of_type_bytes(to) * n);
+            case INT8:
+                switch(to){
+                    case INT8:    while(n--){ r.i8 [n] = elem.i8[n]; } break;
+                    case INT32:   while(n--){ r.i32[n] = elem.i8[n]; } break;
+                    case INT64:   while(n--){ r.i64[n] = elem.i8[n]; } break;
+                    case FLOAT32: while(n--){ r.f32[n] = elem.i8[n]; } break;
+                    case FLOAT64: while(n--){ r.f64[n] = elem.i8[n]; } break;
+                    case UINT8:
+                        while(n--){
+                            *err = ternary(elem.i8 < 0, NEGATIVE_OVERFLOW, *err);
+                            r.ui8[n] = elem.i8[n]; 
+                        }
+                        break;
+                    case UINT32: 
+                        while(n--){
+                            *err = ternary(elem.i8 < 0, NEGATIVE_OVERFLOW, *err);
+                            r.ui32[n] = elem.i8[n]; 
+                        }
+                        break;
+                    case UINT64: 
+                        while(n--){
+                            *err = ternary(elem.i8 < 0, NEGATIVE_OVERFLOW, *err);
+                            r.ui64[n] = elem.i8[n]; 
+                        }
+                        break;
+                }
+                break;
+            case UINT8:
+                switch(to){
+                    case INT8: 
+                        while(n--){
+                            *err = ternary(elem.ui8 > MAX_CHAR, POSITIVE_OVERFLOW, *err);
+                            r.i8[n] = elem.ui8[n];
+                        } 
+                        break;
+                    case UINT8:   while(n--){ r.ui8[n]  = elem.ui8[n]; } break;
+                    case INT32:   while(n--){ r.i32[n]  = elem.ui8[n]; } break;
+                    case UINT32:  while(n--){ r.ui32[n] = elem.ui8[n]; } break;
+                    case INT64:   while(n--){ r.i64[n]  = elem.i8 [n]; } break;
+                    case UINT64:  while(n--){ r.i64[n]  = elem.ui8[n]; } break;
+                    case FLOAT32: while(n--){ r.f32[n]  = elem.ui8[n]; } break;
+                    case FLOAT64: while(n--){ r.f64[n]  = elem.ui8[n]; } 
+                }
+                break;
+            case INT32:
+                switch(to){
+                    case INT32:   while(n--){ r.i32[n] = elem.i32[n]; } break;
+                    case INT64:   while(n--){ r.i64[n] = elem.i32[n]; } break;
+                    case FLOAT32: while(n--){ r.f32[n] = elem.i32[n]; } break;
+                    case FLOAT64: while(n--){ r.f64[n] = elem.i32[n]; } break; 
+                    case INT8:    
+                        while(n--){
+                            *err = ternary(elem.i32[n] > MAX_CHAR, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.i32[n] < MIN_CHAR, NEGATIVE_OVERFLOW, *err);
+                            r.i8[n] = elem.i32[n];
+                        }
+                        break;
+                    case UINT8:   
+                        while(n--){ 
+                            *err = ternary(elem.i32[n] > MAX_UCHAR, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.i32[n] < 0, NEGATIVE_OVERFLOW, *err);
+                            r.ui8[n] = elem.i32[n];
+                        } 
+                        break;
+                        case UINT32:  
+                        while(n--){
+                            *err = ternary(elem.i32[n] < 0, NEGATIVE_OVERFLOW, *err);
+                            r.ui32[n] = elem.i32[n];
+                        } 
+                        break;
+                    case UINT64:  
+                        while(n--){ 
+                            *err = ternary(elem.i32[n] < 0, NEGATIVE_OVERFLOW, *err);
+                            r.ui64[n] = elem.i32[n];
+                        } 
+                        break;
+                }
+                break;
+            case UINT32:
+                switch(to){
+                    case UINT32:  while(n--){ r.ui32[n] = elem.ui32[n]; } break;
+                    case INT64:   while(n--){ r.i64[n]  = elem.ui32[n]; } break;
+                    case UINT64:  while(n--){ r.i64[n]  = elem.ui32[n]; } break;
+                    case FLOAT32: while(n--){ r.f32[n]  = elem.ui32[n]; } break;
+                    case FLOAT64: while(n--){ r.f64[n]  = elem.ui32[n]; } break; 
+                    case INT8: 
+                        while(n--){
+                            *err = ternary(elem.ui32 > MAX_CHAR, POSITIVE_OVERFLOW, *err);
+                            r.i8[n] = elem.ui32[n];
+                        } 
+                        break;
+                    case UINT8:   
+                        while(n--){ 
+                            *err = ternary(elem.ui32[n] > MAX_UCHAR, POSITIVE_OVERFLOW, *err);
+                            r.ui8[n]  = elem.ui32[n]; 
+                        }
+                        break;
+                    case INT32:   
+                        while(n--){
+                            *err = ternary(elem.ui32 > MAX_INT, POSITIVE_OVERFLOW, *err);
+                            r.i32[n] = elem.ui32[n];
+                        }
+                        break;
+                }
+                break;
+            case INT64:
+                switch(to){
+                    case INT64:   while(n--){ r.i64[n] = elem.i64[n]; } break;
+                    case FLOAT32: while(n--){ r.f32[n] = elem.i64[n]; } break;
+                    case FLOAT64: while(n--){ r.f64[n] = elem.i64[n]; } break; 
+                    case INT8:    
+                        while(n--){
+                            *err = ternary(elem.i64[n] > MAX_CHAR, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.i64[n] < MIN_CHAR, NEGATIVE_OVERFLOW, *err);
+                            r.i8[n] = elem.i64[n];
+                        }
+                        break;
+                    case UINT8:   
+                        while(n--){ 
+                            *err = ternary(elem.i64[n] > MAX_UCHAR, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.i64[n] < 0, NEGATIVE_OVERFLOW, *err);
+                            r.ui8[n] = elem.i64[n];
+                        } 
+                        break;
+                    case INT32:   
+                        while(n--){ 
+                            *err = ternary(elem.i64[n] > MAX_INT, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.i64[n] < MIN_INT, NEGATIVE_OVERFLOW, *err);                        
+                            r.i32[n] = elem.i64[n]; 
+                        } 
+                        break;
+                    case UINT32:  
+                        while(n--){
+                            *err = ternary(elem.i64[n] > MAX_UINT, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.i64[n] < 0, NEGATIVE_OVERFLOW, *err);
+                            r.ui32[n] = elem.i64[n];
+                        } 
+                        break;
+                    case UINT64:  
+                        while(n--){ 
+                            *err = ternary(elem.i64[n] < 0, NEGATIVE_OVERFLOW, *err);
+                            r.ui64[n] = elem.i64[n];
+                        } 
+                        break;
+                }
+                break;
+            case UINT64:
+                switch(to){
+                    case UINT64:  while(n--){ r.i64[n]  = elem.ui64[n]; } break;
+                    case FLOAT32: while(n--){ r.f32[n]  = elem.ui64[n]; } break;
+                    case FLOAT64: while(n--){ r.f64[n]  = elem.ui64[n]; } break; 
+                    case INT8: 
+                        while(n--){
+                            *err = ternary(elem.ui64 > MAX_CHAR, POSITIVE_OVERFLOW, *err);
+                            r.i8[n] = elem.ui64[n];
+                        } 
+                        break;
+                    case UINT8:   
+                        while(n--){ 
+                            *err = ternary(elem.ui64[n] > MAX_UCHAR, POSITIVE_OVERFLOW, *err);
+                            r.ui8[n]  = elem.ui64[n]; 
+                        }
+                        break;
+                    case INT32:   
+                        while(n--){
+                            *err = ternary(elem.ui32 > MAX_INT, POSITIVE_OVERFLOW, *err);
+                            r.i32[n] = elem.ui64[n];
+                        }
+                        break;
+                    case UINT32:  
+                        while(n--){ 
+                            *err = ternary(elem.ui64[n] > MAX_UINT, POSITIVE_OVERFLOW, *err);
+                            r.ui32[n] = elem.ui64[n]; 
+                        } 
+                        break;
+                    case INT64:   
+                        while(n--){ 
+                            *err = ternary(elem.ui64[n] > MAX_LINT, POSITIVE_OVERFLOW, *err);
+                            r.i64[n]  = elem.ui64[n]; 
+                        } 
+                        break;
+                }
+                break;
+            case FLOAT32:
+                switch(to){
+                    case INT8:    
+                        while(n--){
+                            *err = ternary(elem.f32[n] > MAX_CHAR, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.f32[n] < MIN_CHAR, NEGATIVE_OVERFLOW, *err);
+                            r.i8[n] = elem.f32[n];
+                        }
+                    break;
+                    case UINT8:   
+                        while(n--){
+                            *err = ternary(elem.f32[n] > MAX_UCHAR, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.f32[n] < 0, NEGATIVE_OVERFLOW, *err);
+                            r.ui8[n] = elem.f32[n];
+                        }
+                    break;
+                    case INT32:   
+                        while(n--){
+                            *err = ternary(elem.f32[n] > MAX_INT, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.f32[n] < MIN_INT, NEGATIVE_OVERFLOW, *err);
+                            r.i32[n] = elem.f32[n];
+                        }
+                    break;
+                    case UINT32:  
+                        while(n--){
+                            *err = ternary(elem.f32[n] > MAX_UINT, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.f32[n] < 0, NEGATIVE_OVERFLOW, *err);
+                            r.ui32[n] = elem.f32[n];
+                        }
+                    break;
+                    case INT64:   
+                        while(n--){
+                            *err = ternary(elem.f32[n] > MAX_LINT, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.f32[n] < MIN_LINT, NEGATIVE_OVERFLOW, *err);
+                            r.i64[n] = elem.f32[n];
+                        }
+                    break;
+                    case UINT64:  
+                        while(n--){
+                            *err = ternary(elem.f32[n] > MAX_LUINT, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.f32[n] < 0, NEGATIVE_OVERFLOW, *err);
+                            r.ui64[n] = elem.f32[n];
+                        }
+                    break;
+                    case FLOAT32: while(n--){ r.f32 [n] = elem.f32[n]; } break;
+                    case FLOAT64: while(n--){ r.f64[n] = elem.f32[n];}
+                }
+                break;
+            case FLOAT64:
+                switch(to){
+                    case INT8:    
+                        while(n--){
+                            *err = ternary(elem.f32[n] > MAX_CHAR, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.f32[n] < MIN_CHAR, NEGATIVE_OVERFLOW, *err);
+                            r.i8[n] = elem.f32[n];
+                        }
+                    break;
+                    case UINT8:   
+                        while(n--){
+                            *err = ternary(elem.f32[n] > MAX_UCHAR, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.f32[n] < 0, NEGATIVE_OVERFLOW, *err);
+                            r.i8[n] = elem.f32[n];
+                        }
+                    break;
+                    case INT32:   
+                        while(n--){
+                            *err = ternary(elem.f32[n] > MAX_INT, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.f32[n] < MIN_INT, NEGATIVE_OVERFLOW, *err);
+                            r.i8[n] = elem.f32[n];
+                        }
+                    break;
+                    case UINT32:  
+                        while(n--){
+                            *err = ternary(elem.f32[n] > MAX_UINT, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.f32[n] < 0, NEGATIVE_OVERFLOW, *err);
+                            r.i8[n] = elem.f32[n];
+                        }
+                    break;
+                    case INT64:   
+                        while(n--){
+                            *err = ternary(elem.f32[n] > MAX_LINT, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.f32[n] < MIN_LINT, NEGATIVE_OVERFLOW, *err);
+                            r.i8[n] = elem.f32[n];
+                        }
+                    break;
+                    case UINT64:  
+                        while(n--){
+                            *err = ternary(elem.f32[n] > MAX_LUINT, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.f32[n] < 0, NEGATIVE_OVERFLOW, *err);
+                            r.i8[n] = elem.f32[n];
+                        }
+                    break;
+                    case FLOAT32: 
+                        while(n--){
+                            *err = ternary(elem.f64[n] > MAX_FLOAT, POSITIVE_OVERFLOW, *err);
+                            *err = ternary(elem.f64[n] < NEG_MAX_FLOAT, NEGATIVE_OVERFLOW, *err);
+                            r.i8[n] = elem.f32[n];
+                        }
+                    break;
+                    case FLOAT64: while(n--){ r.f64[n] = elem.f64[n];}
+                }
+        }
+    return r;
+}
+
+vecN vec_scaler(datatype type, vecN vec, datapointer scale){// TODO: what if amount of elements in data is less than n
+    vecN r = { .type = 0, .n = 0, .err = 0, .elements = 0};
+    if(scale.i32 && vec.type && vec.n && vec.err && vec.elements.i32){ 
+        r = vec_create(type, vec.n[0]);
+        switch(){
+            case :
+                break;        
+        }       
+    }
+    return r;
+}
+
+vecN vec_scaler_in_place(vecN vec, datatype type, datapointer scale){// TODO: what if amount of elements in data is less than n
     if(scale.i32 && vec.elements.i32 && vec.err && vec.type && vec.n){
         uint32_t i = vec.n[0];
         switch(vec.type[0]){
-            case INT8:    while(i--){ safe_char_multiplication (vec.elements.i8  [i], scale.i8  [0], vec.err); } break;
-            case UINT8:   while(i--){ safe_uchar_multiplication(vec.elements.ui8 [i], scale.ui8 [0], vec.err); } break;
-            case INT32:   while(i--){ safe_int_multiplication  (vec.elements.i32 [i], scale.i32 [0], vec.err); } break;
-            case UINT32:  while(i--){ safe_uint_multiplication (vec.elements.ui32[i], scale.ui32[0], vec.err); } break;
-            case INT64:   while(i--){ safe_lint_multiplication (vec.elements.i64 [i], scale.i64 [0], vec.err); } break;
-            case UINT64:  while(i--){ safe_luint_multiplication(vec.elements.ui64[i], scale.ui64[0], vec.err); } break;
-            case FLOAT32: while(i--){ safe_float_multiplication_with_rounding((fbits){ .f = vec.elements.f32 [i] }, (fbits){ .f = scale.f32[0] }, vec.err); } break;
-            case FLOAT64: while(i--){ safe_double_multiplication_with_rounding((dbits){ .d = vec.elements.f64[i] }, (dbits){ .d = scale.f64[0] }, vec.err); }
+            case INT8:    while(i--){ vec.elements.i8  [i] = safe_char_multiplication(vec.elements.i8  [i], scale.i8  [0], vec.err); } break;
+            case UINT8:   while(i--){ vec.elements.ui8 [i] = safe_uchar_multiplication(vec.elements.ui8 [i], scale.ui8 [0], vec.err); } break;
+            case INT32:   while(i--){ vec.elements.i32 [i] = safe_int_multiplication  (vec.elements.i32 [i], scale.i32 [0], vec.err); } break;
+            case UINT32:  while(i--){ vec.elements.ui32[i] = safe_uint_multiplication (vec.elements.ui32[i], scale.ui32[0], vec.err); } break;
+            case INT64:   while(i--){ vec.elements.i64 [i] = safe_lint_multiplication (vec.elements.i64 [i], scale.i64 [0], vec.err); } break;
+            case UINT64:  while(i--){ vec.elements.ui64[i] = safe_luint_multiplication(vec.elements.ui64[i], scale.ui64[0], vec.err); } break;
+            case FLOAT32: while(i--){ vec.elements.f32 [i] = safe_float_multiplication_with_rounding((fbits){ .f = vec.elements.f32[i] }, (fbits){ .f = scale.f32[0] }, vec.err); } break;
+            case FLOAT64: while(i--){ vec.elements.f64 [i] = safe_double_multiplication_with_rounding((dbits){ .d = vec.elements.f64[i] }, (dbits){ .d = scale.f64[0] }, vec.err); }
         }
     }
     return vec;
 }
 
-vecN vec_neg(vecN vec){
+vecN vec_neg(vecN vec){// TODO: what if amount of elements in data is less than n
     vecN r = { .type = 0, .n = 0, .err = 0, .elements = 0};
     if(vec.type  && vec.elements.i32 && vec.err && vec.n){
         uint32_t i = vec.n[0];
-        vec.type = malloc(sizeof(datatype) + sizeof(uint32_t) + sizeof(error) 
-        + ( ( 1 + ((vec.type[0] == UINT8) | (vec.type[0] == UINT32)) ) * vec.n[0] * amount_of_type_bytes(vec.type[0])) );// ( 1 + ((vec.type[0] == UINT8) | (vec.type[0] == UINT32)) ) this part will double allocated memory or will multiply it to 1 depending on it's type
-        r.n        = (uint32_t*)  (r.type + 1);
-        r.err      = (error*)     (r.n    + 1);
-        r.elements = (datapointer)(r.err  + 1);
+        r = vec_create( ternary(UINT8 == vec.type[0], INT32, ternary(UINT32 == vec.type[0], INT64, vec.type[0])), vec.n[0]);
         switch(r.type[0]){
             case INT8: 
                 while(i--){ r.elements.i8[i] = -vec.elements.i8[i]; }   
                 break;
             case UINT8:
                 r.type[0] = UINT32;   
-                while(i--){ r.elements.i32[i] = -vec.elements.ui8[i]; }   
+                while(i--){ r.elements.i32[i] = -vec.elements.ui8[i]; }// C standard says the unary - promotes unsigned integer types 
                 break;
             case INT32:   
                 while(i--){ r.elements.i32[i] = -vec.elements.i32[i]; }   
@@ -131,10 +426,10 @@ vecN vec_neg(vecN vec){
                 while(i--){ r.elements.i64[i] = -vec.elements.i64[i]; }   
                 break;
             case UINT64:
-                uint64_t max_negatiable_uint64 = MAX_INT + 1;
+                uint64_t max_negateable_uint64 = MAX_INT + 1;
                 r.type[0] = UINT64;
                 while(i--){ 
-                    r.err[0] = ternary(vec.elements.ui64[i] > max_negatiable_uint64, NEGATIVE_OVERFLOW, r.err[0]);
+                    r.err[0] = ternary(vec.elements.ui64[i] > max_negateable_uint64, NEGATIVE_OVERFLOW, r.err[0]);
                     r.elements.i64[i] = -vec.elements.ui64[i]; 
                 }   
                 break;
@@ -148,7 +443,7 @@ vecN vec_neg(vecN vec){
     return r;
 }
 
-vecN vec_neg_in_place(vecN vec){
+vecN vec_neg_in_place(vecN vec){// TODO: what if amount of elements in data is less than n
     if(vec.elements.i32 && vec.err && vec.type && vec.n){
         uint32_t i = vec.n[0];
         switch (vec.type[0]){
@@ -156,10 +451,10 @@ vecN vec_neg_in_place(vecN vec){
                 while(i--){ vec.elements.i8[i] = -vec.elements.i8[i]; } 
                 break;
             case UINT8:   
-                uint8_t max_negatiable_uint8 = MAX_CHAR + 1;
+                uint8_t max_negateable_uint8 = MAX_CHAR + 1;
                 vec.type[0] = INT8;
                 while(i--){ 
-                    vec.err[0] = ternary(vec.elements.ui8 > max_negatiable_uint8, NEGATIVE_OVERFLOW, vec.err[0]);
+                    vec.err[0] = ternary(vec.elements.ui8 > max_negateable_uint8, NEGATIVE_OVERFLOW, vec.err[0]);
                     vec.elements.i8[i] = -vec.elements.ui8[i]; 
                 } 
                 break;
@@ -167,10 +462,10 @@ vecN vec_neg_in_place(vecN vec){
                 while(i--){ vec.elements.i32[i] = -vec.elements.i32[i]; } 
                 break;
             case UINT32:  
-                uint32_t max_negatiable_uint32 = MAX_INT + 1;
+                uint32_t max_negateable_uint32 = MAX_INT + 1;
                 vec.type[0] = INT32;
                 while(i--){
-                    vec.err[0] = ternary(vec.elements.ui32 > max_negatiable_uint32, NEGATIVE_OVERFLOW, vec.err[0]);
+                    vec.err[0] = ternary(vec.elements.ui32 > max_negateable_uint32, NEGATIVE_OVERFLOW, vec.err[0]);
                     vec.elements.i32[i] = -vec.elements.ui32[i]; 
                 } 
                 break;
@@ -178,10 +473,10 @@ vecN vec_neg_in_place(vecN vec){
                 while(i--){ vec.elements.i64[i] = -vec.elements.i64[i]; } 
                 break;
             case UINT64:
-                uint64_t max_negatiable_uint64 = MAX_LINT + 1;
+                uint64_t max_negateable_uint64 = MAX_LINT + 1;
                 vec.type[0] = INT64;
                 while(i--){ 
-                    vec.err[0] = ternary(vec.elements.ui64 > max_negatiable_uint64, NEGATIVE_OVERFLOW, vec.err[0]);                    
+                    vec.err[0] = ternary(vec.elements.ui64 > max_negateable_uint64, NEGATIVE_OVERFLOW, vec.err[0]);                    
                     vec.elements.i64[i] = -vec.elements.ui64[i];
                 } 
                 break;

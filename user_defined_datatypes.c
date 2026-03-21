@@ -108,6 +108,17 @@ union POINTERS {
   int64_t* i64;
 } typedef datapointer;
 
+union FUNDUMENTAL_TYPES_UNION{
+  int8_t i8;
+  uint8_t ui8;
+  int32_t i32;
+  uint32_t ui32;
+  int64_t i64;
+  uint64_t ui64;
+  float f32;
+  double f64;
+} typedef fundtypeunion;
+
 typedef struct vector_type{
   datatype* type;
   uint32_t* n;
