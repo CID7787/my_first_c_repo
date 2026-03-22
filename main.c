@@ -6,7 +6,7 @@
 // #define headerfile 1
 
 // #include "user_defined_datatypes.c"
-#include "constants.c"
+// #include "constants.c"
 // #include "logical_functions_of_decision.c"
 // #include "additional_functions.c"
 // #include "bitwise_functions.c"
@@ -17,15 +17,16 @@
 // #include "print_binary.c"
 
 
-inline int add(int a){ return a + 1; }
+int main(){  
 
-int main(){
-    printf("%d", add(4));
+    FILE* fptr = fopen("image.ppm", "w");
+    char image_data[100] = "P6\n3 3\n255\n!@#$%^&*()_+|{}:<<";
+    fprintf(fptr, "%s", image_data);
+    fclose(fptr);
     return 0;
 }
 
-
-/*
+/*"
 RGB CMBK ....
 
 char* internal_memory_buffer = "P6\n10 10\n255\n000000";
