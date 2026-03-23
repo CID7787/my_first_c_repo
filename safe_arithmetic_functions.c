@@ -65,7 +65,7 @@ int safe_int_multiplication(int a, int b, error* err){
   if(!err || ((a == 1) & (b == MIN_INT))){ return b; }
   int result = 0, sign = b < 0;
   *err = ternary(b == MIN_INT, ternary(a < 0, POSITIVE_OVERFLOW, NEGATIVE_OVERFLOW), *err);
-  b = tenary(!a, 0, b);
+  b = ternary(!a, 0, b);
   b = ternary(sign, lint_negation(b), b);
   while(b-- > 0){ result = safe_int_addition(result, a, err); }
   return ternary(sign, lint_negation(result), result);
@@ -88,7 +88,7 @@ long int safe_lint_multiplication(long int a, long int b, error* err){
   if(!err || ((a == 1) & (b == MIN_LINT))){ return b; }
   long int result = 0, sign = b < 0;
   *err = ternary(b == MIN_LINT, ternary(a < 0, POSITIVE_OVERFLOW, NEGATIVE_OVERFLOW), *err);
-  b = tenary(!a, 0, b);
+  b = ternary(!a, 0, b);
   b = ternary(sign, lint_negation(b), b);
   while(b-- > 0){ result = safe_lint_addition(result, a, err); }
   return ternary(sign, lint_negation(result), result);

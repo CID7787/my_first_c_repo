@@ -1,28 +1,31 @@
 #include <stdio.h> 
-// #include <time.h>  
+#include <time.h>  
 #include <stdlib.h>
-// #include <math.h>  
-// #include <stdint.h> 
-// #define headerfile 1
+#include <math.h>  
+#include <stdint.h> 
+#define headerfile 1
 
-// #include "user_defined_datatypes.c"
-// #include "constants.c"
-// #include "logical_functions_of_decision.c"
-// #include "additional_functions.c"
-// #include "bitwise_functions.c"
-// #include "safe_arithmetic_functions.c"
-// #include "matrix_functions.c
-// #include "image_functions.c"
-// #include "new_vector_functions.c"
-// #include "print_binary.c"
+#include "user_defined_datatypes.c"
+#include "constants.c"
+#include "logical_functions_of_decision.c"
+#include "additional_functions.c"
+#include "bitwise_functions.c"
+#include "safe_arithmetic_functions.c"
+// #include "matrix_functions.c"
+#include "image_functions.c"
+#include "new_vector_functions.c"
+#include "print_binary.c"
 
+int* f(int* a){
+    int b = 4;
+    a = &b;
+    return a; 
+}
 
-int main(){  
-
-    FILE* fptr = fopen("image.ppm", "w");
-    char image_data[100] = "P6\n3 3\n255\n!@#$%^&*()_+|{}:<<";
-    fprintf(fptr, "%s", image_data);
-    fclose(fptr);
+int main(){
+    int *a;
+    a = f(a);
+    printf("%d", *a);  
     return 0;
 }
 

@@ -2,6 +2,7 @@
 #ifndef headerfile
   #include <stdint.h>
 #endif
+
 typedef union variable_all_types{
   double d;
   long int li;
