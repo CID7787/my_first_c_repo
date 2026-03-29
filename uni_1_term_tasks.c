@@ -49,3 +49,12 @@ int n_root(void) {
     
     return 0;
 }
+
+/* observe the principle of this recursion
+#define lluint long long unsigned int
+lluint comb(int n, int k){
+    if(k > n){ return 0; }
+    if(k < 1){ return 1; }
+    return (lluint)comb(n - 1, k - 1) + comb(n - 1, k);
+}
+*/

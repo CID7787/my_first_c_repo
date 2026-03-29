@@ -5,29 +5,23 @@
 #include <stdint.h> 
 #define headerfile 1
 
-#include "user_defined_datatypes.c"
 #include "constants.c"
+#include "user_defined_datatypes.c"
 #include "logical_functions_of_decision.c"
 #include "additional_functions.c"
-#include "bitwise_functions.c"
-#include "safe_arithmetic_functions.c"
+// #include "bitwise_functions.c"
+// #include "safe_arithmetic_functions.c"
+// #include "image_functions.c"
+// #include "new_vector_functions.c"
 // #include "matrix_functions.c"
-#include "image_functions.c"
-#include "new_vector_functions.c"
-#include "print_binary.c"
-
-int* f(int* a){
-    int b = 4;
-    a = &b;
-    return a; 
-}
+// #include "print_binary.c"
 
 int main(){
-    int *a;
-    a = f(a);
-    printf("%d", *a);  
+    dbits d = (dbits){ .parts.exp = MAX_NORM_DOUBLE_EXP + 1, .parts.mantissa = 12};
+    printf("%d", d.d < MAX_LUINT);
     return 0;
 }
+
 
 /*"
 RGB CMBK ....

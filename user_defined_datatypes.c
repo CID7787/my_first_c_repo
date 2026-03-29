@@ -77,8 +77,9 @@ typedef enum error_code{
   NEGATIVE_INFINITY,
   RETURN_REAL_PART,
   NULL_POINTER,
-  QNAN,
-  SNAN,
+  QNAN,// TODO: need to systemize in what cases to evaluate Qnan and Snan
+  SNAN,// TODO: need to systemize in what cases to evaluate Qnan and Snan
+  SUBNORM,
   INCOMPATIBLE,
   ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER,
   MEMORY_LIMIT_EXCESS

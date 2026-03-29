@@ -53,35 +53,6 @@ unsigned int dist_uint(unsigned int a, unsigned int b){
 }
   
 
-int integer_binary_search_v2(int num, int (*func)(int, f_error*), int left, int right, int precision, f_error* err) { 
-  if(!err){ return num; }
-  if(left > right) { swap_in_place(&left, &right); }
-  int sum, middle, var;
-
-  while(1) {
-    *err = safe_int_addition(left, right, &sum);
-    if(*err){ return middle; }
-    middle = sum / 2;
-  
-    var = (*func)(middle, err);  
-    if((*func)(middle, err) == num){ return middle; };
-    if((right - left) <= precision) {
-      (*err) = ROUNDING;
-      int dis_left_2 = num - (*func)(left, err); // distance between 'num' and value of function called with argument 'left'
-      int dis_right = num - (*func)(right, err); // distance between 'num' and value of function called with argument 'right'
-      int case_dis_right_bigger = (dis_right >= dis_left_2) << (sizeof(int) << 3);////in case of distance from func(right) to num bigger than distance from func(left), this variable will be certain big number which than totaly shifts right to 0, else it will be 0 and will return right
-      int case_dis_left_bigger = (dis_left_2 >= dis_right) << (sizeof(int) << 3);//in case of distance from func(left) to num bigger than distance from func(right), this variable will be certain big number which than totaly shifts left to 0, else it will be 0 and will return left
-      return (right >> case_dis_right_bigger) | (left >> case_dis_left_bigger);
-    }
-  
-    if(var < num) { left = middle; }
-    if(var > num) { right = middle; }
-  }     
-  return middle;
-}
-
-
-
 int integer_binary_search(int num, int (*func)(int, f_error*), int start, unsigned int size, unsigned int precision, f_error* err){
   if(!err){ return num; }
   int middle, func_of_middle, func_of_start, dis_num_to_func_of_start, func_of_end, dis_num_to_func_of_end;
