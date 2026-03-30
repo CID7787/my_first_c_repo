@@ -426,7 +426,7 @@ vecN vec_scaler_in_place(vecN vec, datatype scale_type, fundtypeunion scale){// 
                 case FLOAT64:
                     vec.err[0] = ternary(scale.f64 > MAX_CHAR, POSITIVE_OVERFLOW, vec.err[0]);
                     vec.err[0] = ternary(scale.f64 < MIN_CHAR, NEGATIVE_OVERFLOW, vec.err[0]);
-                    while(i--){ vec.elements.i8[i] = float_mult_round(fbits){ .f = vec.elements.i8[i] } , (fbits){ .f = scale.f64 }, vec.err); } 
+                    while(i--){ vec.elements.i8[i] = float_mult_round((fbits){ .f = vec.elements.i8[i] } , (fbits){ .f = scale.f64 }, vec.err); } 
                     break;
             }
             break;
@@ -716,466 +716,120 @@ vecN vec_neg_in_place(vecN vec){// TODO: what if amount of elements in data is l
 }
 
 
-
-
-
-vecN vec_add_first_arg_type(vecN a, vecN b){// TODO: what if amount of elements in data is less than n
-    vecN r;
-    if(!(a.type && a.n && a.err && a.elements.i32 && b.type && b.n && b.err && b.elements.i32)){ 
-        error er = NULL_POINTER;
-        r.err = &er;
-        return r; 
-    }
-    r = vec_create(a.type[0], ternary(a.n[0] > b.n[0], a.n[0], b.n[0]));
-    uint32_t i = r.n[0];
-    uint8_t ai, bi;
-    vecN* arr[3] = {&(vecN){ .type = 0, .n = 0, .err = 0, .elements.i64 = (int64_t[]){0}}, &a, &b};
-    switch(a.type[0]){
-        case INT8:
-            switch(b.type[0]){
-                case INT8:    
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.elements.i8[i] = int8_add(arr[ai]->elements.i8[ai * i], arr[bi << 1]->elements.i8[bi * i], r.err);
-                    }
-                case UINT8:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.ui8[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.err);
-                        r.elements.i8[i] = int8_add(arr[ai]->elements.i8[ai * i], arr[bi << 1]->elements.ui8[bi * i], r.err);
-                    }
-                case INT32:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.i32[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.err);
-                        r.err[0] = ternary(arr[bi << 1]->elements.i32[bi * i] < MIN_CHAR, NEGATIVE_OVERFLOW, r.err);
-                        r.elements.i8[i] = int8_add(arr[ai]->elements.i8[ai * i], arr[bi << 1]->elements.i32[bi * i], r.err);
-                    }
-                case UINT32:  
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.ui32[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.err);
-                        r.elements.i8[i] = int8_add(arr[ai]->elements.i8[ai * i], arr[bi << 1]->elements.ui32[bi * i], r.err);
-                    }
-                case INT64:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.i64[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.err);
-                        r.err[0] = ternary(arr[bi << 1]->elements.i64[bi * i] < MIN_CHAR, NEGATIVE_OVERFLOW, r.err);
-                        r.elements.i8[i] = int8_add(arr[ai]->elements.i8[ai * i], arr[bi << 1]->elements.i64[bi * i], r.err);
-                    }
-                case UINT64:  
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.ui64[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.err);
-                        r.elements.i8[i] = int8_add(arr[ai]->elements.i8[ai * i], arr[bi << 1]->elements.ui64[bi * i], r.err);
-                    }
-                case FLOAT32: 
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.f32[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.err);
-                        r.err[0] = ternary(arr[bi << 1]->elements.f32[bi * i] < MIN_CHAR, NEGATIVE_OVERFLOW, r.err);
-                        r.elements.i8[i] = int8_add(arr[ai]->elements.i8[ai * i], arr[bi << 1]->elements.f32[bi * i], r.err);
-                    }
-                case FLOAT64: 
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.f64[bi * i] > MAX_CHAR, POSITIVE_OVERFLOW, r.err);
-                        r.err[0] = ternary(arr[bi << 1]->elements.f64[bi * i] < MIN_CHAR, NEGATIVE_OVERFLOW, r.err);
-                        r.elements.i8[i] = int8_add(arr[ai]->elements.i8[ai * i], arr[bi << 1]->elements.f64[bi * i], r.err);
-                    } 
-            }
-            break;
-        case UINT8:   
-            switch(b.type[0]){
-                case INT8:    
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary((arr[ai]->elements.ui8[i] + arr[bi << 1]->elements.i8[bi * i]) < 0, NEGATIVE_OVERFLOW, r.err[0]);
-                        r.elements.ui8[i] = int32_add(arr[ai]->elements.ui8[ai * i], arr[bi << 1]->elements.i8[bi * i], r.err);
-                    }
-                case UINT8:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.elements.ui8[i] = uint8_add(arr[ai]->elements.ui8[ai * i], arr[bi << 1]->elements.ui8[bi * i], r.err);
-                    }
-                case INT32:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.i32[bi * i] > MAX_UCHAR, POSITIVE_OVERFLOW, r.err[0]);
-                        r.err[0] = ternary((arr[ai]->elements.ui8[i] + arr[bi << 1]->elements.i32[bi * i]) < 0, NEGATIVE_OVERFLOW, r.err[0]);
-                        r.elements.ui8[i] = int32_add(arr[ai]->elements.ui8[ai * i], arr[bi << 1]->elements.i32[bi * i], r.err);
-                    }
-                case UINT32:  
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.ui32[bi * i] > MAX_UCHAR, POSITIVE_OVERFLOW, r.err[0]);
-                        r.elements.ui8[i] = uint8_add(arr[ai]->elements.ui8[ai * i], arr[bi << 1]->elements.ui32[bi * i], r.err);
-                    }
-                case INT64:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.i64[bi * i] > MAX_UCHAR, POSITIVE_OVERFLOW, r.err[0]);
-                        r.err[0] = ternary((arr[ai]->elements.ui8[i] + arr[bi << 1]->elements.i64[bi * i]) < 0, NEGATIVE_OVERFLOW, r.err[0]);
-                        r.elements.ui8[i] = int32_add(arr[ai]->elements.ui8[ai * i], arr[bi << 1]->elements.i64[bi * i], r.err);
-                    }
-                case UINT64:  
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.ui64[bi * i] > MAX_UCHAR, POSITIVE_OVERFLOW, r.err[0]);
-                        r.elements.ui8[i] = uint8_add(arr[ai]->elements.ui8[ai * i], arr[bi << 1]->elements.ui64[bi * i], r.err);
-                    }
-                case FLOAT32: 
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.f32[bi * i] > MAX_UCHAR, POSITIVE_OVERFLOW, r.err[0]);
-                        r.err[0] = ternary((arr[ai]->elements.ui8[i] + arr[bi << 1]->elements.f32[bi * i]) < 0, NEGATIVE_OVERFLOW, r.err[0]);
-                        r.elements.ui8[i] = int32_add(arr[ai]->elements.ui8[ai * i], arr[bi << 1]->elements.f32[bi * i], r.err);
-                    }
-                case FLOAT64: 
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.f64[bi * i] > MAX_UCHAR, POSITIVE_OVERFLOW, r.err[0]);
-                        r.err[0] = ternary((arr[ai]->elements.ui8[i] + arr[bi << 1]->elements.f64[bi * i]) < 0, NEGATIVE_OVERFLOW, r.err[0]);
-                        r.elements.ui8[i] = int32_add(arr[ai]->elements.ui8[ai * i], arr[bi << 1]->elements.f64[bi * i], r.err);
-                    } 
-            }
-            break;
-        case INT32:   
-            switch(b.type[0]){
-                case INT8:    
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.elements.i32[i] = int32_add(arr[ai]->elements.i32[ai * i], arr[bi << 1]->elements.i8[bi * i], r.err);
-                    }
-                case UINT8:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.elements.i32[i] = int32_add(arr[ai]->elements.i32[ai * i], arr[bi << 1]->elements.ui8[bi * i], r.err);
-                    }
-                case INT32:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.elements.i32[i] = int32_add(arr[ai]->elements.i32[ai * i], arr[bi << 1]->elements.i32[bi * i], r.err);
-                    }
-                case UINT32:  
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.ui32[bi * i] > MAX_INT, POSITIVE_OVERFLOW, r.err);
-                        r.elements.i32[i] = int32_add(arr[ai]->elements.i32[ai * i], arr[bi << 1]->elements.ui32[bi * i], r.err);
-                    }
-                case INT64:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.i64[bi * i] > MAX_INT, POSITIVE_OVERFLOW, r.err);
-                        r.err[0] = ternary(arr[bi << 1]->elements.i64[bi * i] < MIN_INT, NEGATIVE_OVERFLOW, r.err);
-                        r.elements.i32[i] = int32_add(arr[ai]->elements.i32[ai * i], arr[bi << 1]->elements.i64[bi * i], r.err);
-                    }
-                case UINT64:  
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.ui64[bi * i] > MAX_INT, POSITIVE_OVERFLOW, r.err);
-                        r.elements.i32[i] = int32_add(arr[ai]->elements.i32[ai * i], arr[bi << 1]->elements.ui64[bi * i], r.err);
-                    }
-                case FLOAT32: 
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.f32[bi * i] > MAX_INT, POSITIVE_OVERFLOW, r.err);
-                        r.err[0] = ternary(arr[bi << 1]->elements.f32[bi * i] < MIN_INT, NEGATIVE_OVERFLOW, r.err);
-                        r.elements.i32[i] = int32_add(arr[ai]->elements.i32[ai * i], arr[bi << 1]->elements.f32[bi * i], r.err);
-                    }
-                case FLOAT64: 
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.f64[bi * i] > MAX_INT, POSITIVE_OVERFLOW, r.err);
-                        r.err[0] = ternary(arr[bi << 1]->elements.f64[bi * i] < MIN_INT, NEGATIVE_OVERFLOW, r.err);
-                        r.elements.i32[i] = int32_add(arr[ai]->elements.i32[ai * i], arr[bi << 1]->elements.f64[bi * i], r.err);
-                    } 
-            }
-            break;
-        case UINT32:  
-            switch(b.type[0]){
-                case INT8:    
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary((arr[ai]->elements.ui32[i] + arr[bi << 1]->elements.i8[bi * i]) < 0, NEGATIVE_OVERFLOW, r.err[0]);
-                        r.elements.ui32[i] = int64_add(arr[ai]->elements.ui32[ai * i], arr[bi << 1]->elements.i8[bi * i], r.err);
-                    }
-                case UINT8:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.elements.ui32[i] = uint32_add(arr[ai]->elements.ui32[ai * i], arr[bi << 1]->elements.ui8[bi * i], r.err);
-                    }
-                case INT32:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary((arr[ai]->elements.ui32[i] + arr[bi << 1]->elements.i32[bi * i]) < 0, NEGATIVE_OVERFLOW, r.err[0]);
-                        r.elements.ui32[i] = int32_add(arr[ai]->elements.ui32[ai * i], arr[bi << 1]->elements.i32[bi * i], r.err);
-                    }
-                case UINT32:  
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.elements.ui32[i] = uint32_add(arr[ai]->elements.ui32[ai * i], arr[bi << 1]->elements.ui32[bi * i], r.err);
-                    }
-                case INT64:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.i64[bi * i] > MAX_UINT, POSITIVE_OVERFLOW, r.err[0]);
-                        r.err[0] = ternary((arr[ai]->elements.ui32[i] + arr[bi << 1]->elements.i64[bi * i]) < 0, NEGATIVE_OVERFLOW, r.err[0]);
-                        r.elements.ui32[i] = int32_add(arr[ai]->elements.ui32[ai * i], arr[bi << 1]->elements.i64[bi * i], r.err);
-                    }
-                case UINT64:  
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.ui64[bi * i] > MAX_UINT, POSITIVE_OVERFLOW, r.err[0]);
-                        r.elements.ui32[i] = uint32_add(arr[ai]->elements.ui32[ai * i], arr[bi << 1]->elements.ui64[bi * i], r.err);
-                    }
-                case FLOAT32: 
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.f32[bi * i] > MAX_UINT, POSITIVE_OVERFLOW, r.err[0]);
-                        r.err[0] = ternary((arr[ai]->elements.ui32[i] + arr[bi << 1]->elements.f32[bi * i]) < 0, NEGATIVE_OVERFLOW, r.err[0]);
-                        r.elements.ui32[i] = int64_add(arr[ai]->elements.ui32[ai * i], arr[bi << 1]->elements.f32[bi * i], r.err);
-                    }
-                case FLOAT64: 
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.f64[bi * i] > MAX_UINT, POSITIVE_OVERFLOW, r.err[0]);
-                        r.err[0] = ternary((arr[ai]->elements.ui32[i] + arr[bi << 1]->elements.f64[bi * i]) < 0, NEGATIVE_OVERFLOW, r.err[0]);
-                        r.elements.ui32[i] = int64_add(arr[ai]->elements.ui32[ai * i], arr[bi << 1]->elements.f64[bi * i], r.err);
-                    } 
-            }
-            break;
-        case INT64:   
-            switch(b.type[0]){
-                case INT8:    
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.elements.i64[i] = int64_add(arr[ai]->elements.i64[ai * i], arr[bi << 1]->elements.i8[bi * i], r.err);
-                    }
-                case UINT8:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.elements.i64[i] = int64_add(arr[ai]->elements.i64[ai * i], arr[bi << 1]->elements.ui8[bi * i], r.err);
-                    }
-                case INT32:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.elements.i64[i] = int64_add(arr[ai]->elements.i64[ai * i], arr[bi << 1]->elements.i32[bi * i], r.err);
-                    }
-                case UINT32:  
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.elements.i64[i] = int64_add(arr[ai]->elements.i64[ai * i], arr[bi << 1]->elements.ui32[bi * i], r.err);
-                    }
-                case INT64:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.elements.i64[i] = int64_add(arr[ai]->elements.i64[ai * i], arr[bi << 1]->elements.i64[bi * i], r.err);
-                    }
-                case UINT64:  
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary((arr[ai]->elements.i64[ai * i] + arr[bi << 1]->elements.ui64[bi * i]) > MAX_LINT, POSITIVE_OVERFLOW, r.err);
-                        r.elements.i64[i] = arr[ai]->elements.i64[ai * i] + arr[bi << 1]->elements.ui64[bi * i];
-                    }
-                case FLOAT32: 
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.f32[bi * i] > MAX_INT, POSITIVE_OVERFLOW, r.err);
-                        r.err[0] = ternary(arr[bi << 1]->elements.f32[bi * i] < MIN_INT, NEGATIVE_OVERFLOW, r.err);
-                        r.elements.i64[i] = arr[ai]->elements.i64[ai * i] + arr[bi << 1]->elements.f32[bi * i]);
-                    }
-                case FLOAT64: 
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                        r.err[0] = ternary(arr[bi << 1]->elements.f64[bi * i] > MAX_INT, POSITIVE_OVERFLOW, r.err);
-                        r.err[0] = ternary(arr[bi << 1]->elements.f64[bi * i] < MIN_INT, NEGATIVE_OVERFLOW, r.err);
-                        r.elements.i64[i] = arr[ai]->elements.i64[ai * i], arr[bi << 1]->elements.f64[bi * i], r.err);
-                    } 
-            }
-            break;
-        case UINT64:  
-            switch(b.type[0]){
-                case INT8:    
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case UINT8:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case INT32:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case UINT32:  
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case INT64:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case UINT64:  
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case FLOAT32: 
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case FLOAT64: 
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    } 
-            }
-            break;
-        case FLOAT32: 
-            switch(b.type[0]){
-                case INT8:    
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case UINT8:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case INT32:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case UINT32:  
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case INT64:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case UINT64:  
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case FLOAT32: 
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case FLOAT64: 
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    } 
-            }
-            break;
-        case FLOAT64: 
-            switch(b.type[0]){
-                case INT8:    
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case UINT8:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case INT32:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case UINT32:  
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case INT64:   
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case UINT64:  
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case FLOAT32: 
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    }
-                case FLOAT64: 
-                    while(i--){
-                        ai = a.n[0] <= i;
-                        bi = b.n[0] <= i;
-                    } 
-            }
+vecN vec_add_first_arg_t(vecN a, vecN b){
+    if(!(a.type && a.n && a.err && a.elements.i32 && b.type && b.n && b.err && b.elements.i32)){ return a; }
+    vecN r = vec_create(a.type[0], ternary(a.n[0] > b.n[0], a.n[0], b.n[0])),
+         *arr[3] = { &(vecN){ .elements.i64 = (int64_t[]){0} } };
+    fundtypeunion val;
+    uint32_t i = r.n[0], ai, bi;
+    while(i--){
+        switch(b.type[0]){
+            case INT8:
+            case UINT8:
+            case INT32:
+            case UINT32:
+            case INT64:
+            case UINT64:
+            case FLOAT32:
+            case FLOAT64:
+        }
     }
     return r;
-} 
+}
 
-vecN vec_add_in_place(vecN a, vecN b){
-    if(!(a.type && a.n && a.err && a.elements.i32 && b.type && b.n && b.err && b.elements.i32)){ 
-        error er = NULL_POINTER;
-        a.err = (error*)(long unsigned int*)ternary((long unsigned int)(long unsigned int*)a.err, (long unsigned int)(long unsigned int*)a.err, (long unsigned int)(long unsigned int*)&er);
-        return a; 
+#define FUNC_ARR_ELEM(a, b, c) ((a) * 6) + ((b) * 2) + (c) // this macro counts which element(type_convertion_function) of type_conv_func_arr will be called, for principle of it's work please reference to string number 741
+//  a * 6 stand for a arg type's category(int, uint or float), b * 2 stand for which category does b arg type belongs to, and c determines whether to use little endian function of big endian fuction 
+
+void int_n_to_int_k_len_big_end(void* from, uint32_t from_s, void* to, uint32_t to_size, error* err){}
+void int_n_to_int_k_len_lit_end(void* from, uint32_t from_s, void* to, uint32_t to_size, error* err){}
+
+void uint_n_to_int_k_len_big_end(void* from, uint32_t from_s, void* to, uint32_t to_size, error* err){}
+void uint_n_to_int_k_len_lit_end(void* from, uint32_t from_s, void* to, uint32_t to_size, error* err){}
+
+void float_n_to_int_k_len_big_end(void* from, uint32_t from_s, void* to, uint32_t to_size, error* err){}
+void float_n_to_int_k_len_lit_end(void* from, uint32_t from_s, void* to, uint32_t to_size, error* err){}
+
+
+void int_n_to_uint_k_len_big_end(void* from, uint32_t from_s, void* to, uint32_t to_size, error* err){}
+void int_n_to_uint_k_len_lit_end(void* from, uint32_t from_s, void* to, uint32_t to_size, error* err){}
+
+void uint_n_to_uint_k_len_big_end(void* from, uint32_t from_s, void* to, uint32_t to_size, error* err){}
+void uint_n_to_uint_k_len_lit_end(void* from, uint32_t from_s, void* to, uint32_t to_size, error* err){}
+
+void float_n_to_uint_k_len_big_end(void* from, uint32_t from_s, void* to, uint32_t to_size, error* err){}
+void float_n_to_uint_k_len_lit_end(void* from, uint32_t from_s, void* to, uint32_t to_size, error* err){}
+
+
+void int_n_to_float_k_len_big_end(void* from, uint32_t from_s, void* to, uint32_t to_size, error* err){}
+void int_n_to_float_k_len_lit_end(void* from, uint32_t from_s, void* to, uint32_t to_size, error* err){}
+
+void uint_n_to_float_k_len_big_end(void* from, uint32_t from_s, void* to, uint32_t to_size, error* err){}
+void uint_n_to_float_k_len_lit_end(void* from, uint32_t from_s, void* to, uint32_t to_size, error* err){}
+
+void float_n_to_float_k_len_big_end(void* from, uint32_t from_s, void* to, uint32_t to_size, error* err){}
+void float_n_to_float_k_len_lit_end(void* from, uint32_t from_s, void* to, uint32_t to_size, error* err){}
+
+void (*type_conv_func_arr[18])(void*, uint32_t, void*, uint32_t, error*) = 
+        { int_n_to_int_k_len_big_end, int_n_to_int_k_len_lit_end, uint_n_to_int_k_len_big_end, uint_n_to_int_k_len_lit_end , float_n_to_int_k_len_big_end, float_n_to_int_k_len_lit_end,
+          int_n_to_uint_k_len_big_end, int_n_to_uint_k_len_lit_end, uint_n_to_uint_k_len_big_end, uint_n_to_uint_k_len_lit_end, float_n_to_uint_k_len_big_end, float_n_to_uint_k_len_lit_end,
+          int_n_to_float_k_len_big_end, int_n_to_float_k_len_lit_end, uint_n_to_float_k_len_big_end, uint_n_to_float_k_len_lit_end, float_n_to_float_k_len_big_end, float_n_to_float_k_len_lit_end };
+
+
+int is_little_end(){
+    int32_t i = 0x01020304;
+    return *(int8_t*)&i == 4; 
+}
+
+
+vecN vec_add_first_arg_t(vecN a, vecN b){// TODO: what if amount of elements in data is less than n
+    if(!(a.type && a.n && a.err && a.elements.i32 && b.type && b.n && b.err && b.elements.i32)){ return a; }
+    vecN r = vec_create(a.type[0], ternary(a.n[0] > b.n[0], a.n[0], b.n[0])),
+    *arr[3] = { &(vecN){ .elements.i64 = (int64_t[]){0} }, &a, &b };
+    uint32_t i = r.n, ai, bi;
+    uint8_t end = is_little_end(), a_size = amount_of_type_bytes(a.type[0]), b_size = amount_of_type_bytes(b.type[0]), a_type_cat = int_uint_float_t(a.type[0]), b_type_cat = int_uint_float_t(b.type[0]);
+    datapointer ptr;
+    while(i--){
+        ai = i < a.n[0];
+        bi = i < b.n[0];
+        type_conv_func_arr[ FUNC_ARR_ELEM( a_type_cat, b_type_cat, end ) ] (arr[bi << 1]->elements.i8 + (bi * i * b_size), b_size, ptr.vptr, a_size, r.err);
+        switch(a.type[0]){
+            case INT8:    r.elements.i8  [i] = int8_add  (arr[ai]->elements.i8  [ai * i], ptr.i8  [0], r.err); break; 
+            case UINT8:   r.elements.ui8 [i] = uint8_add (arr[ai]->elements.ui8 [ai * i], ptr.ui8 [0], r.err); break;
+            case INT32:   r.elements.i32 [i] = int32_add (arr[ai]->elements.i32 [ai * i], ptr.i32 [0], r.err); break;
+            case UINT32:  r.elements.ui32[i] = uint32_add(arr[ai]->elements.ui32[ai * i], ptr.ui32[0], r.err); break;
+            case INT64:   r.elements.i64 [i] = int64_add (arr[ai]->elements.i64 [ai * i], ptr.i64 [0], r.err); break; 
+            case UINT64:  r.elements.ui64[i] = uint64_add(arr[ai]->elements.ui64[ai * i], ptr.ui64[0], r.err); break;
+            case FLOAT32: r.elements.f32 [i] = float_add((fbits){ .f = arr[ai]->elements.f32[ai * i] }, (fbits){ .f = ptr.f32[0] }, r.err); break; 
+            case FLOAT64: r.elements.f64 [i] = float_add((dbits){ .d = arr[ai]->elements.f64[ai * i] }, (dbits){ .d = ptr.f64[0] }, r.err); break; 
+        }
+    } 
+    return r;
+}
+
+vecN vec_mult_first_arg_t(vecN a, vecN b){// TODO: what if amount of elements in data is less than n
+    if(!(a.type && a.n && a.err && a.elements.i32 && b.type && b.n && b.err && b.elements.i32)){ return a; }
+    if(a.n[0] ^ b.n[0]){ 
+        error er = malloc(sizeof(error));
+        return (vecN){ .err = &er }; 
     }
+    vecN r = vec_create(a.type[0], a.n[0]);
+    uint32_t i = r.n;
+    uint8_t end = is_little_end(), a_size = amount_of_type_bytes(a.type[0]), b_size = amount_of_type_bytes(b.type[0]), a_type_cat = int_uint_float_t(a.type[0]), b_type_cat = int_uint_float_t(b.type[0]);
+    datapointer ptr;
+    while(i--){
+        type_conv_func_arr[ FUNC_ARR_ELEM( a_type_cat, b_type_cat, end ) ] (b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, r.err);
+        switch(a.type[0]){
+            case INT8:    r.elements.i8  [i] = int8_mult  (a.elements.i8  [i], ptr.i8  [0], r.err); break; 
+            case UINT8:   r.elements.ui8 [i] = uint8_mult (a.elements.ui8 [i], ptr.ui8 [0], r.err); break;
+            case INT32:   r.elements.i32 [i] = int32_mult (a.elements.i32 [i], ptr.i32 [0], r.err); break;
+            case UINT32:  r.elements.ui32[i] = uint32_mult(a.elements.ui32[i], ptr.ui32[0], r.err); break;
+            case INT64:   r.elements.i64 [i] = int64_mult (a.elements.i64 [i], ptr.i64 [0], r.err); break; 
+            case UINT64:  r.elements.ui64[i] = uint64_mult(a.elements.ui64[i], ptr.ui64[0], r.err); break;
+            case FLOAT32: r.elements.f32 [i] = float_mult ((fbits){ .f = a.elements.f32[i] }, (fbits){ .f = ptr.f32[0] }, r.err); break; 
+            case FLOAT64: r.elements.f64 [i] = float_mult ((dbits){ .d = a.elements.f64[i] }, (dbits){ .d = ptr.f64[0] }, r.err); break; 
+        }
+    } 
+    return r;
 }
 
 /*sample

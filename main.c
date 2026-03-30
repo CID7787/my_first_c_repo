@@ -16,9 +16,13 @@
 // #include "matrix_functions.c"
 // #include "print_binary.c"
 
+
+
+
 int main(){
-    dbits d = (dbits){ .parts.exp = MAX_NORM_DOUBLE_EXP + 1, .parts.mantissa = 12};
-    printf("%d", d.d < MAX_LUINT);
+    char str[5];
+    snprintf(str, 5, "hello dear");
+    printf("%s", str);
     return 0;
 }
 

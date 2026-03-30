@@ -82,7 +82,8 @@ typedef enum error_code{
   SUBNORM,
   INCOMPATIBLE,
   ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER,
-  MEMORY_LIMIT_EXCESS
+  MEMORY_LIMIT_EXCESS,
+  SIZE_DOES_NOT_MATCH
 }error;
 
 enum DATATYPES { // enumeration
