@@ -702,7 +702,7 @@ vecN vec_neg_in_place(vecN vec){// TODO: what if amount of elements in data is l
 
 
 
-vecN vec_add_first_arg_type_v2(vecN a, vecN b){// TODO: what if amount of elements in data is less than n
+vecN vec_add_first_arg_type(vecN a, vecN b){// TODO: what if amount of elements in data is less than n
     if(!(a.type && a.n && a.err && a.elements.i32 && b.type && b.n && b.err && b.elements.i32)){ return a; }
     vecN r = vec_create(a.type[0], ternary(a.n[0] > b.n[0], a.n[0], b.n[0]));
     uint32_t i = r.n[0], ai, bi, an = a.n[0], bn = b.n[0];
