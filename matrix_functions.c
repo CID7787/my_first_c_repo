@@ -13,6 +13,43 @@
     #include "new_vector_functions.c"
 #endif
 
+#define MATRIX_MAX_ELEM_SIZE MAX_UINT32
+
+
+matrix_t matrix_create(datatype type, uint32_t row, uint32_t col){
+    uint32_t condition = ((row * col) <= VECTOR_MAX_ELEM_SIZE);
+    row &= -condition;
+
+    void* r = malloc(sizeof(datatype) 
+                + (sizeof(uint32_t) << 1) 
+                + sizeof(error) 
+                + (row * col * amount_of_type_bytes(type)) );
+
+    matrix_t result;
+        result.type     = (datatype*)   r;
+        result.row      = (uint32_t*)  (result.type + 1);
+        result.col      = (uint32_t*)  (result.row  + 1);
+        result.err      = (error*)     (result.col  + 1);
+        result.elements = (datapointer)(result.err  + 1);
+
+    result.type[0] = type;
+    result.row [0] = row;
+    result.col [0] = col;
+    result.err [0] = ternary(condition, NO_ERROR, MEMORY_LIMIT_EXCESS);
+    return result;
+}
+
+
+matrix_t matrix_scaler_in_place(matrix_t m, datatype scl_type, fundtypeunion scale){
+    if(m.row && m.col){ 
+        if(m.err){ m.err[0] = NULL_POINTER; }
+        return m; 
+    }
+    uint32_t n = uint32_mult(m.row[0], m.col[0], m.err);
+    vecN vec = { .type = m.type, .err = m.err, .elements = m.elements, .n = &n };
+    return m;
+}
+
 
 /*
 What if memory is smaller than N? Then, we access it out of bounds. That's a problem. What do we do?

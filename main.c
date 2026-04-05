@@ -9,20 +9,17 @@
 #include "user_defined_datatypes.c"
 #include "logical_functions_of_decision.c"
 #include "additional_functions.c"
-// #include "bitwise_functions.c"
-// #include "safe_arithmetic_functions.c"
-// #include "image_functions.c"
-// #include "new_vector_functions.c"
+#include "bitwise_functions.c"
+#include "safe_arithmetic_functions.c"
+#include "image_functions.c"
+#include "new_vector_functions.c"
 // #include "matrix_functions.c"
-// #include "print_binary.c"
-
-
+#include "print_binary.c"
 
 
 int main(){
-    char str[5];
-    snprintf(str, 5, "hello dear");
-    printf("%s", str);
+    // dbits d = { .parts.exp = 0x7ff, .parts.mantissa = 124 };
+    printf("%d", sizeof(-MAX_UINT64));
     return 0;
 }
 
