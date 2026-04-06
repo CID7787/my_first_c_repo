@@ -961,15 +961,15 @@ void int_n_to_int_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, 
         if(err){ *err = NULL_POINTER; }
         return;
     }
-    uint32_t i = 0, val = 0; 
-    if(from_s > to_s){
+    uint8_t i = 0, val = 0; 
+    if(from_s < to_s){
+        // TODO
+    }
+    else{
         for( ; i < to_s; i++){ to_ptr[i] = from_ptr[i]; val |= sec_arg[i]; }
         for(to_s = 0; i < from_s; i++){ to_s |= from_ptr[i]; val |= sec_arg[i]; }
         i = (from_ptr[i - 1] >> 7) & 1;
-        *err = ternary(to_s && val, ternary(i, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err);
-    }
-    else{
-        
+        *err = ternary(to_s && val && (from_s > to_s), ternary(i, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err);
     }
 }
 
@@ -978,7 +978,7 @@ void uint_n_to_int_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr,
         if(err){ *err = NULL_POINTER; }
         return;
     }
-    uint32_t i = 0, val = 0; 
+    uint8_t i = 0, val = 0; 
     if(from_s > to_s){
         for( ; i < to_s; i++){ to_ptr[i] = from_ptr[i]; val |= sec_arg[i]; }
         for(to_s = 0; i < from_s; i++){ to_s |= from_ptr[i]; val |= sec_arg[i]; }
@@ -996,7 +996,7 @@ void int_n_to_uint_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr,
         if(err){ *err = NULL_POINTER; }
         return;
     }
-    uint32_t i = 0, val = 0;
+    uint8_t i = 0, val = 0;
     if(from_s > to_s){
         for( ; i < to_s; i++){ to_ptr[i] = from_ptr[i]; val |= sec_arg[i]; }
         for(to_s = 0; i < from_s; i++){ to_s |= from_ptr[i]; val |= sec_arg[i]; }
@@ -1006,10 +1006,36 @@ void int_n_to_uint_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr,
     else{
         val = from_s ^ to_s; // from_s ^ to_s == from_s != to_s
         for( ; i < from_s; i++){ to_ptr[i] = from_ptr[i]; }
-        *err = ternary(from_ptr[i] >> 7 & 1, NEGATIVE_OVERFLOW, *err); 
+        *err = ternary((from_ptr[i] >> 7) & 1, NEGATIVE_OVERFLOW, *err); 
+        for( ; i < to_s; i++){ to_ptr[i] = 0; }
     }
 }
 
+void uint_n_to_uint_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+    if(!(from_ptr && to_ptr && sec_arg && err)){
+        if(err){ *err = NULL_POINTER; }
+        return;
+    }
+    uint8_t i = 0, val = 0; 
+    if(from_s > to_s){
+        for( ; i < to_s; i++){ to_ptr[i] = from_ptr[i]; val |= sec_arg[i]; }
+        for(to_s = 0; i < from_s; i++){ to_s |= from_ptr[i]; val |= sec_arg[i]; }
+        *err = ternary(to_s && val, POSITIVE_OVERFLOW, *err);
+    }
+    else{
+        for( ; i < from_s; i++){ to_ptr[i] = from_ptr[i]; }
+        for( ; i < to_s; i++){ to_ptr[i] = 0; }
+    }
+}
+
+void float_n_to_uint_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+    if(!(from_ptr && to_ptr && sec_arg && err)){
+        if(err){ *err = NULL_POINTER; }
+        return;
+    }
+    uint8_t i = 0;
+    
+}
 
 
 vecN vec_mult_first_arg_t(vecN a, vecN b){// TODO: what if amount of elements in data is less than n
