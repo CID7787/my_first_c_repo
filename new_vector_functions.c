@@ -10,11 +10,11 @@
     #include "additional_functions.c"
 #endif
 
-#define VECTOR_MAX_ELEM_SIZE MAX_UINT32
+#define VECTOR_MAX_ELEM_BYTE_SIZE MAX_UINT32
 
 
 vecN vec_create(datatype type, uint64_t n){
-    uint32_t condition = (n <= VECTOR_MAX_ELEM_SIZE);
+    uint32_t condition = ((n * amount_of_type_bytes(type))<= VECTOR_MAX_ELEM_BYTE_SIZE);
     n &= -condition;
 
     void* r = malloc(sizeof(datatype) 
@@ -61,7 +61,7 @@ error check_float_type_elem_for_err(datapointer data, datatype type, uint32_t n,
     return *err;
 }
 
-
+// TODO: decide what to do with the length of arr
 vecN vec_filler(vecN vec, datapointer arr){// TODO: what if amount of elements in data is less than n
     if(!(vec.n && vec.type && vec.err && vec.elements.i32 && arr.i32)){ 
         error er = NULL_POINTER;
@@ -78,7 +78,10 @@ vecN vec_filler(vecN vec, datapointer arr){// TODO: what if amount of elements i
 
 datapointer elem_type_cast(datapointer elem, datatype from, datatype to, uint32_t n, error* err){// TODO: there is an option to convert negative int type to positve unsigned the same way as C does
     // TODO: what if amount of elements in data is less than n
-    if(!(elem.i32 && err)){ return elem; }
+    if(!(elem.i32 && err)){ 
+        if(err){ *err = NULL_POINTER; }
+        return elem; 
+    }
     datapointer r = (datapointer){ .vptr = malloc(amount_of_type_bytes(to) * n) };
     switch(from){
             case INT8:
@@ -372,6 +375,7 @@ datapointer elem_type_cast(datapointer elem, datatype from, datatype to, uint32_
 
 vecN vec_scaler_in_place(vecN vec, datatype scale_type, fundtypeunion scale){// TODO: what if amount of elements in data is less than n
     if(!(vec.elements.i32 && vec.err && vec.type && vec.n)){// TODO: how to inform about NULL 
+        if(vec.err){ vec.err[0] = NULL_POINTER; }
         return vec;    
     } 
     uint32_t i = vec.n[0];
@@ -701,9 +705,11 @@ vecN vec_neg_in_place(vecN vec){// TODO: what if amount of elements in data is l
 }
 
 
-
 vecN vec_add_first_arg_type(vecN a, vecN b){// TODO: what if amount of elements in data is less than n
-    if(!(a.type && a.n && a.err && a.elements.i32 && b.type && b.n && b.err && b.elements.i32)){ return a; }
+    if(!(a.type && a.n && a.err && a.elements.i32 && b.type && b.n && b.err && b.elements.i32)){ 
+        if(a.err){ a.err[0] = NULL_POINTER; }
+        return a; 
+    }
     vecN r = vec_create(a.type[0], ternary(a.n[0] > b.n[0], a.n[0], b.n[0]));
     uint32_t i = r.n[0], ai, bi, an = a.n[0], bn = b.n[0];
     fundtypeunion val;
@@ -949,6 +955,110 @@ vecN vec_add_first_arg_type(vecN a, vecN b){// TODO: what if amount of elements 
     return r;
 }
 
+
+void int_n_to_int_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+    if(!(from_ptr && to_ptr && sec_arg && err)){
+        if(err){ *err = NULL_POINTER; }
+        return;
+    }
+    uint32_t i = 0, val = 0; 
+    if(from_s > to_s){
+        for( ; i < to_s; i++){ to_ptr[i] = from_ptr[i]; val |= sec_arg[i]; }
+        for(to_s = 0; i < from_s; i++){ to_s |= from_ptr[i]; val |= sec_arg[i]; }
+        i = (from_ptr[i - 1] >> 7) & 1;
+        *err = ternary(to_s && val, ternary(i, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err);
+    }
+    else{
+        
+    }
+}
+
+void uint_n_to_int_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+    if(!(from_ptr && to_ptr && sec_arg && err)){
+        if(err){ *err = NULL_POINTER; }
+        return;
+    }
+    uint32_t i = 0, val = 0; 
+    if(from_s > to_s){
+        for( ; i < to_s; i++){ to_ptr[i] = from_ptr[i]; val |= sec_arg[i]; }
+        for(to_s = 0; i < from_s; i++){ to_s |= from_ptr[i]; val |= sec_arg[i]; }
+        *err = ternary(to_s && val, POSITIVE_OVERFLOW, *err);
+    }
+    else{
+        val = from_s ^ to_s;// from_s ^ to_s == from_s != to_s
+        for( ; i < from_s; i++){ to_ptr[i] = from_ptr[i]; }
+        for( ; (i < to_s) && val; i++){ to_ptr[i] = 0; }
+    }
+}
+
+void int_n_to_uint_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+    if(!(from_ptr && to_ptr && sec_arg && err)){
+        if(err){ *err = NULL_POINTER; }
+        return;
+    }
+    uint32_t i = 0, val = 0;
+    if(from_s > to_s){
+        for( ; i < to_s; i++){ to_ptr[i] = from_ptr[i]; val |= sec_arg[i]; }
+        for(to_s = 0; i < from_s; i++){ to_s |= from_ptr[i]; val |= sec_arg[i]; }
+        i = (from_ptr[i - 1] >> 7) & 1;
+        *err = ternary(to_s && val, ternary(i, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err);
+    }
+    else{
+        val = from_s ^ to_s; // from_s ^ to_s == from_s != to_s
+        for( ; i < from_s; i++){ to_ptr[i] = from_ptr[i]; }
+        *err = ternary(from_ptr[i] >> 7 & 1, NEGATIVE_OVERFLOW, *err); 
+    }
+}
+
+
+
+vecN vec_mult_first_arg_t(vecN a, vecN b){// TODO: what if amount of elements in data is less than n
+    if(!(a.type && a.n && a.err && a.elements.i32 && b.type && b.n && b.err && b.elements.i32)){ 
+        if(a.err){ a.err[0] = NULL_POINTER; }
+        return a; 
+    }
+    if(a.n[0] ^ b.n[0]){ a.err[0] = SIZE_DOES_NOT_MATCH; return a; }
+    uint32_t i = a.n[0];
+    uint8_t a_size = amount_of_type_bytes(a.type[0]), b_size = amount_of_type_bytes(b.type[0]), 
+            a_type_cat = int_uint_float_t(a.type[0]), b_type_cat = int_uint_float_t(b.type[0]);
+    vecN r = vec_create(a.type[0], i);
+    datapointer ptr = { .vptr = malloc(8) };
+    while(i--){
+        switch(a_type_cat){
+            case 0: 
+                switch(b_type_cat){
+                    case 0: int_n_to_int_k_type_cast  (b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, a.elements.i8 + (i * a_size), r.err); break;
+                    case 1: uint_n_to_int_k_type_cast (b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, a.elements.i8 + (i * a_size), r.err); break;
+                    case 2: float_n_to_int_k_type_cast(b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, a.elements.i8 + (i * a_size), r.err); 
+                }
+            break;
+            case 1: 
+                switch(b_type_cat){
+                    case 0: int_n_to_uint_k_type_cast  (b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, a.elements.i8 + (i * a_size), r.err); break;
+                    case 1: uint_n_to_uint_k_type_cast (b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, a.elements.i8 + (i * a_size), r.err); break;
+                    case 2: float_n_to_uint_k_type_cast(b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, a.elements.i8 + (i * a_size), r.err); 
+                }
+            break;
+            case 2: 
+                switch(b_type_cat){
+                    case 0: int_n_to_float_k_type_cast  (b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, a.elements.i8 + (i * a_size), r.err); break;
+                    case 1: uint_n_to_float_k_type_cast (b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, a.elements.i8 + (i * a_size), r.err); break;
+                    case 2: float_n_to_float_k_type_cast(b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, a.elements.i8 + (i * a_size), r.err); 
+                }   
+        }
+        switch(a.type[0]){
+            case INT8:    r.elements.i8  [i] = int8_add  (a.elements.i8  [i], ptr.i8  [0], r.err); break; 
+            case UINT8:   r.elements.ui8 [i] = uint8_add (a.elements.ui8 [i], ptr.ui8 [0], r.err); break;
+            case INT32:   r.elements.i32 [i] = int32_add (a.elements.i32 [i], ptr.i32 [0], r.err); break;
+            case UINT32:  r.elements.ui32[i] = uint32_add(a.elements.ui32[i], ptr.ui32[0], r.err); break;
+            case INT64:   r.elements.i64 [i] = int64_add (a.elements.i64 [i], ptr.i64 [0], r.err); break; 
+            case UINT64:  r.elements.ui64[i] = uint64_add(a.elements.ui64[i], ptr.ui64[0], r.err); break;
+            case FLOAT32: r.elements.f32 [i] = float_add((fbits){ .f = a.elements.f32[i] }, (fbits){ .f = ptr.f32[0] }, r.err); break; 
+            case FLOAT64: r.elements.f64 [i] = float_add((dbits){ .d = a.elements.f64[i] }, (dbits){ .d = ptr.f64[0] }, r.err); break; 
+        }
+    } 
+    return r;
+}
 
 
 /*sample

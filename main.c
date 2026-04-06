@@ -12,16 +12,57 @@
 #include "bitwise_functions.c"
 #include "safe_arithmetic_functions.c"
 #include "image_functions.c"
-#include "new_vector_functions.c"
+// #include "new_vector_functions.c"
 // #include "matrix_functions.c"
 #include "print_binary.c"
 
 
 int main(){
-    // dbits d = { .parts.exp = 0x7ff, .parts.mantissa = 124 };
-    printf("%d", sizeof(-MAX_UINT64));
+    FILE* fptr = fopen("pic.ppm", "w");
+    char str[100000] = {"P6\n100 100\n255\n"};
+    uint32_t i, d; 
+    for(i = 0; str[i]; i++){}
+    for(d = i + 30000; i < d; i+=3){
+        str[i]  = 255;
+        str[i + 1] = 1; 
+        str[i + 2] = 1;
+    }
+    str[i] = 0;
+    fprintf(fptr, "%s", str);
+    fclose(fptr);
     return 0;
 }
+
+/*TODO LIST  : FMPG
+ graphic:
+  left side = color_1, right side = color_2
+  top = color_1, bottom = color_2
+  checkerboard pattern:
+    even pixel = color_1, odd_pixel = color_2
+    N pixels = color_1, N next pixels = color_2
+  vertical line
+    1px at any position
+    of width N
+    of width N with offset X
+  horizontal line
+    1px at any position
+    of width N
+    of width N with offset Y
+  coordinate axis:
+    1 vertical line + 1 horizontal line, intersecting at the center of the image
+  horizontal gradient:
+    left side: red = 0; green = 0; blue = 0; right side: red = 255, green = 0, blue = 0
+    BLACK                      RED
+    ______________________________
+    |                            |
+    |                            |
+    |                            |
+  vertical gradient:
+    top: red =0; green = 0; blue = 0; bottom: red = 0; green = 255; blue = 0;
+  diagonal gradient:
+    top left corner: red = 0; green = 0; blue = 0; bottom right corner: red = 255;
+/*
+
 
 
 /*"

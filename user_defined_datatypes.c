@@ -83,8 +83,9 @@ typedef enum error_code{
   INCOMPATIBLE,
   ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER,
   MEMORY_LIMIT_EXCESS,
-  SIZE_DOES_NOT_MATCH
+  SIZE_DOES_NOT_MATCH// DESCRIPTION: this error informs about the mismatch of dimension(or amount of elements), for instance in vec_mult function first arg could have less elements than second
 }error;
+
 
 enum DATATYPES { // enumeration
   INT8 = 0,

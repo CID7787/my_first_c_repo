@@ -95,7 +95,7 @@ int64_t int64_mult(int64_t a, int64_t b, error* err){
 // FUNCTION: long int and long unsigned int addition(int64_t, uint64_t, error*)
 
 int64_t int64_uint64_add(int64_t a, uint64_t b, error* err){
-  if(err){ return a; }
+  if(!err){ return a; }
   *err = ternary((MAX_INT64 - a) < b, POSITIVE_OVERFLOW, *err);
   return a + b;
 }
@@ -104,7 +104,7 @@ int64_t int64_uint64_add(int64_t a, uint64_t b, error* err){
 // FUNCTION: long unsigned int and long int addition(uint64_t, int64_t, error*)
 
 uint64_t uint64_int64_add(uint64_t a, int64_t b, error* err){
-  if(err){ return a; }
+  if(!err){ return a; }
   *err = ternary((MAX_UINT64 - a) < b, POSITIVE_OVERFLOW, *err);
   return a + b;
 }
