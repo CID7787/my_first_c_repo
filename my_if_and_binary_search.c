@@ -49,7 +49,7 @@ unsigned int dist_uint(unsigned int a, unsigned int b){
 }
   
   unsigned int dist_int(unsigned int a, unsigned int b){
-    return dist_uint(a ^ ((unsigned int)MAX_INT + 1u), b ^ ((unsigned int)MAX_INT + 1u));
+    return dist_uint(a ^ ((unsigned int)MAX_INT32 + 1u), b ^ ((unsigned int)MAX_INT32 + 1u));
 }
   
 

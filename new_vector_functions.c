@@ -963,7 +963,10 @@ void int_n_to_int_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, 
     }
     uint8_t i = 0, val = 0; 
     if(from_s < to_s){
-        // TODO
+        val = (from_ptr[from_s - 1] >> 7) & 1;// condition if converting number is negative
+        for( ; i < from_s; i++){ to_ptr[i] = from_ptr[i]; }
+        for( ; val & (i < to_s); i++){ to_ptr[i] = 0xff; }// 0xff == 11111111
+        // explanation if number is negative traling 1 will be added to the head part of the data type to which it is being converted to 
     }
     else{
         for( ; i < to_s; i++){ to_ptr[i] = from_ptr[i]; val |= sec_arg[i]; }
@@ -1028,14 +1031,80 @@ void uint_n_to_uint_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr
     }
 }
 
+void float_n_to_int_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+    if(!(from_ptr && to_ptr && sec_arg && err)){
+        if(err){ *err = NULL_POINTER; }
+        return;
+    }
+    uint32_t i = (from_s == 8) * 3, exp;
+    exp = from_ptr[from_s - 1] << 1;
+    exp <<= i;
+    exp |= (from_ptr[from_s - 2] >> (7 - i) & 0xf);
+    exp -= FLOAT_EXP_BIAS;
+    // if(exp < FLOAT_EXP_BIAS){ to_ptr[0] = 0; to_ptr[i+++] = 0; }
+    
+    if(from_s > to_s){
+    }
+    else{
+    }
+}
+
+// s eeeeeeee i fffffffffffffffffffffff
+
 void float_n_to_uint_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
     if(!(from_ptr && to_ptr && sec_arg && err)){
         if(err){ *err = NULL_POINTER; }
         return;
     }
     uint8_t i = 0;
-    
+    if(from_s > to_s){
+
+    }
+    else{
+        
+    }
 }
+
+void int_n_to_float_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+    if(!(from_ptr && to_ptr && sec_arg && err)){
+        if(err){ *err = NULL_POINTER; }
+        return;
+    }
+    if(from_s > to_s){
+
+    }
+    else{
+        
+    }
+}
+
+void uint_n_to_float_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+    if(!(from_ptr && to_ptr && sec_arg && err)){
+        if(err){ *err = NULL_POINTER; }
+        return;
+    }
+    if(from_s > to_s){
+
+    }
+    else{
+        
+    }
+}
+
+void float_n_to_float_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+    if(!(from_ptr && to_ptr && sec_arg && err)){
+        if(err){ *err = NULL_POINTER; }
+        return;
+    }
+
+    if(from_s > to_s){
+
+    }
+    else{
+
+    }
+}
+
 
 
 vecN vec_mult_first_arg_t(vecN a, vecN b){// TODO: what if amount of elements in data is less than n

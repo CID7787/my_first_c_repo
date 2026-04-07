@@ -24,8 +24,8 @@ int main(){
     for(i = 0; str[i]; i++){}
     for(d = i + 30000; i < d; i+=3){
         str[i]  = 255;
-        str[i + 1] = 1; 
-        str[i + 2] = 1;
+        str[i + 1] = 255; 
+        str[i + 2] = 255;
     }
     str[i] = 0;
     fprintf(fptr, "%s", str);
