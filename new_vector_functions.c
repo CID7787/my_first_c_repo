@@ -1037,17 +1037,25 @@ void float_n_to_int_k_type_cast(uint8_t* from_ptr, uint8_t from_s, int8_t* to_pt
         return;
     }
     int32_t i = (from_s == 8) * 3, exp, exp_bias = ternary(i, DOUBLE_EXP_BIAS, FLOAT_EXP_BIAS), 
-            impl_one = ternary(i, DOUBLE_MANTISSA_IMPLICIT_ONE, FLOAT_MANTISSA_IMPLICIT_ONE);// from_s == 8 condition to check if type variavle is type double
+            impl_one = ternary(i, DOUBLE_MANTISSA_IMPLICIT_ONE, FLOAT_MANTISSA_IMPLICIT_ONE),
+            max_norm_exp = ternary(i, MAX_NORM_DOUBLE_EXP, MAX_NORM_FLOAT_EXP);// from_s == 8 condition to check if type variavle is type double
     int64_t mant = 0;
     exp = from_ptr[from_s - 1] << 1;
     exp <<= i;
     exp |= from_ptr[from_s - 2] >> (7 - i);
+// error check
+    *err = ternary(exp > max_norm_exp, SNAN, *err);
     exp -= exp_bias;
     for(i = from_s - 1; i--; ){ mant <<= 8; mant |= from_ptr[i]; }
     i = from_s == 8;
     mant &= ternary(i, MAX_DOUBLE_MANTISSA, MAX_FLOAT_MANTISSA);
     mant |= impl_one;
-
+// error check
+    *err = ternary((exp < 0) & (mant != impl_one), UNDERFLOW, *err);
+// error check
+    *err = ternary(exp > (1 + ternary(i, AMOUNT_OF_DOUBLE_EXP_BITS, AMOUNT_OF_FLOAT_EXP_BITS)), ternary(from_ptr[from_s - 1] >> 7, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err);
+    exp = ternary(exp < 0, -exp, exp);
+    
 }
 
 // s eeeeeeeeeee i ffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff
@@ -1063,6 +1071,20 @@ void float_n_to_uint_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_pt
     }
     else{
         
+    }
+}
+
+void float_n_to_float_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+    if(!(from_ptr && to_ptr && sec_arg && err)){
+        if(err){ *err = NULL_POINTER; }
+        return;
+    }
+
+    if(from_s > to_s){
+
+    }
+    else{
+
     }
 }
 
@@ -1091,21 +1113,6 @@ void uint_n_to_float_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_pt
         
     }
 }
-
-void float_n_to_float_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
-    if(!(from_ptr && to_ptr && sec_arg && err)){
-        if(err){ *err = NULL_POINTER; }
-        return;
-    }
-
-    if(from_s > to_s){
-
-    }
-    else{
-
-    }
-}
-
 
 
 vecN vec_mult_first_arg_t(vecN a, vecN b){// TODO: what if amount of elements in data is less than n
