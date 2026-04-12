@@ -18,19 +18,12 @@
 
 
 int main(){
-    FILE* fptr = fopen("pic.ppm", "w");
-    char str[100000] = {"P6\n100 100\n255\n"};
-    uint32_t i, d; 
-    for(i = 0; str[i]; i++){}
-    for(d = i + 30000; i < d; i+=3){
-        str[i]  = 255;
-        str[i + 1] = 255; 
-        str[i + 2] = 255;
-    }
-    str[i] = 0;
-    fprintf(fptr, "%s", str);
-    fclose(fptr);
-    return 0;
+  float d1 = 0, d2 = 2;
+  unsigned char wht[2] = {22, 30};
+  print_binary_with_arrays((all){ .f = d1 }, sizeof(float), wht, sizeof(wht));
+  printf("\n\n");
+  print_binary_with_arrays((all){ .f = d2 }, sizeof(float), wht, sizeof(wht));
+  return 0;
 }
 
 /*TODO LIST  : FMPG

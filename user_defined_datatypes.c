@@ -3,7 +3,7 @@
   #include <stdint.h>
 #endif
 
-typedef union variable_all_types{
+typedef union variable_all_types{// TODO: all type is the same as fundtypeunion type, leave one
   double d;
   long int li;
   long unsigned int lui;

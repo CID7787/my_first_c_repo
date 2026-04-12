@@ -1031,25 +1031,26 @@ void uint_n_to_uint_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr
     }
 }
 
-void float_n_to_int_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+void float_n_to_int_k_type_cast(uint8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
     if(!(from_ptr && to_ptr && sec_arg && err)){
         if(err){ *err = NULL_POINTER; }
         return;
     }
-    uint32_t i = (from_s == 8) * 3, exp;
+    int32_t i = (from_s == 8) * 3, exp, exp_bias = ternary(i, DOUBLE_EXP_BIAS, FLOAT_EXP_BIAS), 
+            impl_one = ternary(i, DOUBLE_MANTISSA_IMPLICIT_ONE, FLOAT_MANTISSA_IMPLICIT_ONE);// from_s == 8 condition to check if type variavle is type double
+    int64_t mant = 0;
     exp = from_ptr[from_s - 1] << 1;
     exp <<= i;
-    exp |= (from_ptr[from_s - 2] >> (7 - i) & 0xf);
-    exp -= FLOAT_EXP_BIAS;
-    // if(exp < FLOAT_EXP_BIAS){ to_ptr[0] = 0; to_ptr[i+++] = 0; }
-    
-    if(from_s > to_s){
-    }
-    else{
-    }
+    exp |= from_ptr[from_s - 2] >> (7 - i);
+    exp -= exp_bias;
+    for(i = from_s - 1; i--; ){ mant <<= 8; mant |= from_ptr[i]; }
+    i = from_s == 8;
+    mant &= ternary(i, MAX_DOUBLE_MANTISSA, MAX_FLOAT_MANTISSA);
+    mant |= impl_one;
+
 }
 
-// s eeeeeeee i fffffffffffffffffffffff
+// s eeeeeeeeeee i ffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff
 
 void float_n_to_uint_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
     if(!(from_ptr && to_ptr && sec_arg && err)){
