@@ -83,14 +83,14 @@ void print_vector(vecN a){
     }    
 }
 
-// void print_matrix(matrix_t a){
-//     unsigned int i = 0;
-//     printf("Matrix type: %s, size: %ux%u, matrix error: %s\nmatrix elements:\n", fund_types_sting_arr[a.type], a.rows, a.cols, errors_sting_arr[a.m_err]);
-//     while(i < a.rows * a.cols){
-//         if(!(i % a.cols)){ printf("\n"); }
-//         print_fund_type_func_arr[a.type]((datapointer){ .i8 = a.elements.i8 + ((i / a.cols) * a.cols + (i % a.cols)) * amount_of_type_bytes(a.type) } );
-//         printf(" ");
-//         i++;
-//     }    
-// }
+void print_matrix(matrix_t a){
+    unsigned int i = 0;
+    printf("Matrix type: %s, size: %ux%u, matrix error: %s\nmatrix elements:\n", fund_types_sting_arr[a.type[0]], a.row[0], a.col[0], errors_sting_arr[a.err[0]]);
+    while(i < a.row[0] * a.col[0]){
+        if(!(i % a.col[0])){ printf("\n"); }
+        print_fund_type_func_arr[a.type[0]]((datapointer){ .i8 = a.elements.i8 + ((i / a.col[0]) * a.col[0] + (i % a.col[0])) * amount_of_type_bytes(a.type[0]) } );
+        printf(" ");
+        i++;
+    }    
+}
 

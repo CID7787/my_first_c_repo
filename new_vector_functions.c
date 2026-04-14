@@ -956,27 +956,31 @@ vecN vec_add_first_arg_type(vecN a, vecN b){// TODO: what if amount of elements 
 }
 
 
-void int_n_to_int_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+void int_n_to_int_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
     if(!(from_ptr && to_ptr && sec_arg && err)){
         if(err){ *err = NULL_POINTER; }
         return;
     }
-    uint8_t i = 0, val = 0; 
-    if(from_s < to_s){
-        val = (from_ptr[from_s - 1] >> 7) & 1;// condition if converting number is negative
+    uint8_t i = 0, neg_cond = (from_ptr[from_s - 1] >> 7) & 1, val, zero_cond = 0;// condition if converting number is negative 
+    if(from_s <= to_s){
         for( ; i < from_s; i++){ to_ptr[i] = from_ptr[i]; }
-        for( ; val & (i < to_s); i++){ to_ptr[i] = 0xff; }// 0xff == 11111111
-        // explanation if number is negative traling 1 will be added to the head part of the data type to which it is being converted to 
+        for( ; neg_cond & (from_s < to_s) & (i < to_s); i++){ to_ptr[i] = 0xff; }// 0xff == 11111111 == -1
+        // explanation to upper string: if number is negative traling 1 will be  added to the head part of the data type to which it is being converted to 
     }
     else{
-        for( ; i < to_s; i++){ to_ptr[i] = from_ptr[i]; val |= sec_arg[i]; }
-        for(to_s = 0; i < from_s; i++){ to_s |= from_ptr[i]; val |= sec_arg[i]; }
-        i = (from_ptr[i - 1] >> 7) & 1;
-        *err = ternary(to_s && val && (from_s > to_s), ternary(i, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err);
+        for(zero_cond = 0; i < to_s; i++){ 
+            to_ptr[i] = from_ptr[i]; 
+            zero_cond |= sec_arg[i];
+        }
+        for(i = to_s, val = 0; i < from_s; i++){ // TODO: 11111111 11111111 11111111 01100110, this case have no error but value will be store incorrect
+            val |= ((from_ptr[i] ^ 0xff) & -neg_cond) | (from_ptr[i] & -(!neg_cond)); 
+            zero_cond |= sec_arg[i];
+        }
+        *err = ternary(val && zero_cond, ternary(neg_cond & (to_ptr[to_s - 1] >> 7), NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err);
     }
 }
 
-void uint_n_to_int_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+void uint_n_to_int_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
     if(!(from_ptr && to_ptr && sec_arg && err)){
         if(err){ *err = NULL_POINTER; }
         return;
@@ -994,7 +998,7 @@ void uint_n_to_int_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr,
     }
 }
 
-void int_n_to_uint_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+void int_n_to_uint_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
     if(!(from_ptr && to_ptr && sec_arg && err)){
         if(err){ *err = NULL_POINTER; }
         return;
@@ -1014,7 +1018,7 @@ void int_n_to_uint_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr,
     }
 }
 
-void uint_n_to_uint_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+void uint_n_to_uint_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
     if(!(from_ptr && to_ptr && sec_arg && err)){
         if(err){ *err = NULL_POINTER; }
         return;
@@ -1031,41 +1035,91 @@ void uint_n_to_uint_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr
     }
 }
 
-void float_n_to_int_k_type_cast(uint8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+void float_n_to_int_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
     if(!(from_ptr && to_ptr && sec_arg && err)){
         if(err){ *err = NULL_POINTER; }
         return;
     }
-    int32_t i = (from_s == 8) * 3, exp, exp_bias = ternary(i, DOUBLE_EXP_BIAS, FLOAT_EXP_BIAS), 
-            impl_one = ternary(i, DOUBLE_MANTISSA_IMPLICIT_ONE, FLOAT_MANTISSA_IMPLICIT_ONE),
-            max_norm_exp = ternary(i, MAX_NORM_DOUBLE_EXP, MAX_NORM_FLOAT_EXP);// from_s == 8 condition to check if type variavle is type double
-    int64_t mant = 0;
-    exp = from_ptr[from_s - 1] << 1;
+    int32_t i = (from_s == 8) * 3, exp, zero_cond = from_s << 3, neg_cond;// from_s == 8 condition to check if type variavle is type double 
+    int64_t mant = 0, mask = 0;
+    exp = (from_ptr[from_s - 1] & 0x7f) << 1;
     exp <<= i;
     exp |= from_ptr[from_s - 2] >> (7 - i);
-// error check
-    *err = ternary(exp > max_norm_exp, SNAN, *err);
-    exp -= exp_bias;
     for(i = from_s - 1; i--; ){ mant <<= 8; mant |= from_ptr[i]; }
-    i = from_s == 8;
+    i = from_s == 8;// from_s == 8 condition to check if type variavle is type double
     mant &= ternary(i, MAX_DOUBLE_MANTISSA, MAX_FLOAT_MANTISSA);
-    mant |= impl_one;
+    mant |= ternary(i, DOUBLE_MANTISSA_IMPLICIT_ONE, FLOAT_MANTISSA_IMPLICIT_ONE);
 // error check
-    *err = ternary((exp < 0) & (mant != impl_one), UNDERFLOW, *err);
+    *err = ternary(exp > ternary(i, MAX_NORM_DOUBLE_EXP, MAX_NORM_FLOAT_EXP), SNAN, *err);
+    mant = else0(exp, mant);// if exp == 0, it amplies that mant must be 0 too, not mantissa implicit one number 
+    exp -= ternary(i, DOUBLE_EXP_BIAS, FLOAT_EXP_BIAS);
+    *err = ternary((exp < 0) && mant, UNDERFLOW, *err);
 // error check
-    *err = ternary(exp > (1 + ternary(i, AMOUNT_OF_DOUBLE_EXP_BITS, AMOUNT_OF_FLOAT_EXP_BITS)), ternary(from_ptr[from_s - 1] >> 7, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err);
-    exp = ternary(exp < 0, -exp, exp);
-    
+    *err = ternary(exp > zero_cond, ternary(from_ptr[from_s - 1] >> 7, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err);
+    exp = ((int64_t)ternary(i, AMOUNT_OF_DOUBLE_MANTISSA_BITS, AMOUNT_OF_FLOAT_MANTISSA_BITS) - exp) % zero_cond;
+    for(i = 0; i < exp; i++){ mask <<= 1; mask |= 1; }
+    *err = ternary((exp > 0) && (mant & mask), UNDERFLOW, *err);
+    mant = ternary(exp < 0, mant << -exp, mant >> exp);
+// error check
+    neg_cond = from_ptr[from_s - 1] >> 7;
+    *err = ternary(mant < 0, ternary(neg_cond, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err);
+    mant = ternary(neg_cond, int64_neg(mant), mant);
+    neg_cond = (mant < 0) & (*err != POSITIVE_OVERFLOW);
+    for(i = 0; i < to_s; i++){ 
+        to_ptr[i] = (mant >> (8 * i)) & 0xff; 
+        zero_cond |= sec_arg[i];
+    }
+    for(mask = 0; i < 8; i++){ 
+        exp = (mant >> (i * 8)) & 0xff;
+        mask |= ((exp ^ 0xff) & -neg_cond) | (exp & -(!neg_cond));
+        zero_cond |= sec_arg[i];
+    }
+    *err = ternary(mask && zero_cond, ternary(neg_cond & (to_ptr[to_s - 1] >> 7), NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err);
 }
-
 // s eeeeeeeeeee i ffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff
 
-void float_n_to_uint_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+void float_n_to_uint_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
     if(!(from_ptr && to_ptr && sec_arg && err)){
         if(err){ *err = NULL_POINTER; }
         return;
     }
-    uint8_t i = 0;
+    int32_t i, exp, cond = (from_s == 8) * 3;// from_s == 8 condition to check if type variavle is type double 
+    uint64_t mant = 0;
+    exp = (from_ptr[from_s - 1] & 0x7f) << 1;
+    exp <<= cond;
+    exp |= from_ptr[from_s - 2] >> (7 - cond);
+    for(i = from_s - 1; i--; ){ mant <<= 8; mant |= from_ptr[i]; }
+    mant &= ternary(cond, MAX_DOUBLE_MANTISSA, MAX_FLOAT_MANTISSA);
+    mant |= ternary(cond, DOUBLE_MANTISSA_IMPLICIT_ONE, FLOAT_MANTISSA_IMPLICIT_ONE);
+// error check
+    *err = ternary(exp > ternary(cond, MAX_NORM_DOUBLE_EXP, MAX_NORM_FLOAT_EXP), SNAN, *err);
+    mant = else0(exp, mant);// if exp == 0, it amplies that mant must be 0 too, not mantissa implicit one number 
+    exp -= ternary(cond, DOUBLE_EXP_BIAS, FLOAT_EXP_BIAS);
+    *err = ternary((exp < 0) && mant, UNDERFLOW, *err);
+    cond = from_s << 3;
+// error check
+    *err = ternary(from_ptr[from_s - 1] >> 7, NEGATIVE_OVERFLOW, *err);
+    *err = ternary(exp > cond, POSITIVE_OVERFLOW, *err);
+    exp = ((int64_t)ternary(cond, AMOUNT_OF_DOUBLE_MANTISSA_BITS, AMOUNT_OF_FLOAT_MANTISSA_BITS) - exp) % cond;
+    for(i = cond = 0; i < exp; i++){ cond <<= 1; cond |= 1; }
+    *err = ternary((exp > 0) && (mant & cond), UNDERFLOW, *err);
+    mant = ternary(exp < 0, mant << -exp, mant >> exp);
+    for(i = cond = exp = 0; i < to_s; i++){
+        to_ptr[i] = (mant >> (8 * i)) & 0xff; 
+        cond |= sec_arg[i];
+    }
+    for(; i < 8; i++){ 
+        exp |= (mant >> (8 * i)) & 0xff;
+        cond |= sec_arg[0]; 
+    }
+    *err = ternary(exp && cond, POSITIVE_OVERFLOW, *err);
+}
+
+void int_n_to_float_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
+    if(!(from_ptr && to_ptr && sec_arg && err)){
+        if(err){ *err = NULL_POINTER; }
+        return;
+    }
     if(from_s > to_s){
 
     }
@@ -1074,21 +1128,7 @@ void float_n_to_uint_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_pt
     }
 }
 
-void float_n_to_float_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
-    if(!(from_ptr && to_ptr && sec_arg && err)){
-        if(err){ *err = NULL_POINTER; }
-        return;
-    }
-
-    if(from_s > to_s){
-
-    }
-    else{
-
-    }
-}
-
-void int_n_to_float_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+void uint_n_to_float_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
     if(!(from_ptr && to_ptr && sec_arg && err)){
         if(err){ *err = NULL_POINTER; }
         return;
@@ -1101,22 +1141,23 @@ void int_n_to_float_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr
     }
 }
 
-void uint_n_to_float_k_type_cast(int8_t* from_ptr, uint8_t from_s, int8_t* to_ptr, uint8_t to_s, int8_t* sec_arg, error* err){
+void float_n_to_float_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
     if(!(from_ptr && to_ptr && sec_arg && err)){
         if(err){ *err = NULL_POINTER; }
         return;
     }
+
     if(from_s > to_s){
 
     }
     else{
-        
+
     }
 }
 
 
-vecN vec_mult_first_arg_t(vecN a, vecN b){// TODO: what if amount of elements in data is less than n
-    if(!(a.type && a.n && a.err && a.elements.i32 && b.type && b.n && b.err && b.elements.i32)){ 
+vecN vec_mult_first_arg_t(vecN a, vecN b){// DESCRIPTION: function will cast the second argument to first argument type, so during the cast the might happen some negative number to unsigned int or float number cast to integer cases in which possibly could happen negative overflows or underflows 
+    if(!(a.type && a.n && a.err && a.elements.i32 && b.type && b.n && b.err && b.elements.i32)){ // TODO: what if amount of elements in data is less than n
         if(a.err){ a.err[0] = NULL_POINTER; }
         return a; 
     }

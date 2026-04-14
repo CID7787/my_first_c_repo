@@ -16,15 +16,57 @@
 // #include "matrix_functions.c"
 #include "print_binary.c"
 
+void float_n_to_uint_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
+  if(!(from_ptr && to_ptr && sec_arg && err)){
+      if(err){ *err = NULL_POINTER; }
+      return;
+  } 
+  int32_t i, exp, cond = (from_s == 8) * 3;// from_s == 8 condition to check if type variavle is type double 
+  uint64_t mant = 0;
+  exp = (from_ptr[from_s - 1] & 0x7f) << 1;
+  exp <<= cond;
+  exp |= from_ptr[from_s - 2] >> (7 - cond);
+  for(i = from_s - 1; i--; ){ mant <<= 8; mant |= from_ptr[i]; }
+  mant &= ternary(cond, MAX_DOUBLE_MANTISSA, MAX_FLOAT_MANTISSA);
+  mant |= ternary(cond, DOUBLE_MANTISSA_IMPLICIT_ONE, FLOAT_MANTISSA_IMPLICIT_ONE);
+// error check
+  *err = ternary(exp > ternary(cond, MAX_NORM_DOUBLE_EXP, MAX_NORM_FLOAT_EXP), SNAN, *err);
+  mant = else0(exp, mant);// if exp == 0, it amplies that mant must be 0 too, not mantissa implicit one number 
+  exp -= ternary(cond, DOUBLE_EXP_BIAS, FLOAT_EXP_BIAS);
+  *err = ternary((exp < 0) && mant, UNDERFLOW, *err);
+  cond = from_s << 3;
+  // error check
+  *err = ternary(from_ptr[from_s - 1] >> 7, NEGATIVE_OVERFLOW, *err);
+  *err = ternary(exp > cond, POSITIVE_OVERFLOW, *err);
+  exp = ((int64_t)ternary(cond, AMOUNT_OF_DOUBLE_MANTISSA_BITS, AMOUNT_OF_FLOAT_MANTISSA_BITS) - exp) % cond;
+  for(i = cond = 0; i < exp; i++){ cond <<= 1; cond |= 1; }
+  cond = (mant & cond);
+  *err = ternary(cond && (exp > 0), UNDERFLOW, *err);
+  mant = ternary(exp < 0, mant << -exp, mant >> exp);
+  for(i = cond = exp = 0; i < to_s; i++){
+      to_ptr[i] = (mant >> (8 * i)) & 0xff; 
+      cond |= sec_arg[i];
+  }
+  for(; i < 8; i++){ 
+      exp |= (mant >> (8 * i)) & 0xff;
+      cond |= sec_arg[0]; 
+  }
+  *err = ternary(exp && cond, POSITIVE_OVERFLOW, *err);
+}
+
+void f(int a){}
 
 int main(){
-  float d1 = 0, d2 = 2;
-  unsigned char wht[2] = {22, 30};
-  print_binary_with_arrays((all){ .f = d1 }, sizeof(float), wht, sizeof(wht));
-  printf("\n\n");
-  print_binary_with_arrays((all){ .f = d2 }, sizeof(float), wht, sizeof(wht));
+  double  d = -0;
+  uint32_t* to_p = malloc(4);
+  uint64_t sec = 8;
+  error err = 0;
+  float_n_to_uint_k_type_cast((uint8_t*)&d, 8, (uint8_t*)to_p, 4, (uint8_t*)&sec, &err);
+  printf("%u\t%d", *to_p, err);
   return 0;
 }
+
+
 
 /*TODO LIST  : FMPG
  graphic:

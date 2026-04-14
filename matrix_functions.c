@@ -17,7 +17,7 @@
 
 
 matrix_t matrix_create(datatype type, uint32_t row, uint32_t col){
-    uint32_t condition = ((row * col * amount_of_type_bytes(type)) <= VECTOR_MAX_ELEM_BYTE_SIZE);
+    uint32_t condition = ((row * col * amount_of_type_bytes(type)) <= MATRIX_MAX_ELEM_BYTE_SIZE);
     row &= -condition;
 
     void* r = malloc(sizeof(datatype) 
@@ -67,7 +67,7 @@ matrix_t matrix_add_first_arg_type(matrix_t a, matrix_t b){// TODO: what if amou
         if(a.err){ a.err[0] = NULL_POINTER; }    
         return a; 
     }
-    if((a.row[0] ^ b.row[0]) | (a.col[0] ^ b.col[0])){ return ; }
+    if((a.row[0] ^ b.row[0]) | (a.col[0] ^ b.col[0])){ return a; }
 }
 
 /*

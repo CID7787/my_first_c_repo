@@ -74,3 +74,67 @@ void write_P6_PPM_file(const char* filename, uint8_t width, uint8_t height){
     fprintf(fptr, "P6\n%u %u\n255\n%s", width, height, image_data);
     fclose(fptr);
 }
+
+
+
+void felem_filler(const char *str, matrix_t pic){
+    FILE* fptr = fopen(str, "w");
+    unsigned char *arr = malloc((pic.row[0] * pic.col[0]) + 1);
+    int i;
+    for(i = 0; i < pic.row[0] * pic.col[0]; i++){ arr[i] = pic.elements.ui8[i] + !(pic.elements.ui8[i]); }
+    arr[i] = 0;
+    fprintf(fptr, "P6\n%u %u\n255\n%s", pic.row[0], pic.col[0] / 3, (char*)arr);
+    fclose(fptr);
+    free(arr);
+  }
+  
+  
+  void left_side_color(matrix_t pic, uint8_t red_b, uint8_t green_b, uint8_t blue_b){
+    // ASSUMPTIONS: matrix_type always == uint8, pic elements amount == 3 * col * row, if col odd then left side have one more color column
+    uint32_t r, c, row = pic.row[0], col = pic.col[0]; 
+    for(r = 0; r < row; r++){
+        for(c = 0; c < col; c+=3){ // col 
+            if(c <= (col >> 1)){
+                pic.elements.ui8[(r * col) + c    ] = red_b;
+                pic.elements.ui8[(r * col) + c + 1] = green_b;
+                pic.elements.ui8[(r * col) + c + 2] = blue_b;
+            }
+        }
+    } 
+  }
+  
+  void right_side_color(matrix_t pic, uint8_t red_b, uint8_t green_b, uint8_t blue_b){
+    // ASSUMPTIONS: matrix_type always == uint8, pic elements amount == 3 * col * row, if col odd then left side have one more color column
+    uint32_t r, c, row = pic.row[0], col = pic.col[0]; 
+    for(r = 0; r < row; r++){
+        for(c = 0; c < col; c+=3){ // col 
+            if(c > (col >> 1)){
+                pic.elements.ui8[(r * col) + c    ] = red_b;
+                pic.elements.ui8[(r * col) + c + 1] = green_b;
+                pic.elements.ui8[(r * col) + c + 2] = blue_b;
+            }
+        }
+    } 
+  }
+  
+  
+  
+  
+  void top_down_side_color(matrix_t pic){
+    // ASSUMPTIONS: matrix_type always == uint8, pic elements amount == 3 * col * row, if col odd then left side have one more color column
+    uint32_t r, c, row = pic.row[0], col = pic.col[0]; 
+    for(r = 0; r < row; r++){
+        for(c = 0; c < col; c+=3){ // col 
+            if(r <= (row >> 1)){
+                pic.elements.ui8[(r * col) + c    ] = 0;
+                pic.elements.ui8[(r * col) + c + 1] = 0;
+                pic.elements.ui8[(r * col) + c + 2] = 0;
+            }
+            else{
+                pic.elements.ui8[(r * col) + c    ] = 0;
+                pic.elements.ui8[(r * col) + c + 1] = 0;
+                pic.elements.ui8[(r * col) + c + 2] = 255;
+            }
+        }
+    } 
+  }
