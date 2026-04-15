@@ -22,7 +22,7 @@ typedef enum all_unsigned_and_signed_constants{
 	FLOAT_SIGN_AND_EXP_MASK = ~MAX_FLOAT_MANTISSA,
 	AMOUNT_OF_FLOAT_EXP_BITS = 8,
 	AMOUNT_OF_FLOAT_MANTISSA_BITS = 23,
-	MAX_DOUBLE_MANTISSA = 0x1fffffffffffff,
+	MAX_DOUBLE_MANTISSA = 0xfffffffffffff,// TOD0: variable before was 0x1fffffffffffff check if somewhere this form was correct
 	MAX_NORM_DOUBLE_EXP = 2046,
 	DOUBLE_MANTISSA_IMPLICIT_ONE = 0x0010000000000000,
 	DOUBLE_SIGN_AND_EXP_MASK = ~(DOUBLE_MANTISSA_IMPLICIT_ONE - 1),

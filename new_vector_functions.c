@@ -1076,7 +1076,6 @@ void float_n_to_int_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_p
     }
     *err = ternary(mask && zero_cond, ternary(neg_cond & (to_ptr[to_s - 1] >> 7), NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err);
 }
-// s eeeeeeeeeee i ffff ffffffff ffffffff ffffffff ffffffff ffffffff ffffffff
 
 void float_n_to_uint_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
     if(!(from_ptr && to_ptr && sec_arg && err)){
@@ -1120,14 +1119,33 @@ void int_n_to_float_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_p
         if(err){ *err = NULL_POINTER; }
         return;
     }
-    if(from_s > to_s){
-
+    int32_t i, exp, neg_cond = from_ptr[from_s - 1] >> 7, is_float32 = to_s == 4, cond, 
+            mant_bits_n = ternary(to_s == 4, AMOUNT_OF_FLOAT_MANTISSA_BITS, AMOUNT_OF_DOUBLE_MANTISSA_BITS);
+    int64_t val = 0;
+    for(cond = 0, i = 8; i-- > from_s; ){
+      val <<= 8;
+      val |= -neg_cond;
+      cond |= sec_arg[i];
     }
-    else{
-        
+    for(cond =  0, ++i; i--; ){ 
+      val <<= 8; 
+      val |= from_ptr[i]; 
+      cond |= sec_arg[i];
     }
-}
-
+    *err = ternary((val == MIN_INT64) && cond, UNDERFLOW, *err);
+    val = ternary(neg_cond, int64_neg(val), val);
+    exp = how_many_bits_until_eldest_1(val);
+    *err = ternary(cond && (exp > mant_bits_n) , UNDERFLOW, *err);
+    i = mant_bits_n - exp;
+    val = ternary(i > 0, val << i, val >> -i);
+    exp += ternary(is_float32, FLOAT_EXP_BIAS, DOUBLE_EXP_BIAS) & -(!!val);
+    val &= ternary(is_float32, MAX_FLOAT_MANTISSA, MAX_DOUBLE_MANTISSA);
+    cond = ternary(is_float32, 3, 7); // 3 and 7 isn't just magical numbers, they identify the number of bytes in cast to variable type for storing the mantissa part
+    for(i = 0; i < cond; i++){ to_ptr[i] = (val >> (i * 8)) & 0xff; }// evaluting mantissa
+    to_ptr[to_s - 2] = (to_ptr[to_s - 2] & ternary(is_float32, 0x7f, 0xf)) | ((exp << ternary(is_float32, 7, 4)) & 0xff); 
+    to_ptr[to_s - 1] = ( exp >> (4 >> (is_float32 << 1))) | (from_ptr[from_s - 1] & 0x80);
+  }
+  
 void uint_n_to_float_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
     if(!(from_ptr && to_ptr && sec_arg && err)){
         if(err){ *err = NULL_POINTER; }
