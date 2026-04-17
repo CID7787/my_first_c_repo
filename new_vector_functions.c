@@ -999,7 +999,7 @@ vecN vec_mult_first_arg_t(vecN a, vecN b){// DESCRIPTION: function will cast the
             case INT64:   r.elements.i64 [i] = int64_add (a.elements.i64 [i], ptr.i64 [0], r.err); break; 
             case UINT64:  r.elements.ui64[i] = uint64_add(a.elements.ui64[i], ptr.ui64[0], r.err); break;
             case FLOAT32: r.elements.f32 [i] = float_add((fbits){ .f = a.elements.f32[i] }, (fbits){ .f = ptr.f32[0] }, r.err); break; 
-            case FLOAT64: r.elements.f64 [i] = float_add((dbits){ .d = a.elements.f64[i] }, (dbits){ .d = ptr.f64[0] }, r.err); break; 
+            case FLOAT64: r.elements.f64 [i] = double_add((dbits){ .d = a.elements.f64[i] }, (dbits){ .d = ptr.f64[0] }, r.err); break; 
         }
     } 
     return r;
