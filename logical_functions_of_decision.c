@@ -8,12 +8,12 @@ long unsigned int else0_array(unsigned int cond, int x){
     return array[!cond];
 }
 
-long unsigned int else0(long unsigned int condition, long unsigned int x){
+static inline uint64_t else0(uint64_t condition, uint64_t x){
     return x & (~0ul + !condition);
     // return -!!condition & x;
 }
 
-static inline long unsigned int ternary(long unsigned int condition, long unsigned int true_value, long unsigned int false_value){
+static inline uint64_t ternary(uint64_t condition, uint64_t true_value, uint64_t false_value){
     return (-(!!condition) & true_value) | (-(!condition) & false_value);
 }
 

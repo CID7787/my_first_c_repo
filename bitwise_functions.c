@@ -59,8 +59,9 @@ unsigned int is_first_bit_different(unsigned int a, unsigned int b){
   return (a ^ b) & 1u;
 }
 
-long unsigned int how_many_0_until_youngest_1(long unsigned int a){ //32
+long unsigned int how_many_0_until_youngest_1(long unsigned int a){
     unsigned int counter = 0;
+    a += !a * 64;
     while(!(a & 1ul)){ a >>= 1; counter++; }// 10101
     return counter;
 }

@@ -1040,18 +1040,18 @@ void float_n_to_int_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_p
         if(err){ *err = NULL_POINTER; }
         return;
     }
-    int32_t i = (from_s == 8) * 3, exp, zero_cond = from_s << 3, neg_cond;// from_s == 8 condition to check if type variavle is type double 
+    int32_t i = (from_s == 8) * 3, exp, zero_cond = from_s << 3, neg_cond;// from_s == 8 condition to check if variable type is type double 
     int64_t mant = 0, mask = 0;
     exp = (from_ptr[from_s - 1] & 0x7f) << 1;
     exp <<= i;
     exp |= from_ptr[from_s - 2] >> (7 - i);
     for(i = from_s - 1; i--; ){ mant <<= 8; mant |= from_ptr[i]; }
-    i = from_s == 8;// from_s == 8 condition to check if type variavle is type double
+    i = from_s == sizeof(double);// from_s == 8 condition to check if type variavle is type double
     mant &= ternary(i, MAX_DOUBLE_MANTISSA, MAX_FLOAT_MANTISSA);
     mant |= ternary(i, DOUBLE_MANTISSA_IMPLICIT_ONE, FLOAT_MANTISSA_IMPLICIT_ONE);
+    mant = else0(exp, mant);// if exp == 0, it amplies that mant must be 0 too, not mantissa implicit one number 
 // error check
     *err = ternary(exp > ternary(i, MAX_NORM_DOUBLE_EXP, MAX_NORM_FLOAT_EXP), SNAN, *err);
-    mant = else0(exp, mant);// if exp == 0, it amplies that mant must be 0 too, not mantissa implicit one number 
     exp -= ternary(i, DOUBLE_EXP_BIAS, FLOAT_EXP_BIAS);
     *err = ternary((exp < 0) && mant, UNDERFLOW, *err);
 // error check
@@ -1119,10 +1119,9 @@ void int_n_to_float_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_p
         if(err){ *err = NULL_POINTER; }
         return;
     }
-    int32_t i, exp, neg_cond = from_ptr[from_s - 1] >> 7, is_float32 = to_s == 4, cond, 
-            mant_bits_n = ternary(to_s == 4, AMOUNT_OF_FLOAT_MANTISSA_BITS, AMOUNT_OF_DOUBLE_MANTISSA_BITS);
+    int32_t i, exp, neg_cond = from_ptr[from_s - 1] >> 7, is_float32 = to_s == sizeof(float), cond;
     int64_t val = 0;
-    for(cond = 0, i = 8; i-- > from_s; ){
+    for(cond = 0, i = 8; i-- > from_s; ){// this loop fills last bit of val with 1 if negative variable contains negative value
       val <<= 8;
       val |= -neg_cond;
       cond |= sec_arg[i];
@@ -1135,8 +1134,9 @@ void int_n_to_float_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_p
     *err = ternary((val == MIN_INT64) && cond, UNDERFLOW, *err);
     val = ternary(neg_cond, int64_neg(val), val);
     exp = how_many_bits_until_eldest_1(val);
-    *err = ternary(cond && (exp > mant_bits_n) , UNDERFLOW, *err);
-    i = mant_bits_n - exp;
+    i = ternary(is_float32, AMOUNT_OF_FLOAT_MANTISSA_BITS, AMOUNT_OF_DOUBLE_MANTISSA_BITS);// this is the amount of bits in mantissa of this type
+    *err = ternary(cond && (exp > i) , UNDERFLOW, *err);
+    i -= exp;
     val = ternary(i > 0, val << i, val >> -i);
     exp += ternary(is_float32, FLOAT_EXP_BIAS, DOUBLE_EXP_BIAS) & -(!!val);
     val &= ternary(is_float32, MAX_FLOAT_MANTISSA, MAX_DOUBLE_MANTISSA);
@@ -1144,19 +1144,32 @@ void int_n_to_float_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_p
     for(i = 0; i < cond; i++){ to_ptr[i] = (val >> (i * 8)) & 0xff; }// evaluting mantissa
     to_ptr[to_s - 2] = (to_ptr[to_s - 2] & ternary(is_float32, 0x7f, 0xf)) | ((exp << ternary(is_float32, 7, 4)) & 0xff); 
     to_ptr[to_s - 1] = ( exp >> (4 >> (is_float32 << 1))) | (from_ptr[from_s - 1] & 0x80);
-  }
-  
-void uint_n_to_float_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
-    if(!(from_ptr && to_ptr && sec_arg && err)){
-        if(err){ *err = NULL_POINTER; }
-        return;
-    }
-    if(from_s > to_s){
+}
 
-    }
-    else{
-        
-    }
+void uint_n_to_float_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){// TODO: check validality from_s and to_s
+  if(!(from_ptr && to_ptr && sec_arg && err)){
+      if(err){ *err = NULL_POINTER; }
+      return;
+  }
+  int32_t i, cond, exp, is_float32 = to_s == sizeof(float);
+  uint64_t val = 0;
+  for(i = from_s, cond = 0; i--; ){
+    val <<= 8;// 8 == one byte bit size
+    val |= from_ptr[i];
+    cond |= sec_arg[i];
+  }
+  exp = how_many_bits_until_eldest_1(val);
+  i = ternary(is_float32, AMOUNT_OF_FLOAT_MANTISSA_BITS, AMOUNT_OF_DOUBLE_MANTISSA_BITS);
+// error check
+  *err = ternary(cond && (exp > i), UNDERFLOW, *err);
+  i -= exp;
+  val = ternary(i > 0, val << i, val >> -i);
+  exp += ternary(is_float32, FLOAT_EXP_BIAS, DOUBLE_EXP_BIAS) & -(!!val);
+  val &= ternary(is_float32, MAX_FLOAT_MANTISSA, MAX_DOUBLE_MANTISSA);
+  cond = ternary(is_float32, 3, 7); // 3 and 7 isn't just magical numbers, they identify the number of bytes in cast to variable type for storing the mantissa part
+  for(i = 0; i < cond; i++){ to_ptr[i] = (val >> (i * 8)) & 0xff; }// evaluting mantissa
+  to_ptr[to_s - 2] = (to_ptr[to_s - 2] & ternary(is_float32, 0x7f, 0xf)) | ((exp << ternary(is_float32, 7, 4)) & 0xff); 
+  to_ptr[to_s - 1] = exp >> (4 >> (is_float32 << 1));
 }
 
 void float_n_to_float_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
