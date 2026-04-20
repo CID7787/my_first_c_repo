@@ -17,24 +17,18 @@
 #include "matrix_functions.c"
 #include "print_binary.c"
 
+
+
 int main(){
+  matrix_t m = matrix_create(UINT32, 101, 175);
+  pix_from_k_to_m_color(m, (uint32_bytes){ .parts.b1 = 255, .parts.b2 = 255, .parts.b3 = 255 }, 0, 17675);
+  vertical_line_width_n_offset_k(m, (uint32_bytes){ .parts.b1 = 0, .parts.b2 = 0, .parts.b3 = 255 }, 10, 50);
+  horizontal_line_width_n_offset_k(m, (uint32_bytes){ .parts.b1 = 0, .parts.b2 = 0, .parts.b3 = 255 }, 10, 45);
+  file_filler("pic.ppm", m);
 }
 
 /*TODO LIST  : FMPG
  graphic:
-  left side = color_1, right side = color_2
-  top = color_1, bottom = color_2
-  checkerboard pattern:
-    even pixel = color_1, odd_pixel = color_2
-    N pixels = color_1, N next pixels = color_2
-  vertical line
-    1px at any position
-    of width N
-    of width N with offset X
-  horizontal line
-    1px at any position
-    of width N
-    of width N with offset Y
   coordinate axis:
     1 vertical line + 1 horizontal line, intersecting at the center of the image
   horizontal gradient:

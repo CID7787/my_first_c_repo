@@ -6,7 +6,7 @@
 typedef union variable_all_types{// TODO: all type is the same as fundtypeunion type, leave one
   double d;
   long int li;
-  long unsigned int lui;
+  uint64_t lui;
   char c;
   float f;
   int i;
@@ -21,7 +21,7 @@ typedef enum function_state{
 }f_error;
 
 typedef struct long_long_unsigned_int {
-  long unsigned int high, low;
+  uint64_t high, low;
 } lluint;
 
 typedef struct long_long_int{
@@ -29,19 +29,19 @@ typedef struct long_long_int{
 } llint;
 
 typedef struct double_bitfields_sign_exponent_mantissa{
-  long unsigned int mantissa: 52;
-  long unsigned int exp: 11;
-  long unsigned int sign: 1;
+  uint64_t mantissa: 52;
+  uint64_t exp: 11;
+  uint64_t sign: 1;
 } dieee754;
 
 typedef struct double_bitfields_sign_positive{
-  long unsigned int positive: 63;
-  long unsigned int sign: 1;
+  uint64_t positive: 63;
+  uint64_t sign: 1;
 } dluint;
 
 typedef union double_bits{
   double d;
-  long unsigned int luint;
+  uint64_t luint;
   dieee754 parts; 
   dluint bits;
 } dbits;
@@ -167,3 +167,15 @@ union int_64_bit_construction{
   int64_parts parts;
   int64_t val;
 }typedef int64_constr;
+
+struct four_bytes_uint8_var_struct{
+  uint8_t b1: 8;
+  uint8_t b2: 8;
+  uint8_t b3: 8;
+  uint8_t b4: 8;
+} typedef four_uint8_struct;
+
+union uint32_bytes_union{
+  uint32_t ui32;
+  four_uint8_struct parts;
+} typedef uint32_bytes;
