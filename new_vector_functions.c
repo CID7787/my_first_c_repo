@@ -706,7 +706,7 @@ vecN vec_neg_in_place(vecN vec){// TODO: what if amount of elements in data is l
 }
 
 
-vecN vec_add_first_arg_type(vecN a, vecN b){// TODO: what if amount of elements in data is less than n
+vecN vec_add_first_arg_t(vecN a, vecN b){// TODO: what if amount of elements in data is less than n
     if(!(a.type && a.n && a.err && a.elements.i32 && b.type && b.n && b.err && b.elements.i32)){ 
         if(a.err){ a.err[0] = NULL_POINTER; }
         return a; 
@@ -1005,6 +1005,109 @@ vecN vec_mult_first_arg_t(vecN a, vecN b){// DESCRIPTION: function will cast the
     return r;
 }
 
+
+vecN vec_exp_first_arg_t(vecN a, vecN b){
+    if(!(a.type && a.n && a.err && a.elements.i32 && b.type && b.n && b.err && b.elements.i32)){
+        if(a.err){ a.err[0] = NULL_POINTER; }
+        return a;
+    }
+    if(a.n[0] ^ b.n[0]){ a.err[0] = SIZE_DOES_NOT_MATCH; return a; }
+    uint32_t i = a.n[0], a_type = a.type[0], b_type = b.type[0];
+    vecN r = vec_create(a.type[0], a.n[0]);
+    fundtypeunion val;
+    while(i--){
+        switch(b_type){
+            case UINT8:
+                switch(a_type){
+                    case UINT8:
+                    case UINT32:
+                    case UINT64:
+                    case INT8:
+                    case INT32:
+                    case INT64:
+                    case FLOAT32:
+                    case FLOAT64:
+                }    
+            case UINT32:
+                switch(a_type){
+                    case UINT8:
+                    case UINT32:
+                    case UINT64:
+                    case INT8:
+                    case INT32:
+                    case INT64:
+                    case FLOAT32:
+                    case FLOAT64:
+                }    
+            case UINT64:
+                switch(a_type){
+                    case UINT8:
+                    case UINT32:
+                    case UINT64:
+                    case INT8:
+                    case INT32:
+                    case INT64:
+                    case FLOAT32:
+                    case FLOAT64:
+                }    
+            case INT8:
+                switch(a_type){
+                    case UINT8:
+                    case UINT32:
+                    case UINT64:
+                    case INT8:
+                    case INT32:
+                    case INT64:
+                    case FLOAT32:
+                    case FLOAT64:
+                }
+            case INT32:
+                switch(a_type){
+                    case UINT8:
+                    case UINT32:
+                    case UINT64:
+                    case INT8:
+                    case INT32:
+                    case INT64:
+                    case FLOAT32:
+                    case FLOAT64:
+                }    
+            case INT64:
+                switch(a_type){
+                    case UINT8:
+                    case UINT32:
+                    case UINT64:
+                    case INT8:
+                    case INT32:
+                    case INT64:
+                    case FLOAT32:
+                    case FLOAT64:
+                }    
+            case FLOAT32:
+                switch(a_type){
+                    case UINT8:   r.elements.f32[i] = exp_float2uint64((fbits){ .f = a.elements.f32[i] }, b.elements.ui8 [i], r.err); break;
+                    case UINT32:  r.elements.f32[i] = exp_float2uint64((fbits){ .f = a.elements.f32[i] }, b.elements.ui32[i], r.err); break;
+                    case UINT64:  r.elements.f32[i] = exp_float2uint64((fbits){ .f = a.elements.f32[i] }, b.elements.ui64[i], r.err); break;
+                    case INT8:    r.elements.f32[i] = exp_float2int64 ((fbits){ .f = a.elements.f32[i] }, b.elements.i8  [i], r.err); break;
+                    case INT32:   r.elements.f32[i] = exp_float2int64 ((fbits){ .f = a.elements.f32[i] }, b.elements.i32 [i], r.err); break;
+                    case INT64:   r.elements.f32[i] = exp_float2int64 ((fbits){ .f = a.elements.f32[i] }, b.elements.i64 [i], r.err); break;
+                    case FLOAT32: r.elements.f32[i] = exp_float2float ((fbits){ .f = a.elements.f32[i] }, (fbits){ .f = b.elements.f32[i] }, r.err); break;
+                    case FLOAT64: r.elements.f32[i] = exp_float2double((fbits){ .f = a.elements.f32[i] }, (dbits){ .d = b.elements.f64[i] }, r.err); break;
+                }    
+            case FLOAT64:
+                switch(a_type){
+                    case UINT8:   r.elements.f64[i] = exp_double2uint64((dbits){ .d = a.elements.f64[i] }, b.elements.ui8 [i], r.err); break;
+                    case UINT32:  r.elements.f64[i] = exp_double2uint64((dbits){ .d = a.elements.f64[i] }, b.elements.ui32[i], r.err); break;
+                    case UINT64:  r.elements.f64[i] = exp_double2uint64((dbits){ .d = a.elements.f64[i] }, b.elements.ui64[i], r.err); break;
+                    case INT8:    r.elements.f64[i] = exp_double2int64 ((dbits){ .d = a.elements.f64[i] }, b.elements.i8  [i], r.err); break;
+                    case INT32:   r.elements.f64[i] = exp_double2int64 ((dbits){ .d = a.elements.f64[i] }, b.elements.i32 [i], r.err); break;
+                    case INT64:   r.elements.f64[i] = exp_double2int64 ((dbits){ .d = a.elements.f64[i] }, b.elements.i64 [i], r.err); break;
+                    case FLOAT32: r.elements.f64[i] = exp_double2double((dbits){ .d = a.elements.f64[i] }, (dbits){ .d = b.elements.f32[i] }, r.err); break;
+                    case FLOAT64: r.elements.f64[i] = exp_double2double((dbits){ .d = a.elements.f64[i] }, (dbits){ .d = b.elements.f64[i] }, r.err); break;
+                }    
+        }
+    }
+}
 
 /*sample
 error {

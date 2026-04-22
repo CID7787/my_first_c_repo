@@ -88,8 +88,6 @@ void file_filler(const char *str, matrix_t pic){
             arr[i    ] = pic.elements.ui8[ ( ((r * col) + c) << 2 )    ] + !(pic.elements.ui8[ ( ((r * col) + c) << 2 )    ]);
             arr[i + 1] = pic.elements.ui8[ ( ((r * col) + c) << 2 ) + 1] + !(pic.elements.ui8[ ( ((r * col) + c) << 2 ) + 1]);
             arr[i + 2] = pic.elements.ui8[ ( ((r * col) + c) << 2 ) + 2] + !(pic.elements.ui8[ ( ((r * col) + c) << 2 ) + 2]);
-            if(!((r * col + c) % col)){ printf("\n\n"); }
-            printf("%u %u %u  ", arr[i], arr[i + 1], arr[i + 2]);
         }
     }
     arr[i] = 0;
@@ -106,9 +104,6 @@ void left_side_color(matrix_t pic, uint32_bytes col_b){
             pic.elements.ui8[ (((r * col) + c) << 2)    ] = col_b.parts.b1;
             pic.elements.ui8[ (((r * col) + c) << 2) + 1] = col_b.parts.b2;
             pic.elements.ui8[ (((r * col) + c) << 2) + 2] = col_b.parts.b3;
-            printf("%u %u %u   ", pic.elements.ui8[(((r * col) + c) << 2)    ], pic.elements.ui8[(((r * col) + c) << 2) + 1], pic.elements.ui8[(((r * col) + c) << 2) + 2]);
-            if(c == (col_till - 1)){ printf("\n\n"); }
-
         }
     } 
 }
@@ -152,7 +147,7 @@ void down_side_color(matrix_t pic, uint32_bytes col_b){
 void even_pix_color(matrix_t pic, uint32_bytes col_b){
     uint32_t i, n = pic.row[0] * pic.col[0];
     for(i = 0; i < n; i++){
-        if(i ^ 1){
+        if((i ^ 1) & 1){
             pic.elements.ui8[(i << 2)    ] = col_b.parts.b1;
             pic.elements.ui8[(i << 2) + 1] = col_b.parts.b2;
             pic.elements.ui8[(i << 2) + 2] = col_b.parts.b3;    
@@ -217,3 +212,22 @@ void horizontal_line_width_n_offset_k(matrix_t pic, uint32_bytes col_b, uint32_t
         }
     }
 }
+
+void coordinate_axis(matrix_t pic, uint32_bytes col_b){
+    if(!(pic.elements.ui8 && pic.row && pic.col)){ 
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
+    horizontal_line_width_n_offset_k(pic, col_b, 0, pic.row[0] >> 1);    
+    vertical_line_width_n_offset_k(pic, col_b, 0, pic.col[0] >> 1);    
+}
+
+
+
+void diagonal_line(){}
+
+void horizotal_gradient(){}
+
+void vertical_gradient(){}
+
+void diagonal_gradient(){}

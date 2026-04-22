@@ -24,6 +24,23 @@ long int int64_neg(long int a){// 0011 --> 1101
     return ~a + 1;
 }
 
+error check_for_float_err(fbits f){
+  error err = 0;
+  err = ternary(f.parts.exp > MAX_NORM_FLOAT_EXP, ternary(f.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), err);
+  err = ternary((f.parts.exp > MAX_NORM_FLOAT_EXP) && f.parts.mantissa, SNAN, err);
+  err = ternary(!(f.parts.exp) && f.parts.mantissa, SUBNORM, err);
+  return err;
+}
+
+error check_for_double_err(dbits d){
+  error err = 0;
+  err = ternary(d.parts.exp > MAX_NORM_DOUBLE_EXP, ternary(d.parts.sign, NEGATIVE_INFINITY, POSITIVE_INFINITY), err);
+  err = ternary((d.parts.exp > MAX_NORM_DOUBLE_EXP) && d.parts.mantissa, SNAN, err);
+  err = ternary(!(d.parts.exp) && d.parts.mantissa, SUBNORM, err);
+  return err;  
+}
+
+
 // FUNCTION: double_absolute_value(double)
 
 double double_abs(dbits value){
