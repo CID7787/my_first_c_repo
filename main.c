@@ -9,16 +9,18 @@
 #include "user_defined_datatypes.c"
 #include "logical_functions_of_decision.c"
 #include "additional_functions.c"
-#include "bitwise_functions.c"
-#include "type_cast_functions.c"
-#include "safe_arithmetic_functions.c"
-#include "image_functions.c"
-#include "new_vector_functions.c"
-#include "matrix_functions.c"
-#include "print_binary.c"
+// #include "bitwise_functions.c"
+// #include "type_cast_functions.c"
+// #include "safe_arithmetic_functions.c"
+// #include "image_functions.c"
+// #include "new_vector_functions.c"
+// #include "matrix_functions.c"
+// #include "print_binary.c"
 
 
 int main(){ 
+  double d = 0.1;
+  printf("%d", have_frac_part((dbits){ . d = d}));
 }
 
 /*TODO LIST  : FMPG
