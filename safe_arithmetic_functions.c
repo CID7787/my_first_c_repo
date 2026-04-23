@@ -698,7 +698,7 @@ int64_t exp_int64_to_int64(int64_t a, int64_t b, error* err){
   if(!err){ return a; }
   int64_t result = 1;
   *err = ternary(b < 0, UNDERFLOW, *err);
-  while(b--) > 0{ result = int64_mult(result, a, err); }
+  while(b-- > 0){ result = int64_mult(result, a, err); }
   return result;
 }
 
@@ -866,7 +866,7 @@ float exp_float_to_uint64(fbits a, uint64_t b, error* err){
 double exp_double_to_double(dbits a, dbits b, error* err){
   error a_err = check_for_double_err(a), b_err = check_for_double_err(b);
   if(a_err && b_err && !err){
-    if(err){ err = ternary(a_err, a_err, b_err); } 
+    if(err){ *err = ternary(a_err, a_err, b_err); } 
     return a.d; 
   }
   dbits result = (dbits){ .d = 1};
@@ -885,12 +885,12 @@ double exp_double_to_double(dbits a, dbits b, error* err){
 double exp_double_to_float(dbits a, fbits b, error* err){
   error a_err = check_for_double_err(a), b_err = check_for_float_err(b);
   if(a_err && b_err && !err){
-    if(err){ err = ternary(a_err, a_err, b_err); } 
+    if(err){ *err = ternary(a_err, a_err, b_err); } 
     return a.d; 
   }
   dbits result = (dbits){ .d = 1};
   *err = ternary(a.luint | b.uint, *err, ZERO_TO_ZERO);
-  b_err = !have_frac_part(b);
+  b_err = !have_frac_part((dbits){ .d = b.f });
   *err = ternary(!b_err, ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER, *err);
   if((b.f > 0) & b_err){ 
     while(b.f--){ result.d = double_mult_round(result, a, err); }
@@ -904,7 +904,7 @@ double exp_double_to_float(dbits a, fbits b, error* err){
 double exp_double_to_int64(dbits a, int64_t b, error* err){
   error a_err = check_for_double_err(a);
   if(a_err && !err){
-    if(err){ err = a_err; } 
+    if(err){ *err = a_err; } 
     return a.d; 
   }
   dbits r = (dbits){ .d = 1.0 };
@@ -920,7 +920,7 @@ double exp_double_to_int64(dbits a, int64_t b, error* err){
 double exp_double_to_uint64(dbits a, uint64_t b, error* err){
   error a_err = check_for_double_err(a);
   if(a_err && !err){
-    if(err){ err = a_err; } 
+    if(err){ *err = a_err; } 
     return a.d; 
   }
   *err = ternary(a.luint | b, *err, ZERO_TO_ZERO);

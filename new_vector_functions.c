@@ -1038,7 +1038,7 @@ vecN vec_exp_first_arg_t(vecN a, vecN b){
             case INT64:
                 val.i64  = ternary(val.i64, val.i64, b.elements.i64[i]);
                 r.err[0] = ternary((val.i64 < 0) & is_unsigned(b_type), UNDERFLOW, r.err[0]);
-                switch(a_type | ){
+                switch(a_type){
                     case UINT8:   r.elements.ui8 [i] = exp_uint8_to_uint64 (a.elements.ui8 [i], val.ui64, r.err); break;
                     case UINT32:  r.elements.ui32[i] = exp_uint32_to_uint64(a.elements.ui32[i], val.ui64, r.err); break;
                     case UINT64:  r.elements.ui64[i] = exp_uint64_to_uint64(a.elements.ui64[i], val.ui64, r.err); break;
