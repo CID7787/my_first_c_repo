@@ -1019,24 +1019,24 @@ vecN vec_exp_first_arg_t(vecN a, vecN b){
         val.ui64 = 0;
         switch(b_type){
             case UINT8:  val.ui8  = b.elements.ui8[i];
-            case UINT32: val.ui32 = ternary(val.ui64, val.ui32, b.elements.ui32[i]);
+            case UINT32: val.ui32 = ternary(b_type == UINT32, b.elements.ui32[i], val.ui32);
             case UINT64:
-                val.ui64 = ternary(val.ui64, val.ui64, b.elements.ui64[i]);
+                val.ui64 = ternary(b_type == UINT64, b.elements.ui64[i], val.ui64);
                 switch(a_type){
-                    case UINT8:   r.elements.ui8[i]  = exp_uint8_to_uint64 (a.elements.ui8 [i], b.elements.ui32[i], r.err); break;
-                    case UINT32:  r.elements.ui32[i] = exp_uint32_to_uint64(a.elements.ui32[i], b.elements.ui32[i], r.err); break;
-                    case UINT64:  r.elements.ui64[i] = exp_uint64_to_uint64(a.elements.ui64[i], b.elements.ui32[i], r.err); break;
-                    case INT8:    r.elements.i8[i]   = exp_int8_to_uint64  (a.elements.i8  [i], b.elements.ui32[i], r.err); break;
-                    case INT32:   r.elements.i32[i]  = exp_int32_to_uint64 (a.elements.i32 [i], b.elements.ui32[i], r.err); break;
-                    case INT64:   r.elements.i64[i]  = exp_int64_to_uint64 (a.elements.i64 [i], b.elements.ui32[i], r.err); break;
-                    case FLOAT32: r.elements.f32[i]  = exp_float_to_uint64 ((fbits){ .f = a.elements.f32[i] }, b.elements.ui32[i], r.err); break;
-                    case FLOAT64: r.elements.f64[i]  = exp_double_to_uint64((dbits){ .d = a.elements.f64[i] }, b.elements.ui32[i], r.err);
+                    case UINT8:   r.elements.ui8[i]  = exp_uint8_to_uint64 (a.elements.ui8 [i], val.ui64, r.err); break;
+                    case UINT32:  r.elements.ui32[i] = exp_uint32_to_uint64(a.elements.ui32[i], val.ui64, r.err); break;
+                    case UINT64:  r.elements.ui64[i] = exp_uint64_to_uint64(a.elements.ui64[i], val.ui64, r.err); break;
+                    case INT8:    r.elements.i8[i]   = exp_int8_to_uint64  (a.elements.i8  [i], val.ui64, r.err); break;
+                    case INT32:   r.elements.i32[i]  = exp_int32_to_uint64 (a.elements.i32 [i], val.ui64, r.err); break;
+                    case INT64:   r.elements.i64[i]  = exp_int64_to_uint64 (a.elements.i64 [i], val.ui64, r.err); break;
+                    case FLOAT32: r.elements.f32[i]  = exp_float_to_uint64 ((fbits){ .f = a.elements.f32[i] }, val.ui64, r.err); break;
+                    case FLOAT64: r.elements.f64[i]  = exp_double_to_uint64((dbits){ .d = a.elements.f64[i] }, val.ui64, r.err);
                 }    
             break;
             case INT8:  val.i64 = b.elements.i8[i]; 
-            case INT32: val.i64 = ternary(val.i64, val.i64, b.elements.i32[i]);
+            case INT32: val.i64 = ternary(b_type == INT32, b.elements.i32[i], val.i64);
             case INT64:
-                val.i64  = ternary(val.i64, val.i64, b.elements.i64[i]);
+                val.i64  = ternary(b_type == INT64, b.elements.i64[i], val.i64);
                 r.err[0] = ternary((val.i64 < 0) & is_unsigned(b_type), UNDERFLOW, r.err[0]);
                 switch(a_type){
                     case UINT8:   r.elements.ui8 [i] = exp_uint8_to_uint64 (a.elements.ui8 [i], val.ui64, r.err); break;
@@ -1051,29 +1051,30 @@ vecN vec_exp_first_arg_t(vecN a, vecN b){
             break;
             case FLOAT32:
                 switch(a_type){
-                    case UINT8:   r.elements.ui8 [i] = exp_uint8_to_double (b.elements.ui8 [i], (dbits){ .d = a.elements.f32[i] }, r.err); break;
-                    case UINT32:  r.elements.ui32[i] = exp_uint32_to_double(b.elements.ui32[i], (dbits){ .d = a.elements.f32[i] }, r.err); break;
-                    case UINT64:  r.elements.ui64[i] = exp_uint64_to_double(b.elements.ui64[i], (dbits){ .d = a.elements.f32[i] }, r.err); break;
-                    case INT8:    r.elements.i8  [i] = exp_int8_to_double  (b.elements.i8  [i], (dbits){ .d = a.elements.f32[i] }, r.err); break;
-                    case INT32:   r.elements.i32 [i] = exp_int32_to_double (b.elements.i32 [i], (dbits){ .d = a.elements.f32[i] }, r.err); break;
-                    case INT64:   r.elements.i64 [i] = exp_int64_to_double (b.elements.i64 [i], (dbits){ .d = a.elements.f32[i] }, r.err); break;
+                    case UINT8:   r.elements.ui8 [i] = exp_uint8_to_double (a.elements.ui8 [i], (dbits){ .d = b.elements.f32[i] }, r.err); break;
+                    case UINT32:  r.elements.ui32[i] = exp_uint32_to_double(a.elements.ui32[i], (dbits){ .d = b.elements.f32[i] }, r.err); break;
+                    case UINT64:  r.elements.ui64[i] = exp_uint64_to_double(a.elements.ui64[i], (dbits){ .d = b.elements.f32[i] }, r.err); break;
+                    case INT8:    r.elements.i8  [i] = exp_int8_to_double  (a.elements.i8  [i], (dbits){ .d = b.elements.f32[i] }, r.err); break;
+                    case INT32:   r.elements.i32 [i] = exp_int32_to_double (a.elements.i32 [i], (dbits){ .d = b.elements.f32[i] }, r.err); break;
+                    case INT64:   r.elements.i64 [i] = exp_int64_to_double (a.elements.i64 [i], (dbits){ .d = b.elements.f32[i] }, r.err); break;
                     case FLOAT32: r.elements.f32 [i] = exp_float_to_float  ((fbits){ .f = a.elements.f32[i] }, (fbits){ .f = b.elements.f32[i] }, r.err); break;
                     case FLOAT64: r.elements.f64 [i] = exp_double_to_float ((dbits){ .d = a.elements.f64[i] }, (fbits){ .f = b.elements.f32[i] }, r.err);
                 }
             break;
             case FLOAT64:
                 switch(a_type){
-                    case UINT8:   r.elements.ui8 [i] = exp_uint8_to_double (b.elements.ui8 [i], (dbits){ .d = a.elements.f64[i] }, r.err); break;
-                    case UINT32:  r.elements.ui32[i] = exp_uint32_to_double(b.elements.ui32[i], (dbits){ .d = a.elements.f64[i] }, r.err); break;
-                    case UINT64:  r.elements.ui64[i] = exp_uint64_to_double(b.elements.ui64[i], (dbits){ .d = a.elements.f64[i] }, r.err); break;
-                    case INT8:    r.elements.i8  [i] = exp_int8_to_double  (b.elements.i8  [i], (dbits){ .d = a.elements.f64[i] }, r.err); break;
-                    case INT32:   r.elements.i32 [i] = exp_int32_to_double (b.elements.i32 [i], (dbits){ .d = a.elements.f64[i] }, r.err); break;
-                    case INT64:   r.elements.i64 [i] = exp_int64_to_double (b.elements.i64 [i], (dbits){ .d = a.elements.f64[i] }, r.err); break;
+                    case UINT8:   r.elements.ui8 [i] = exp_uint8_to_double (a.elements.ui8 [i], (dbits){ .d = b.elements.f64[i] }, r.err); break;
+                    case UINT32:  r.elements.ui32[i] = exp_uint32_to_double(a.elements.ui32[i], (dbits){ .d = b.elements.f64[i] }, r.err); break;
+                    case UINT64:  r.elements.ui64[i] = exp_uint64_to_double(a.elements.ui64[i], (dbits){ .d = b.elements.f64[i] }, r.err); break;
+                    case INT8:    r.elements.i8  [i] = exp_int8_to_double  (a.elements.i8  [i], (dbits){ .d = b.elements.f64[i] }, r.err); break;
+                    case INT32:   r.elements.i32 [i] = exp_int32_to_double (a.elements.i32 [i], (dbits){ .d = b.elements.f64[i] }, r.err); break;
+                    case INT64:   r.elements.i64 [i] = exp_int64_to_double (a.elements.i64 [i], (dbits){ .d = b.elements.f64[i] }, r.err); break;
                     case FLOAT32: r.elements.f32 [i] = exp_float_to_double ((fbits){ .f = a.elements.f32[i] }, (dbits){ .d = b.elements.f64[i] }, r.err); break;
                     case FLOAT64: r.elements.f64 [i] = exp_double_to_double((dbits){ .d = a.elements.f64[i] }, (dbits){ .d = b.elements.f64[i] }, r.err);
                 }    
         }
     }
+    return r;
 }
 
 /*sample

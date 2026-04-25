@@ -97,7 +97,7 @@ int64_t int64_mult(int64_t a, int64_t b, error* err){
 
 int64_t int64_uint64_add(int64_t a, uint64_t b, error* err){
   if(!err){ return a; }
-  *err = ternary((MAX_INT64 - a) < b, POSITIVE_OVERFLOW, *err);
+  *err = ternary((MAX_INT64 - b) < a, POSITIVE_OVERFLOW, *err);
   return a + b;
 }
 
@@ -142,8 +142,8 @@ uint64_t uint64_double_add(uint64_t a, dbits b, error* err){
 // FUNCTION: unsigned_char_addition(unsigned char, error*)
 
 uint8_t uint8_add(uint8_t a, uint8_t b, error* err){
-  if(!err){ return a; }  
-  *err = ternary(a > MIN_INT8 - b, POSITIVE_OVERFLOW, *err);
+  if(!err){ return a; }
+  *err = ternary(a > MAX_UINT8 - b, POSITIVE_OVERFLOW, *err);
   return a + b; 
 }
 
@@ -151,8 +151,10 @@ uint8_t uint8_add(uint8_t a, uint8_t b, error* err){
 // FUNCTION: unsigned_char_multiplication(unsigned char, error*)
 
 uint8_t uint8_mult(uint8_t a, uint8_t b, error* err){
-  uint8_t result = 0;
-  while(b-- > 0){ result = uint8_add(result, a, err); }
+  uint8_t result = 0;  
+  while(b-- > 0){ 
+    result = uint8_add(result, a, err);
+  }
   return result;
 }
 
@@ -635,7 +637,7 @@ float float_division(float result, float m1, float precision){ // a = 9, b = 3 c
 int8_t exp_int8_to_int64(int8_t a, int64_t b, error* err){
   if(!err){ return a; }
   int8_t result = 1;
-  *err = else0(b < 0, UNDERFLOW);
+  *err = ternary(b < 0, UNDERFLOW, *err);
   while(b-- > 0){ result = int8_mult(result, a, err); }
   return result;
 }
@@ -666,7 +668,7 @@ int8_t exp_int8_to_double(int8_t a, dbits b, error* err){
 int32_t exp_int32_to_int64(int32_t a, int64_t b, error* err){
   if(!err){ return a; }
   int32_t result = 1;
-  *err = else0(b < 0, UNDERFLOW);
+  *err = ternary(b < 0, UNDERFLOW, *err);
   while(b-- > 0){ result = int32_mult(result, a, err); }
   return result;
 }
@@ -745,7 +747,7 @@ uint8_t exp_uint8_to_double(uint8_t a, dbits b, error* err){
   b_err = !have_frac_part(b);
   *err = ternary(!b_err, ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER, *err);
   while((b.d-- > 0) & b_err){ r = uint8_mult(r, a, err); }
-  return a;
+  return r;
 }
 
 
@@ -768,7 +770,7 @@ uint32_t exp_uint32_to_double(uint32_t a, dbits b, error* err){
   b_err = !have_frac_part(b);
   *err = ternary(!b_err, ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER, *err);
   while((b.d-- > 0) & b_err){ r = uint32_mult(r, a, err); }
-  return a;
+  return r;
 }
 
 
@@ -791,7 +793,7 @@ uint64_t exp_uint64_to_double(uint64_t a, dbits b, error* err){
   b_err = !have_frac_part(b);
   *err = ternary(!b_err, ATTEMPT_TO_GET_ROOT_OF_THE_NUMBER, *err);
   while((b.d-- > 0) & b_err){ r = uint64_mult(r, a, err); }
-  return a;
+  return r;
 }
 
 
@@ -831,6 +833,7 @@ float exp_float_to_double(fbits a, dbits b, error* err){
   else{
     while((b.d++ < 0) & b_err){ result.f = float_div_round(result, a, err); }// TODO: WRITE FLOAT DIVISION WITH ROUNDING FUNCTION
   }
+  return result.f;
 }
 
 float exp_float_to_int64(fbits a, int64_t b, error* err){
@@ -840,14 +843,14 @@ float exp_float_to_int64(fbits a, int64_t b, error* err){
     return a.f;
   }
   *err = ternary(a.uint | b, *err, ZERO_TO_ZERO);
-  fbits result = (fbits){ .f = 1.0 };
+  fbits r = (fbits){ .f = 1.0 };
   if(b < 0){ 
-      while(b++){ a.f = float_div_round(result, a, err); }// TODO: WRITE FLOAT DIVISION WITH ROUNDING FUNCTION
+    while(b++){ r.f = float_div_round(r, a, err); }// TODO: WRITE FLOAT DIVISION WITH ROUNDING FUNCTION
   }
   else{
-      while(b--){ a.f = float_mult_round(result, a, err); }
+    while(b--){ r.f = float_mult_round(r, a, err); }
   }
-  return result.f; 
+  return r.f; 
 }
 
 float exp_float_to_uint64(fbits a, uint64_t b, error* err){
@@ -858,7 +861,7 @@ float exp_float_to_uint64(fbits a, uint64_t b, error* err){
   }
   fbits result = (fbits){ .f = 1.0 };
   *err = ternary(a.uint | b, *err, ZERO_TO_ZERO);
-  while(b--){ a.f = float_mult_round(result, a, err); }
+  while(b--){ result.f = float_mult_round(result, a, err); }
   return result.f; 
 }
 

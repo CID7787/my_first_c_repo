@@ -19,8 +19,8 @@
 
 
 int main(){ 
-  double d = 0.1;
-  printf("%d", have_frac_part((dbits){ . d = d}));
+  vecN base, pow, r;
+  return 0;
 }
 
 /*TODO LIST  : FMPG

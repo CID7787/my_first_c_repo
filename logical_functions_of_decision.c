@@ -24,5 +24,5 @@ long unsigned int ternary_array(unsigned char condition, long unsigned int true_
 
 int8_t have_frac_part(dbits a){// TODO: fix function doesn't working correct
     int32_t norm_exp = a.parts.exp - DOUBLE_EXP_BIAS;
-    return ((norm_exp < 0) | !!( a.parts.mantissa & (MAX_DOUBLE_MANTISSA >> (-(norm_exp > 0) & norm_exp)) )) && a.luint;
+    return ( (norm_exp < 0) | ( a.parts.mantissa & (MAX_DOUBLE_MANTISSA >> else0(norm_exp > 0, norm_exp)) ) ) && a.luint;
 }
