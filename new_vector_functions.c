@@ -712,50 +712,50 @@ vecN vec_add_first_arg_t(vecN a, vecN b){// TODO: what if amount of elements in 
         return a; 
     }
     vecN r = vec_create(a.type[0], ternary(a.n[0] > b.n[0], a.n[0], b.n[0]));
-    uint32_t i = r.n[0], ai, bi, an = a.n[0], bn = b.n[0];
+    uint32_t i = r.n[0], a_ind, b_ind, an = a.n[0], bn = b.n[0];
     fundtypeunion val;
     switch(a.type[0]){
-        case INT8:    
+        case INT8:
             while(i--){
-                ai = i < an;
-                bi = i < bn;
+                a_ind = i < an;
+                b_ind = i < bn;
                 switch(b.type[0]){
-                    case INT8:    r.elements.i8[i] = int8_add(a.elements.i8[i % an] * ai, b.elements.i8[i % bn] * bi, r.err);  break;
+                    case INT8:    r.elements.i8[i] = int8_add(a.elements.i8[i % an] * a_ind, b.elements.i8[i % bn] * b_ind, r.err);  break;
                     case UINT8:   
-                        val.i32 = int32_add(a.elements.i8[i % an] * ai, b.elements.ui8[i % bn] * bi, r.err);
+                        val.i32 = int32_add(a.elements.i8[i % an] * a_ind, b.elements.ui8[i % bn] * b_ind, r.err);
                         r.err[0] = ternary(val.i32 > MAX_INT8, POSITIVE_OVERFLOW, r.err[0]);
                         r.elements.i8[i] = val.i32 * !(r.err[0]);
                     break;
                     case INT32:  
-                        val.i32 = int32_add(a.elements.i8[i % an] * ai, b.elements.i32[i % bn] * bi, r.err);
+                        val.i32 = int32_add(a.elements.i8[i % an] * a_ind, b.elements.i32[i % bn] * b_ind, r.err);
                         r.err[0] = ternary(val.i32 > MAX_INT8, POSITIVE_OVERFLOW, r.err[0]);
                         r.err[0] = ternary(val.i32 < MIN_INT8, NEGATIVE_OVERFLOW, r.err[0]);
                         r.elements.i8[i] = val.i32 * !(r.err[0]);
                     break;
                     case UINT32:  
-                        val.i64 = int64_add(a.elements.i8[i % an] * ai, b.elements.ui32[i % bn] * bi, r.err);
+                        val.i64 = int64_add(a.elements.i8[i % an] * a_ind, b.elements.ui32[i % bn] * b_ind, r.err);
                         r.err[0] = ternary(val.i64 > MAX_INT8, POSITIVE_OVERFLOW, r.err[0]);
                         r.elements.i8[i] = val.i64 * !(r.err[0]);
                     break;
                     case INT64:   
-                        val.i64 = int64_add(a.elements.i8[i % an] * ai, b.elements.i64[i % bn] * bi, r.err);
+                        val.i64 = int64_add(a.elements.i8[i % an] * a_ind, b.elements.i64[i % bn] * b_ind, r.err);
                         r.err[0] = ternary(val.i64 > MAX_INT8, POSITIVE_OVERFLOW, r.err[0]);
                         r.err[0] = ternary(val.i64 < MIN_INT8, NEGATIVE_OVERFLOW, r.err[0]);
                         r.elements.i8[i] = val.i64 * !(r.err[0]);
                     break;
                     case UINT64:  
-                        val.i64 = int64_uint64_add(a.elements.i8[i % an] * ai, b.elements.ui64[i % bn] * bi, r.err); 
+                        val.i64 = int64_uint64_add(a.elements.i8[i % an] * a_ind, b.elements.ui64[i % bn] * b_ind, r.err); 
                         r.err[0] = ternary(val.i64 > MAX_INT8, POSITIVE_OVERFLOW, r.err[0]);
                         r.elements.i8[i] = val.i64 * !(r.err[0]);                    
                     break;
                     case FLOAT32: 
-                        val.i64 = int64_double_add(a.elements.i8[i % an] * ai, (dbits){ .d = b.elements.f32[i % bn] * bi }, r.err);
+                        val.i64 = int64_double_add(a.elements.i8[i % an] * a_ind, (dbits){ .d = b.elements.f32[i % bn] * b_ind }, r.err);
                         r.err[0] = ternary(val.i64 > MAX_INT8, POSITIVE_OVERFLOW, r.err[0]);
                         r.err[0] = ternary(val.i64 < MIN_INT8, NEGATIVE_OVERFLOW, r.err[0]);
                         r.elements.i8[i] = val.i64 * !(r.err[0]);
                     break;
                     case FLOAT64: 
-                        val.i64 = int64_double_add(a.elements.i8[i % an] * ai, (dbits){ .d = b.elements.f64[i % bn] * bi }, r.err);
+                        val.i64 = int64_double_add(a.elements.i8[i % an] * a_ind, (dbits){ .d = b.elements.f64[i % bn] * b_ind }, r.err);
                         r.err[0] = ternary(val.i64 > MAX_INT8, POSITIVE_OVERFLOW, r.err[0]);
                         r.err[0] = ternary(val.i64 < MIN_INT8, NEGATIVE_OVERFLOW, r.err[0]);
                         r.elements.i8[i] = val.i64 * !(r.err[0]);                    
@@ -764,45 +764,45 @@ vecN vec_add_first_arg_t(vecN a, vecN b){// TODO: what if amount of elements in 
             break;
         case UINT8:   
             while(i--){
-                ai = i < an;
-                bi = i < bn;
+                a_ind = i < an;
+                b_ind = i < bn;
                 switch(b.type[0]){
-                    case UINT8:  r.elements.ui8[i] = uint8_add(a.elements.ui8[i % an] * ai, b.elements.ui8[i % bn] * bi, r.err); break;
+                    case UINT8:  r.elements.ui8[i] = uint8_add(a.elements.ui8[i % an] * a_ind, b.elements.ui8[i % bn] * b_ind, r.err); break;
                     case INT8:  
-                        val.i32  = int32_add(a.elements.ui8[i % an] * ai, b.elements.i8[i % bn] * bi, r.err);  
+                        val.i32  = int32_add(a.elements.ui8[i % an] * a_ind, b.elements.i8[i % bn] * b_ind, r.err);  
                         r.err[0] = ternary(val.i32 > MAX_UINT8, POSITIVE_OVERFLOW, r.err[0]);
                         r.err[0] = ternary(val.i32 < 0, NEGATIVE_OVERFLOW, r.err[0]);
                         r.elements.ui8[i] = val.i32 * !(r.err[0]);
                     break;
                     case INT32:  
-                        val.i32  = int32_add(a.elements.ui8[i % an] * ai, b.elements.i32[i % bn] * bi, r.err);
+                        val.i32  = int32_add(a.elements.ui8[i % an] * a_ind, b.elements.i32[i % bn] * b_ind, r.err);
                         r.err[0] = ternary(val.i32 > MAX_UINT8, POSITIVE_OVERFLOW, r.err[0]);
                         r.err[0] = ternary(val.i32 < 0, NEGATIVE_OVERFLOW, r.err[0]);
                         r.elements.ui8[i] = val.i32 * !(r.err[0]);
                     break;
                     case UINT32: 
-                        val.ui32 = uint32_add(a.elements.ui8[i % an] * ai, b.elements.ui32[i % bn] * bi, r.err);
+                        val.ui32 = uint32_add(a.elements.ui8[i % an] * a_ind, b.elements.ui32[i % bn] * b_ind, r.err);
                         r.err[0] = ternary(val.ui32 > MAX_UINT8, POSITIVE_OVERFLOW, r.err[0]);
                         r.elements.ui8[i] = val.ui32 * !(r.err[0]);
                     break;
                     case INT64:   
-                        val.i64  = int64_add(a.elements.ui8[i % an] * ai, b.elements.i64[i % bn] * bi, r.err);
+                        val.i64  = int64_add(a.elements.ui8[i % an] * a_ind, b.elements.i64[i % bn] * b_ind, r.err);
                         r.err[0] = ternary(val.i64 > MAX_UINT8, POSITIVE_OVERFLOW, r.err[0]);
                         r.err[0] = ternary(val.i64 < 0, NEGATIVE_OVERFLOW, r.err[0]);
                         r.elements.ui8[i] = val.i64 * !(r.err[0]);
                     break;
                     case UINT64:  
-                        val.ui64  = uint64_add(a.elements.ui8[i % an] * ai, b.elements.ui64[i % bn] * bi, r.err); 
+                        val.ui64  = uint64_add(a.elements.ui8[i % an] * a_ind, b.elements.ui64[i % bn] * b_ind, r.err); 
                         r.err[0] = ternary(val.ui64 > MAX_UINT8, POSITIVE_OVERFLOW, r.err[0]);
                         r.elements.ui8[i] = val.ui64 * !(r.err[0]);                    
                     break;
                     case FLOAT32: 
-                        val.ui64  = uint64_double_add(a.elements.ui8[i % an] * ai, (dbits){ .d = b.elements.f32[i % bn] * bi }, r.err);
+                        val.ui64  = uint64_double_add(a.elements.ui8[i % an] * a_ind, (dbits){ .d = b.elements.f32[i % bn] * b_ind }, r.err);
                         r.err[0] = ternary(val.ui64 > MAX_UINT8, POSITIVE_OVERFLOW, r.err[0]);
                         r.elements.ui8[i] = val.ui64 * !(r.err[0]);
                     break;
                     case FLOAT64: 
-                        val.ui64  = uint64_double_add(a.elements.ui8[i % an] * ai, (dbits){ .d = b.elements.f64[i % bn] * bi }, r.err);
+                        val.ui64  = uint64_double_add(a.elements.ui8[i % an] * a_ind, (dbits){ .d = b.elements.f64[i % bn] * b_ind }, r.err);
                         r.err[0] = ternary(val.ui64 > MAX_UINT8, POSITIVE_OVERFLOW, r.err[0]);
                         r.elements.ui8[i] = val.ui64 * !(r.err[0]);                    
                 }        
@@ -810,36 +810,36 @@ vecN vec_add_first_arg_t(vecN a, vecN b){// TODO: what if amount of elements in 
             break;
         case INT32:   
             while(i--){
-                ai = i < an;
-                bi = i < bn;
+                a_ind = i < an;
+                b_ind = i < bn;
                 switch(b.type[0]){
-                    case INT8:    r.elements.i32[i] = int32_add(a.elements.i32[i % an] * ai, b.elements.i8[i % bn] * bi, r.err);  break;
-                    case UINT8:   r.elements.i32[i] = int32_add(a.elements.i32[i % an] * ai, b.elements.ui8[i % bn] * bi, r.err);  break;
-                    case INT32:   r.elements.i32[i] = int32_add(a.elements.i32[i % an] * ai, b.elements.i32[i % bn] * bi, r.err);  break;
+                    case INT8:    r.elements.i32[i] = int32_add(a.elements.i32[i % an] * a_ind, b.elements.i8[i % bn] * b_ind, r.err);  break;
+                    case UINT8:   r.elements.i32[i] = int32_add(a.elements.i32[i % an] * a_ind, b.elements.ui8[i % bn] * b_ind, r.err);  break;
+                    case INT32:   r.elements.i32[i] = int32_add(a.elements.i32[i % an] * a_ind, b.elements.i32[i % bn] * b_ind, r.err);  break;
                     case UINT32:  
-                        val.i64  = int64_add(a.elements.i32[i % an] * ai, b.elements.ui32[i % bn] * bi, r.err);
+                        val.i64  = int64_add(a.elements.i32[i % an] * a_ind, b.elements.ui32[i % bn] * b_ind, r.err);
                         r.err[0] = ternary(val.i64 > MAX_INT32, POSITIVE_OVERFLOW, r.err[0]);
                         r.elements.i32[i] = val.i64 * !(r.err[0]);
                     break;
                     case INT64:   
-                        val.i64  = int64_add(a.elements.i32[i % an] * ai, b.elements.i64[i % bn] * bi, r.err);
+                        val.i64  = int64_add(a.elements.i32[i % an] * a_ind, b.elements.i64[i % bn] * b_ind, r.err);
                         r.err[0] = ternary(val.i64 > MAX_INT32, POSITIVE_OVERFLOW, r.err[0]);
                         r.err[0] = ternary(val.i64 < MIN_INT32, NEGATIVE_OVERFLOW, r.err[0]);
                         r.elements.i32[i] = val.i64 * !(r.err[0]);
                     break;
                     case UINT64:  
-                        val.i64  = int64_uint64_add(a.elements.i32[i % an] * ai, b.elements.ui64[i % bn] * bi, r.err); 
+                        val.i64  = int64_uint64_add(a.elements.i32[i % an] * a_ind, b.elements.ui64[i % bn] * b_ind, r.err); 
                         r.err[0] = ternary(val.i64 > MAX_INT32, POSITIVE_OVERFLOW, r.err[0]);
                         r.elements.i32[i] = val.i64 * !(r.err[0]);                    
                     break;
                     case FLOAT32: 
-                        val.i64  = int64_double_add(a.elements.i32[i % an] * ai, (dbits){ .d = b.elements.f32[i % bn] * bi }, r.err);
+                        val.i64  = int64_double_add(a.elements.i32[i % an] * a_ind, (dbits){ .d = b.elements.f32[i % bn] * b_ind }, r.err);
                         r.err[0] = ternary(val.i64 > MAX_INT32, POSITIVE_OVERFLOW, r.err[0]);
                         r.err[0] = ternary(val.i64 < MIN_INT32, NEGATIVE_OVERFLOW, r.err[0]);
                         r.elements.i32[i] = val.i64 * !(r.err[0]);
                     break;
                     case FLOAT64: 
-                        val.i64  = int64_double_add(a.elements.i32[i % an] * ai, (dbits){ .d = b.elements.f64[i % bn] * bi }, r.err);
+                        val.i64  = int64_double_add(a.elements.i32[i % an] * a_ind, (dbits){ .d = b.elements.f64[i % bn] * b_ind }, r.err);
                         r.err[0] = ternary(val.i64 > MAX_INT32, POSITIVE_OVERFLOW, r.err[0]);
                         r.err[0] = ternary(val.i64 < MIN_INT32, NEGATIVE_OVERFLOW, r.err[0]);
                         r.elements.i32[i] = val.i64 * !(r.err[0]);                    
@@ -848,41 +848,41 @@ vecN vec_add_first_arg_t(vecN a, vecN b){// TODO: what if amount of elements in 
             break;
         case UINT32:  
         while(i--){
-            ai = i < an;
-            bi = i < bn;
+            a_ind = i < an;
+            b_ind = i < bn;
             switch(b.type[0]){
-                case UINT8:   r.elements.ui32[i] = uint8_add (a.elements.ui32[i % an] * ai, b.elements.ui8[i % bn] * bi, r.err); break;
-                case UINT32:  r.elements.ui32[i] = uint32_add(a.elements.ui32[i % an] * ai, b.elements.ui32[i % bn] * bi, r.err); break;
+                case UINT8:   r.elements.ui32[i] = uint8_add (a.elements.ui32[i % an] * a_ind, b.elements.ui8[i % bn] * b_ind, r.err); break;
+                case UINT32:  r.elements.ui32[i] = uint32_add(a.elements.ui32[i % an] * a_ind, b.elements.ui32[i % bn] * b_ind, r.err); break;
                 case INT8:  
-                    val.i64  = int64_add(a.elements.ui32[i % an] * ai, b.elements.i8[i % bn] * bi, r.err);  
+                    val.i64  = int64_add(a.elements.ui32[i % an] * a_ind, b.elements.i8[i % bn] * b_ind, r.err);  
                     r.err[0] = ternary(val.i64 > MAX_UINT32, POSITIVE_OVERFLOW, r.err[0]);
                     r.err[0] = ternary(val.i64 < 0, NEGATIVE_OVERFLOW, r.err[0]);
                     r.elements.ui32[i] = val.i64 * !(r.err[0]);
                 break;
                 case INT32:  
-                    val.i64  = int64_add(a.elements.ui32[i % an] * ai, b.elements.i32[i % bn] * bi, r.err);  
+                    val.i64  = int64_add(a.elements.ui32[i % an] * a_ind, b.elements.i32[i % bn] * b_ind, r.err);  
                     r.err[0] = ternary(val.i64 > MAX_UINT32, POSITIVE_OVERFLOW, r.err[0]);
                     r.err[0] = ternary(val.i64 < 0, NEGATIVE_OVERFLOW, r.err[0]);
                     r.elements.ui32[i] = val.i64 * !(r.err[0]);
                 break;
                 case INT64:   
-                    val.i64  = int64_add(a.elements.ui32[i % an] * ai, b.elements.i64[i % bn] * bi, r.err);
+                    val.i64  = int64_add(a.elements.ui32[i % an] * a_ind, b.elements.i64[i % bn] * b_ind, r.err);
                     r.err[0] = ternary(val.i64 > MAX_UINT32, POSITIVE_OVERFLOW, r.err[0]);
                     r.err[0] = ternary(val.i64 < 0, NEGATIVE_OVERFLOW, r.err[0]);
                     r.elements.ui32[i] = val.i64 * !(r.err[0]);
                 break;
                 case UINT64:  
-                    val.ui64  = int64_add(a.elements.ui32[i % an] * ai, b.elements.ui64[i % bn] * bi, r.err); 
+                    val.ui64  = int64_add(a.elements.ui32[i % an] * a_ind, b.elements.ui64[i % bn] * b_ind, r.err); 
                     r.err[0] = ternary(val.ui64 > MAX_UINT32, POSITIVE_OVERFLOW, r.err[0]);
                     r.elements.ui32[i] = val.ui64 * !(r.err[0]);                    
                 break;
                 case FLOAT32: 
-                    val.ui64  = uint64_double_add(a.elements.ui32[i % an] * ai, (dbits){ .d = b.elements.f32[i % bn] * bi }, r.err);
+                    val.ui64  = uint64_double_add(a.elements.ui32[i % an] * a_ind, (dbits){ .d = b.elements.f32[i % bn] * b_ind }, r.err);
                     r.err[0] = ternary(val.ui64 > MAX_UINT32, POSITIVE_OVERFLOW, r.err[0]);
                     r.elements.ui32[i] = val.ui64 * !(r.err[0]);
                 break;
                 case FLOAT64: 
-                    val.ui64  = uint64_double_add(a.elements.ui32[i % an] * ai, (dbits){ .d = b.elements.f64[i % bn] * bi }, r.err);
+                    val.ui64  = uint64_double_add(a.elements.ui32[i % an] * a_ind, (dbits){ .d = b.elements.f64[i % bn] * b_ind }, r.err);
                     r.err[0] = ternary(val.ui64 > MAX_UINT32, POSITIVE_OVERFLOW, r.err[0]);
                     r.elements.ui32[i] = val.ui64 * !(r.err[0]);                    
             }        
@@ -890,65 +890,65 @@ vecN vec_add_first_arg_t(vecN a, vecN b){// TODO: what if amount of elements in 
             break;
         case INT64:   
             while(i--){
-                ai = i < an;
-                bi = i < bn;
+                a_ind = i < an;
+                b_ind = i < bn;
                 switch(b.type[0]){
-                    case INT8:    r.elements.i64[i] = int64_add(a.elements.i64[i % an] * ai, b.elements.i8  [i % bn] * bi, r.err); break;
-                    case UINT8:   r.elements.i64[i] = int64_add(a.elements.i64[i % an] * ai, b.elements.ui8 [i % bn] * bi, r.err); break;
-                    case INT32:   r.elements.i64[i] = int64_add(a.elements.i64[i % an] * ai, b.elements.i32 [i % bn] * bi, r.err); break;
-                    case UINT32:  r.elements.i64[i] = int64_add(a.elements.i64[i % an] * ai, b.elements.ui32[i % bn] * bi, r.err); break;
-                    case INT64:   r.elements.i64[i] = int64_add(a.elements.i64[i % an] * ai, b.elements.i64 [i % bn] * bi, r.err); break;
-                    case UINT64:  r.elements.i64[i] = int64_uint64_add(a.elements.i64[i % an] * ai, b.elements.ui64[i % bn] * bi, r.err); break;
-                    case FLOAT32: r.elements.i64[i] = int64_double_add(a.elements.i64[i % an] * ai, (dbits){ .d = b.elements.f32[i % bn] * bi }, r.err); break;
-                    case FLOAT64: r.elements.i64[i] = int64_double_add(a.elements.i64[i % an] * ai, (dbits){ .d = b.elements.f64[i % bn] * bi }, r.err);
+                    case INT8:    r.elements.i64[i] = int64_add(a.elements.i64[i % an] * a_ind, b.elements.i8  [i % bn] * b_ind, r.err); break;
+                    case UINT8:   r.elements.i64[i] = int64_add(a.elements.i64[i % an] * a_ind, b.elements.ui8 [i % bn] * b_ind, r.err); break;
+                    case INT32:   r.elements.i64[i] = int64_add(a.elements.i64[i % an] * a_ind, b.elements.i32 [i % bn] * b_ind, r.err); break;
+                    case UINT32:  r.elements.i64[i] = int64_add(a.elements.i64[i % an] * a_ind, b.elements.ui32[i % bn] * b_ind, r.err); break;
+                    case INT64:   r.elements.i64[i] = int64_add(a.elements.i64[i % an] * a_ind, b.elements.i64 [i % bn] * b_ind, r.err); break;
+                    case UINT64:  r.elements.i64[i] = int64_uint64_add(a.elements.i64[i % an] * a_ind, b.elements.ui64[i % bn] * b_ind, r.err); break;
+                    case FLOAT32: r.elements.i64[i] = int64_double_add(a.elements.i64[i % an] * a_ind, (dbits){ .d = b.elements.f32[i % bn] * b_ind }, r.err); break;
+                    case FLOAT64: r.elements.i64[i] = int64_double_add(a.elements.i64[i % an] * a_ind, (dbits){ .d = b.elements.f64[i % bn] * b_ind }, r.err);
                 }        
             }
             break;
         case UINT64:  
             while(i--){
-                ai = i < an;
-                bi = i < bn;
+                a_ind = i < an;
+                b_ind = i < bn;
                 switch(b.type[0]){
-                    case UINT8:   r.elements.ui64[i] = uint64_add(a.elements.ui64[i % an] * ai, b.elements.ui8 [i % bn] * bi, r.err); break;
-                    case UINT32:  r.elements.ui64[i] = uint64_add(a.elements.ui64[i % an] * ai, b.elements.ui32[i % bn] * bi, r.err); break;
-                    case UINT64:  r.elements.ui64[i] = uint64_add(a.elements.ui64[i % an] * ai, b.elements.ui64[i % bn] * bi, r.err); break;
-                    case INT8:    r.elements.ui64[i] = uint64_int64_add(a.elements.ui64[i % an] * ai, b.elements.i8 [i % bn] * bi, r.err); break;
-                    case INT32:   r.elements.ui64[i] = uint64_int64_add(a.elements.ui64[i % an] * ai, b.elements.i32[i % bn] * bi, r.err); break;
-                    case INT64:   r.elements.ui64[i] = uint64_int64_add(a.elements.ui64[i % an] * ai, b.elements.i64[i % bn] * bi, r.err); break;
-                    case FLOAT32: r.elements.ui64[i] = uint64_double_add(a.elements.ui64[i % an] * ai, (dbits){ .d = b.elements.f32[i % bn] * bi }, r.err); break;
-                    case FLOAT64: r.elements.ui64[i] = uint64_double_add(a.elements.ui64[i % an] * ai, (dbits){ .d = b.elements.f64[i % bn] * bi }, r.err); 
+                    case UINT8:   r.elements.ui64[i] = uint64_add(a.elements.ui64[i % an] * a_ind, b.elements.ui8 [i % bn] * b_ind, r.err); break;
+                    case UINT32:  r.elements.ui64[i] = uint64_add(a.elements.ui64[i % an] * a_ind, b.elements.ui32[i % bn] * b_ind, r.err); break;
+                    case UINT64:  r.elements.ui64[i] = uint64_add(a.elements.ui64[i % an] * a_ind, b.elements.ui64[i % bn] * b_ind, r.err); break;
+                    case INT8:    r.elements.ui64[i] = uint64_int64_add(a.elements.ui64[i % an] * a_ind, b.elements.i8 [i % bn] * b_ind, r.err); break;
+                    case INT32:   r.elements.ui64[i] = uint64_int64_add(a.elements.ui64[i % an] * a_ind, b.elements.i32[i % bn] * b_ind, r.err); break;
+                    case INT64:   r.elements.ui64[i] = uint64_int64_add(a.elements.ui64[i % an] * a_ind, b.elements.i64[i % bn] * b_ind, r.err); break;
+                    case FLOAT32: r.elements.ui64[i] = uint64_double_add(a.elements.ui64[i % an] * a_ind, (dbits){ .d = b.elements.f32[i % bn] * b_ind }, r.err); break;
+                    case FLOAT64: r.elements.ui64[i] = uint64_double_add(a.elements.ui64[i % an] * a_ind, (dbits){ .d = b.elements.f64[i % bn] * b_ind }, r.err); 
                 }
             }
             break;
         case FLOAT32: 
             while(i--){
-                ai = i < an;
-                bi = i < bn;
+                a_ind = i < an;
+                b_ind = i < bn;
                 switch(b.type[0]){
-                    case INT8:    r.elements.f32[i] = float_add((fbits){ .f = a.elements.f32[i % an] * ai }, (fbits){ .f = b.elements.i8  [i % bn] * bi }, r.err); break;
-                    case UINT8:   r.elements.f32[i] = float_add((fbits){ .f = a.elements.f32[i % an] * ai }, (fbits){ .f = b.elements.ui8 [i % bn] * bi }, r.err); break;
-                    case INT32:   r.elements.f32[i] = float_add((fbits){ .f = a.elements.f32[i % an] * ai }, (fbits){ .f = b.elements.i32 [i % bn] * bi }, r.err); break;
-                    case UINT32:  r.elements.f32[i] = float_add((fbits){ .f = a.elements.f32[i % an] * ai }, (fbits){ .f = b.elements.ui32[i % bn] * bi }, r.err); break;
-                    case INT64:   r.elements.f32[i] = float_add((fbits){ .f = a.elements.f32[i % an] * ai }, (fbits){ .f = b.elements.i64 [i % bn] * bi }, r.err); break;
-                    case UINT64:  r.elements.f32[i] = float_add((fbits){ .f = a.elements.f32[i % an] * ai }, (fbits){ .f = b.elements.ui64[i % bn] * bi }, r.err); break;
-                    case FLOAT32: r.elements.f32[i] = float_add((fbits){ .f = a.elements.f32[i % an] * ai }, (fbits){ .f = b.elements.f32 [i % bn] * bi }, r.err); break;
-                    case FLOAT64: r.elements.f32[i] = float_add((fbits){ .f = a.elements.f32[i % an] * ai }, (fbits){ .f = b.elements.f64 [i % bn] * bi }, r.err); 
+                    case INT8:    r.elements.f32[i] = float_add((fbits){ .f = a.elements.f32[i % an] * a_ind }, (fbits){ .f = b.elements.i8  [i % bn] * b_ind }, r.err); break;
+                    case UINT8:   r.elements.f32[i] = float_add((fbits){ .f = a.elements.f32[i % an] * a_ind }, (fbits){ .f = b.elements.ui8 [i % bn] * b_ind }, r.err); break;
+                    case INT32:   r.elements.f32[i] = float_add((fbits){ .f = a.elements.f32[i % an] * a_ind }, (fbits){ .f = b.elements.i32 [i % bn] * b_ind }, r.err); break;
+                    case UINT32:  r.elements.f32[i] = float_add((fbits){ .f = a.elements.f32[i % an] * a_ind }, (fbits){ .f = b.elements.ui32[i % bn] * b_ind }, r.err); break;
+                    case INT64:   r.elements.f32[i] = float_add((fbits){ .f = a.elements.f32[i % an] * a_ind }, (fbits){ .f = b.elements.i64 [i % bn] * b_ind }, r.err); break;
+                    case UINT64:  r.elements.f32[i] = float_add((fbits){ .f = a.elements.f32[i % an] * a_ind }, (fbits){ .f = b.elements.ui64[i % bn] * b_ind }, r.err); break;
+                    case FLOAT32: r.elements.f32[i] = float_add((fbits){ .f = a.elements.f32[i % an] * a_ind }, (fbits){ .f = b.elements.f32 [i % bn] * b_ind }, r.err); break;
+                    case FLOAT64: r.elements.f32[i] = float_add((fbits){ .f = a.elements.f32[i % an] * a_ind }, (fbits){ .f = b.elements.f64 [i % bn] * b_ind }, r.err); 
                 }
             }
             break;
         case FLOAT64: 
             while(i--){
-                ai = i < an;
-                bi = i < bn;
+                a_ind = i < an;
+                b_ind = i < bn;
                 switch(b.type[0]){
-                    case INT8:    r.elements.f64[i] = double_add((dbits){ .d = a.elements.f64[i % an] * ai }, (dbits){ .d = b.elements.i8  [i % bn] * bi }, r.err); break;
-                    case UINT8:   r.elements.f64[i] = double_add((dbits){ .d = a.elements.f64[i % an] * ai }, (dbits){ .d = b.elements.ui8 [i % bn] * bi }, r.err); break;
-                    case INT32:   r.elements.f64[i] = double_add((dbits){ .d = a.elements.f64[i % an] * ai }, (dbits){ .d = b.elements.i32 [i % bn] * bi }, r.err); break;
-                    case UINT32:  r.elements.f64[i] = double_add((dbits){ .d = a.elements.f64[i % an] * ai }, (dbits){ .d = b.elements.ui32[i % bn] * bi }, r.err); break;
-                    case INT64:   r.elements.f64[i] = double_add((dbits){ .d = a.elements.f64[i % an] * ai }, (dbits){ .d = b.elements.i64 [i % bn] * bi }, r.err); break;
-                    case UINT64:  r.elements.f64[i] = double_add((dbits){ .d = a.elements.f64[i % an] * ai }, (dbits){ .d = b.elements.ui64[i % bn] * bi }, r.err); break;
-                    case FLOAT32: r.elements.f64[i] = double_add((dbits){ .d = a.elements.f64[i % an] * ai }, (dbits){ .d = b.elements.f32 [i % bn] * bi }, r.err); break;
-                    case FLOAT64: r.elements.f64[i] = double_add((dbits){ .d = a.elements.f64[i % an] * ai }, (dbits){ .d = b.elements.f64 [i % bn] * bi }, r.err); 
+                    case INT8:    r.elements.f64[i] = double_add((dbits){ .d = a.elements.f64[i % an] * a_ind }, (dbits){ .d = b.elements.i8  [i % bn] * b_ind }, r.err); break;
+                    case UINT8:   r.elements.f64[i] = double_add((dbits){ .d = a.elements.f64[i % an] * a_ind }, (dbits){ .d = b.elements.ui8 [i % bn] * b_ind }, r.err); break;
+                    case INT32:   r.elements.f64[i] = double_add((dbits){ .d = a.elements.f64[i % an] * a_ind }, (dbits){ .d = b.elements.i32 [i % bn] * b_ind }, r.err); break;
+                    case UINT32:  r.elements.f64[i] = double_add((dbits){ .d = a.elements.f64[i % an] * a_ind }, (dbits){ .d = b.elements.ui32[i % bn] * b_ind }, r.err); break;
+                    case INT64:   r.elements.f64[i] = double_add((dbits){ .d = a.elements.f64[i % an] * a_ind }, (dbits){ .d = b.elements.i64 [i % bn] * b_ind }, r.err); break;
+                    case UINT64:  r.elements.f64[i] = double_add((dbits){ .d = a.elements.f64[i % an] * a_ind }, (dbits){ .d = b.elements.ui64[i % bn] * b_ind }, r.err); break;
+                    case FLOAT32: r.elements.f64[i] = double_add((dbits){ .d = a.elements.f64[i % an] * a_ind }, (dbits){ .d = b.elements.f32 [i % bn] * b_ind }, r.err); break;
+                    case FLOAT64: r.elements.f64[i] = double_add((dbits){ .d = a.elements.f64[i % an] * a_ind }, (dbits){ .d = b.elements.f64 [i % bn] * b_ind }, r.err); 
                 }
             }
 
@@ -965,43 +965,48 @@ vecN vec_mult_first_arg_t(vecN a, vecN b){// DESCRIPTION: function will cast the
     if(a.n[0] ^ b.n[0]){ a.err[0] = SIZE_DOES_NOT_MATCH; return a; }
     uint32_t i = a.n[0];
     uint8_t a_size = amount_of_type_bytes(a.type[0]), b_size = amount_of_type_bytes(b.type[0]), 
-            a_type_cat = int_uint_float_t(a.type[0]), b_type_cat = int_uint_float_t(b.type[0]);
+            a_type_cat = int_uint_float_t(a.type[0]), b_type_cat = int_uint_float_t(b.type[0]),
+            a_type = a.type[0];
     vecN r = vec_create(a.type[0], i);
     datapointer ptr = { .vptr = malloc(8) };
+    void* b_ptr, *a_ptr;
     while(i--){
+        b_ptr = b.elements.i8 + (i * b_size);
+        a_ptr = a.elements.i8 + (i * a_size);
         switch(a_type_cat){
             case 0: 
                 switch(b_type_cat){
-                    case 0: int_n_to_int_k_type_cast  (b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, a.elements.i8 + (i * a_size), r.err); break;
-                    case 1: uint_n_to_int_k_type_cast (b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, a.elements.i8 + (i * a_size), r.err); break;
-                    case 2: float_n_to_int_k_type_cast(b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, a.elements.i8 + (i * a_size), r.err); 
+                    case 0: int_n_to_int_k_type_cast  (b_ptr, b_size, ptr.vptr, a_size, a_ptr, r.err); break;
+                    case 1: uint_n_to_int_k_type_cast (b_ptr, b_size, ptr.vptr, a_size, a_ptr, r.err); break;
+                    case 2: float_n_to_int_k_type_cast(b_ptr, b_size, ptr.vptr, a_size, a_ptr, r.err); 
                 }
             break;
             case 1: 
                 switch(b_type_cat){
-                    case 0: int_n_to_uint_k_type_cast  (b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, a.elements.i8 + (i * a_size), r.err); break;
-                    case 1: uint_n_to_uint_k_type_cast (b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, a.elements.i8 + (i * a_size), r.err); break;
-                    case 2: float_n_to_uint_k_type_cast(b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, a.elements.i8 + (i * a_size), r.err); 
+                    case 0: int_n_to_uint_k_type_cast  (b_ptr, b_size, ptr.vptr, a_size, a_ptr, r.err); break;
+                    case 1: uint_n_to_uint_k_type_cast (b_ptr, b_size, ptr.vptr, a_size, a_ptr, r.err); break;
+                    case 2: float_n_to_uint_k_type_cast(b_ptr, b_size, ptr.vptr, a_size, a_ptr, r.err); 
                 }
             break;
             case 2: 
                 switch(b_type_cat){
-                    case 0: int_n_to_float_k_type_cast  (b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, a.elements.i8 + (i * a_size), r.err); break;
-                    case 1: uint_n_to_float_k_type_cast (b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, a.elements.i8 + (i * a_size), r.err); break;
-                    case 2: float_n_to_float_k_type_cast(b.elements.i8 + (i * b_size), b_size, ptr.vptr, a_size, a.elements.i8 + (i * a_size), r.err); 
+                    case 0: int_n_to_float_k_type_cast  (b_ptr, b_size, ptr.vptr, a_size, a_ptr, r.err); break;
+                    case 1: uint_n_to_float_k_type_cast (b_ptr, b_size, ptr.vptr, a_size, a_ptr, r.err); break;
+                    case 2: float_n_to_float_k_type_cast(b_ptr, b_size, ptr.vptr, a_size, a_ptr, r.err); 
                 }   
         }
-        switch(a.type[0]){
-            case INT8:    r.elements.i8  [i] = int8_add  (a.elements.i8  [i], ptr.i8  [0], r.err); break; 
-            case UINT8:   r.elements.ui8 [i] = uint8_add (a.elements.ui8 [i], ptr.ui8 [0], r.err); break;
-            case INT32:   r.elements.i32 [i] = int32_add (a.elements.i32 [i], ptr.i32 [0], r.err); break;
-            case UINT32:  r.elements.ui32[i] = uint32_add(a.elements.ui32[i], ptr.ui32[0], r.err); break;
-            case INT64:   r.elements.i64 [i] = int64_add (a.elements.i64 [i], ptr.i64 [0], r.err); break; 
-            case UINT64:  r.elements.ui64[i] = uint64_add(a.elements.ui64[i], ptr.ui64[0], r.err); break;
-            case FLOAT32: r.elements.f32 [i] = float_add((fbits){ .f = a.elements.f32[i] }, (fbits){ .f = ptr.f32[0] }, r.err); break; 
-            case FLOAT64: r.elements.f64 [i] = double_add((dbits){ .d = a.elements.f64[i] }, (dbits){ .d = ptr.f64[0] }, r.err); break; 
+        switch(a_type){
+            case INT8:    r.elements.i8  [i] = int8_mult  (a.elements.i8  [i], ptr.i8  [0], r.err); break; 
+            case INT32:   r.elements.i32 [i] = int32_mult (a.elements.i32 [i], ptr.i32 [0], r.err); break;
+            case INT64:   r.elements.i64 [i] = int64_mult (a.elements.i64 [i], ptr.i64 [0], r.err); break; 
+            case UINT8:   r.elements.ui8 [i] = uint8_mult (a.elements.ui8 [i], ptr.ui8 [0], r.err); break;
+            case UINT32:  r.elements.ui32[i] = uint32_mult(a.elements.ui32[i], ptr.ui32[0], r.err); break;
+            case UINT64:  r.elements.ui64[i] = uint64_mult(a.elements.ui64[i], ptr.ui64[0], r.err); break;
+            case FLOAT32: r.elements.f32 [i] = float_mult_round ((fbits){ .f = a.elements.f32[i] }, (fbits){ .f = ptr.f32[0] }, r.err); break; 
+            case FLOAT64: r.elements.f64 [i] = double_mult_round((dbits){ .d = a.elements.f64[i] }, (dbits){ .d = ptr.f64[0] }, r.err); 
         }
     } 
+    free(ptr.vptr);
     return r;
 }
 

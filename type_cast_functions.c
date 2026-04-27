@@ -5,7 +5,7 @@
     #include "logical_functions_of_decision.c"
     #include "bitwise_functions.c"
 #endif
-
+// TODO: test these functions
 void int_n_to_int_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
     if(!(from_ptr && to_ptr && sec_arg && err)){
         if(err){ *err = NULL_POINTER; }
@@ -63,7 +63,7 @@ void int_n_to_uint_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_pt
     else{
         val = from_s ^ to_s; // from_s ^ to_s == from_s != to_s
         for( ; i < from_s; i++){ to_ptr[i] = from_ptr[i]; }
-        *err = ternary((from_ptr[i] >> 7) & 1, NEGATIVE_OVERFLOW, *err); 
+        *err = ternary((from_ptr[i - 1] >> 7) & 1, NEGATIVE_OVERFLOW, *err); 
         for( ; i < to_s; i++){ to_ptr[i] = 0; }
     }
 }

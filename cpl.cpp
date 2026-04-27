@@ -1,9 +1,14 @@
 #include <iostream>
-
 using namespace std;
 
-int main(){
+void f(int a){
+    printf("shit");
+}
+void f(int b){
+    printf("dang");
+}
 
-    cout << "hello";
+int main(){
+    f(1);
     
 }

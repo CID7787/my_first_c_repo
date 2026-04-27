@@ -98,7 +98,8 @@ void print_vector(vecN a){
         print_fund_type_func_arr[a.type[0]]((datapointer){ .i8 = a.elements.i8 + i * amount_of_type_bytes(a.type[0]) } );
         printf(", ");
         i++;
-    }    
+    }
+    printf("\n\n");
 }
 
 void print_matrix(matrix_t a){
@@ -109,6 +110,7 @@ void print_matrix(matrix_t a){
         print_fund_type_func_arr[a.type[0]]((datapointer){ .i8 = a.elements.i8 + ((i / a.col[0]) * a.col[0] + (i % a.col[0])) * amount_of_type_bytes(a.type[0]) } );
         printf(" ");
         i++;
-    }    
+    }
+    printf("\n\n");
 }
 
