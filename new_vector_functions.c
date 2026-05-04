@@ -374,7 +374,7 @@ datapointer elem_type_cast(datapointer elem, datatype from, datatype to, uint32_
 }
 
 
-vecN vec_scaler_in_place(vecN vec, datatype scale_type, fundtypeunion scale){// TODO: what if amount of elements in data is less than n
+vecN vec_scaler_in_place(vecN vec, datatype scale_type, fundt_un scale){// TODO: what if amount of elements in data is less than n
     if(!(vec.elements.i32 && vec.err && vec.type && vec.n)){// TODO: how to inform about NULL 
         if(vec.err){ vec.err[0] = NULL_POINTER; }
         return vec;    
@@ -713,7 +713,7 @@ vecN vec_add_first_arg_t(vecN a, vecN b){// TODO: what if amount of elements in 
     }
     vecN r = vec_create(a.type[0], ternary(a.n[0] > b.n[0], a.n[0], b.n[0]));
     uint32_t i = r.n[0], a_ind, b_ind, an = a.n[0], bn = b.n[0];
-    fundtypeunion val;
+    fundt_un val;
     switch(a.type[0]){
         case INT8:
             while(i--){
@@ -1019,7 +1019,7 @@ vecN vec_exp_first_arg_t(vecN a, vecN b){
     if(a.n[0] ^ b.n[0]){ a.err[0] = SIZE_DOES_NOT_MATCH; return a; }
     uint32_t i = a.n[0], a_type = a.type[0], b_type = b.type[0];
     vecN r = vec_create(a.type[0], a.n[0]);
-    fundtypeunion val;
+    fundt_un val;
     while(i--){
         val.ui64 = 0;
         switch(b_type){

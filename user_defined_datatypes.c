@@ -1,17 +1,7 @@
-// this file contain all datatypes that was created from struct, union and enms
+// this file contain all datatypes that was created from struct, union and enums
 #ifndef headerfile
   #include <stdint.h>
 #endif
-
-typedef union variable_all_types{// TODO: all type is the same as fundtypeunion type, leave one
-  double d;
-  long int li;
-  uint64_t lui;
-  char c;
-  float f;
-  int i;
-  unsigned int ui;
-} all;
 
 typedef enum function_state{
   NO_PROBLEM = 0,
@@ -86,7 +76,6 @@ typedef enum error_code{
   SIZE_DOES_NOT_MATCH// DESCRIPTION: this error informs about the mismatch of dimension(or amount of elements), for instance in vec_mult function first arg could have less elements than second
 }error;
 
-
 enum DATATYPES { // enumeration
   INT8 = 0,
   UINT8,
@@ -121,14 +110,14 @@ union FUNDUMENTAL_TYPES_UNION{
   uint64_t ui64;
   float f32;
   double f64;
-} typedef fundtypeunion;
+} typedef fundt_un;
 
-typedef struct vector_type{
+struct vector_type{
   datatype* type;
   uint32_t* n;
   error* err;
   datapointer elements;
-} vecN;
+}typedef vecN;
 
 struct matrix_m_n{
   datatype* type;

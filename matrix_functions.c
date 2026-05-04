@@ -50,7 +50,7 @@ matrix_t matrix_filler(matrix_t m, datapointer arr){// TODO: what if amount of e
 }
 
 
-matrix_t matrix_scaler_in_place(matrix_t m, datatype scl_type, fundtypeunion scale){// TODO: what if amount of elements in data is less than n
+matrix_t matrix_scaler_in_place(matrix_t m, datatype scl_type, fundt_un scale){// TODO: what if amount of elements in data is less than n
     if(m.row && m.col){ 
         if(m.err){ m.err[0] = NULL_POINTER; }
         return m; 
@@ -117,7 +117,7 @@ matrix_t matrix_mult_first_arg_t(matrix_t a, matrix_t b){// a.elements.i8[n2 * a
     cond1 = int_uint_float_t(a.type[0]);
     cond2 = int_uint_float_t(b.type[0]);
     uint32_t b_col = b.col[0], a_row = a.row[0], a_col = a.col[0], n3, a_ind, b_ind;
-    fundtypeunion sum;
+    fundt_un sum;
     datapointer ptr = { .vptr = malloc(8) };
     for(n1 = 0; n1 < b_col; n1++){
         for(n2 = 0; n2 < a_row; n2++){

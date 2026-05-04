@@ -1,14 +1,26 @@
 #include <iostream>
-using namespace std;
+#include <vector>
+using namespace std; 
 
-void f(int a){
-    printf("shit");
-}
-void f(int b){
-    printf("dang");
-}
+class MyClass {
+private:
+    int b;
 
-int main(){
-    f(1);
-    
+public:
+    // Constructor
+    MyClass(int &&a) : b(move(a)) {
+        cout << "Move constructor called!" << endl;
+    }
+
+    void display() {
+            cout << b <<endl;
+    }
+};
+
+int main() {
+    int a = 4;
+    MyClass obj1(move(a));  // Move constructor is called
+
+    obj1.display();
+    return 0;
 }

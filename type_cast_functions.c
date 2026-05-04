@@ -30,24 +30,6 @@ void int_n_to_int_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr
     }
 }
 
-void uint_n_to_int_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
-    if(!(from_ptr && to_ptr && sec_arg && err)){
-        if(err){ *err = NULL_POINTER; }
-        return;
-    }
-    uint8_t i = 0, val = 0; 
-    if(from_s > to_s){
-        for( ; i < to_s; i++){ to_ptr[i] = from_ptr[i]; val |= sec_arg[i]; }
-        for(to_s = 0; i < from_s; i++){ to_s |= from_ptr[i]; val |= sec_arg[i]; }
-        *err = ternary(to_s && val, POSITIVE_OVERFLOW, *err);
-    }
-    else{
-        val = from_s ^ to_s;// from_s ^ to_s == from_s != to_s
-        for( ; i < from_s; i++){ to_ptr[i] = from_ptr[i]; }
-        for( ; (i < to_s) && val; i++){ to_ptr[i] = 0; }
-    }
-}
-
 void int_n_to_uint_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
     if(!(from_ptr && to_ptr && sec_arg && err)){
         if(err){ *err = NULL_POINTER; }
@@ -66,102 +48,6 @@ void int_n_to_uint_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_pt
         *err = ternary((from_ptr[i - 1] >> 7) & 1, NEGATIVE_OVERFLOW, *err); 
         for( ; i < to_s; i++){ to_ptr[i] = 0; }
     }
-}
-
-void uint_n_to_uint_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
-    if(!(from_ptr && to_ptr && sec_arg && err)){
-        if(err){ *err = NULL_POINTER; }
-        return;
-    }
-    uint8_t i = 0, val = 0; 
-    if(from_s > to_s){
-        for( ; i < to_s; i++){ to_ptr[i] = from_ptr[i]; val |= sec_arg[i]; }
-        for(to_s = 0; i < from_s; i++){ to_s |= from_ptr[i]; val |= sec_arg[i]; }
-        *err = ternary(to_s && val, POSITIVE_OVERFLOW, *err);
-    }
-    else{
-        for( ; i < from_s; i++){ to_ptr[i] = from_ptr[i]; }
-        for( ; i < to_s; i++){ to_ptr[i] = 0; }
-    }
-}
-
-void float_n_to_int_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
-    if(!(from_ptr && to_ptr && sec_arg && err)){
-        if(err){ *err = NULL_POINTER; }
-        return;
-    }
-    int32_t i = (from_s == 8) * 3, exp, zero_cond = from_s << 3, neg_cond;// from_s == 8 condition to check if variable type is type double 
-    int64_t mant = 0, mask = 0;
-    exp = (from_ptr[from_s - 1] & 0x7f) << 1;
-    exp <<= i;
-    exp |= from_ptr[from_s - 2] >> (7 - i);
-    for(i = from_s - 1; i--; ){ mant <<= 8; mant |= from_ptr[i]; }
-    i = from_s == sizeof(double);// from_s == 8 condition to check if type variavle is type double
-    mant &= ternary(i, MAX_DOUBLE_MANTISSA, MAX_FLOAT_MANTISSA);
-    mant |= ternary(i, DOUBLE_MANTISSA_IMPLICIT_ONE, FLOAT_MANTISSA_IMPLICIT_ONE);
-    mant = else0(exp, mant);// if exp == 0, it amplies that mant must be 0 too, not mantissa implicit one number 
-// error check
-    *err = ternary(exp > ternary(i, MAX_NORM_DOUBLE_EXP, MAX_NORM_FLOAT_EXP), SNAN, *err);
-    exp -= ternary(i, DOUBLE_EXP_BIAS, FLOAT_EXP_BIAS);
-    *err = ternary((exp < 0) && mant, UNDERFLOW, *err);
-// error check
-    *err = ternary(exp > zero_cond, ternary(from_ptr[from_s - 1] >> 7, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err);
-    exp = ((int64_t)ternary(i, AMOUNT_OF_DOUBLE_MANTISSA_BITS, AMOUNT_OF_FLOAT_MANTISSA_BITS) - exp) % zero_cond;
-    for(i = 0; i < exp; i++){ mask <<= 1; mask |= 1; }
-    *err = ternary((exp > 0) && (mant & mask), UNDERFLOW, *err);
-    mant = ternary(exp < 0, mant << -exp, mant >> exp);
-// error check
-    neg_cond = from_ptr[from_s - 1] >> 7;
-    *err = ternary(mant < 0, ternary(neg_cond, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err);
-    mant = ternary(neg_cond, int64_neg(mant), mant);
-    neg_cond = (mant < 0) & (*err != POSITIVE_OVERFLOW);
-    for(i = 0; i < to_s; i++){ 
-        to_ptr[i] = (mant >> (8 * i)) & 0xff; 
-        zero_cond |= sec_arg[i];
-    }
-    for(mask = 0; i < 8; i++){ 
-        exp = (mant >> (i * 8)) & 0xff;
-        mask |= ((exp ^ 0xff) & -neg_cond) | (exp & -(!neg_cond));
-        zero_cond |= sec_arg[i];
-    }
-    *err = ternary(mask && zero_cond, ternary(neg_cond & (to_ptr[to_s - 1] >> 7), NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err);
-}
-
-void float_n_to_uint_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
-    if(!(from_ptr && to_ptr && sec_arg && err)){
-        if(err){ *err = NULL_POINTER; }
-        return;
-    }
-    int32_t i, exp, cond = (from_s == 8) * 3;// from_s == 8 condition to check if type variavle is type double 
-    uint64_t mant = 0;
-    exp = (from_ptr[from_s - 1] & 0x7f) << 1;
-    exp <<= cond;
-    exp |= from_ptr[from_s - 2] >> (7 - cond);
-    for(i = from_s - 1; i--; ){ mant <<= 8; mant |= from_ptr[i]; }
-    mant &= ternary(cond, MAX_DOUBLE_MANTISSA, MAX_FLOAT_MANTISSA);
-    mant |= ternary(cond, DOUBLE_MANTISSA_IMPLICIT_ONE, FLOAT_MANTISSA_IMPLICIT_ONE);
-// error check
-    *err = ternary(exp > ternary(cond, MAX_NORM_DOUBLE_EXP, MAX_NORM_FLOAT_EXP), SNAN, *err);
-    mant = else0(exp, mant);// if exp == 0, it amplies that mant must be 0 too, not mantissa implicit one number 
-    exp -= ternary(cond, DOUBLE_EXP_BIAS, FLOAT_EXP_BIAS);
-    *err = ternary((exp < 0) && mant, UNDERFLOW, *err);
-    cond = from_s << 3;
-// error check
-    *err = ternary(from_ptr[from_s - 1] >> 7, NEGATIVE_OVERFLOW, *err);
-    *err = ternary(exp > cond, POSITIVE_OVERFLOW, *err);
-    exp = ((int64_t)ternary(cond, AMOUNT_OF_DOUBLE_MANTISSA_BITS, AMOUNT_OF_FLOAT_MANTISSA_BITS) - exp) % cond;
-    for(i = cond = 0; i < exp; i++){ cond <<= 1; cond |= 1; }
-    *err = ternary((exp > 0) && (mant & cond), UNDERFLOW, *err);
-    mant = ternary(exp < 0, mant << -exp, mant >> exp);
-    for(i = cond = exp = 0; i < to_s; i++){
-        to_ptr[i] = (mant >> (8 * i)) & 0xff; 
-        cond |= sec_arg[i];
-    }
-    for(; i < 8; i++){ 
-        exp |= (mant >> (8 * i)) & 0xff;
-        cond |= sec_arg[0]; 
-    }
-    *err = ternary(exp && cond, POSITIVE_OVERFLOW, *err);
 }
 
 void int_n_to_float_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
@@ -196,6 +82,43 @@ void int_n_to_float_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_p
     to_ptr[to_s - 1] = ( exp >> (4 >> (is_float32 << 1))) | (from_ptr[from_s - 1] & 0x80);
 }
 
+
+
+void uint_n_to_int_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
+    if(!(from_ptr && to_ptr && sec_arg && err)){
+        if(err){ *err = NULL_POINTER; }
+        return;
+    }
+    uint8_t i = 0, val = 0; 
+    if(from_s > to_s){
+        for( ; i < to_s; i++){ to_ptr[i] = from_ptr[i]; val |= sec_arg[i]; }
+        for(to_s = 0; i < from_s; i++){ to_s |= from_ptr[i]; val |= sec_arg[i]; }
+        *err = ternary(to_s && val, POSITIVE_OVERFLOW, *err);
+    }
+    else{
+        val = from_s ^ to_s;// from_s ^ to_s == from_s != to_s
+        for( ; i < from_s; i++){ to_ptr[i] = from_ptr[i]; }
+        for( ; (i < to_s) && val; i++){ to_ptr[i] = 0; }
+    }
+}
+
+void uint_n_to_uint_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){
+    if(!(from_ptr && to_ptr && sec_arg && err)){
+        if(err){ *err = NULL_POINTER; }
+        return;
+    }
+    uint8_t i = 0, val = 0; 
+    if(from_s > to_s){
+        for( ; i < to_s; i++){ to_ptr[i] = from_ptr[i]; val |= sec_arg[i]; }
+        for(to_s = 0; i < from_s; i++){ to_s |= from_ptr[i]; val |= sec_arg[i]; }
+        *err = ternary(to_s && val, POSITIVE_OVERFLOW, *err);
+    }
+    else{
+        for( ; i < from_s; i++){ to_ptr[i] = from_ptr[i]; }
+        for( ; i < to_s; i++){ to_ptr[i] = 0; }
+    }
+}
+
 void uint_n_to_float_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){// TODO: check validality from_s and to_s
   if(!(from_ptr && to_ptr && sec_arg && err)){
       if(err){ *err = NULL_POINTER; }
@@ -220,6 +143,88 @@ void uint_n_to_float_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_
   for(i = 0; i < cond; i++){ to_ptr[i] = (val >> (i * 8)) & 0xff; }// evaluting mantissa
   to_ptr[to_s - 2] = (to_ptr[to_s - 2] & ternary(is_float32, 0x7f, 0xf)) | ((exp << ternary(is_float32, 7, 4)) & 0xff); 
   to_ptr[to_s - 1] = exp >> (4 >> (is_float32 << 1));
+}
+
+
+
+void float_n_to_int_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){// TESTED
+    if(!(from_ptr && to_ptr && sec_arg && err)){
+        if(err){ *err = NULL_POINTER; }
+        return;
+    }
+    int8_t undefl_cond, overfl_cond, pos_overfl_cond, cond = (from_s == 8) * 3;// from_s == 8 condition to check if variable type is type double 
+    int32_t i, exp;
+    uint64_t mant = 0, mask = 0;
+    exp = (from_ptr[from_s - 1] & 0x7f) << 1;
+    exp <<= cond;
+    exp |= from_ptr[from_s - 2] >> (7 - cond);
+    for(i = from_s - 1; i--; ){ mant <<= 8; mant |= from_ptr[i]; }
+    mant &= ternary(cond, MAX_DOUBLE_MANTISSA, MAX_FLOAT_MANTISSA);
+    undefl_cond = !exp && mant;
+    mant |= ternary(cond, DOUBLE_MANTISSA_IMPLICIT_ONE, FLOAT_MANTISSA_IMPLICIT_ONE);
+    mant = else0(exp, mant);// if exp == 0, it amplies that mant must be 0 too, not (mantissa | implicit one) number 
+// error check
+    *err = ternary(exp > ternary(cond, MAX_NORM_DOUBLE_EXP, MAX_NORM_FLOAT_EXP), SNAN, *err);
+    exp -= ternary(cond, DOUBLE_EXP_BIAS, FLOAT_EXP_BIAS);
+    undefl_cond |= (exp < 0) && mant;
+// error check
+    i = from_s << 3;
+    overfl_cond = exp > i;
+    exp = ternary(exp < 0, int64_neg(exp), exp);
+    exp = ((int64_t)ternary(cond, AMOUNT_OF_DOUBLE_MANTISSA_BITS, AMOUNT_OF_FLOAT_MANTISSA_BITS) - exp) % i;
+    for(i = mask = 0; i < exp; i++){ mask <<= 1; mask |= 1; }
+    undefl_cond |= (exp > 0) && (mant & mask);
+    mant <<= -(exp < 0) & -exp;
+    mant >>= -(exp > 0) & exp;
+    // error check
+    cond = from_ptr[from_s - 1] >> 7;// pure sign bit, seeeeeee >> 7 = 0000000s
+    pos_overfl_cond |= ((int64_t)mant < 0) & (mant == MIN_INT64) & cond;
+    mant = ternary(cond, int64_neg(mant), mant);
+    for(i = mask = exp = 0; i < to_s; i++){
+        to_ptr[i] = (mant >> (8 * i)) & 0xff;
+        mask |= sec_arg[i];
+    }
+    for( ; i < 8; i++){ exp |= (mant >> (i * 8)) & 0xff; }
+    *err = ternary(overfl_cond && mask, ternary(cond | pos_overfl_cond, NEGATIVE_OVERFLOW, POSITIVE_OVERFLOW), *err);
+    *err = ternary(undefl_cond && mask, UNDERFLOW, *err);
+}
+
+void float_n_to_uint_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){// TESTED
+    if(!(from_ptr && to_ptr && sec_arg && err)){
+        if(err){ *err = NULL_POINTER; }
+        return;
+    }
+    int8_t underfl_cond, pos_over_cond;
+    int32_t i, exp;
+    uint64_t mant = 0, cond = (from_s == 8) * 3;// from_s == 8 condition to check if type variavle is type double;
+    exp = (from_ptr[from_s - 1] & 0x7f) << 1;// this script takes pure exponent part and shifts its value one bit to the left(cause there still left either one or 4 bits of exponent in the next byte)
+    exp <<= cond;// this script shift to left 3 bits more in the case of from type being double(cause we have already moved it once to the left in the upper script and three other (youngest)bits for four bits of the next byte are required)
+    exp |= from_ptr[from_s - 2] >> (7 - cond);// shift to the right by 7 required for leaving only exponent part of the next byte, its either 1(eldest) bit or 4(eldest) bits, so that's why there is (7 - cond) shift for leaving either 1 or (7 - 3) bits in the case of double type cast
+    for(i = from_s - 1; i--; ){ mant <<= 8; mant |= from_ptr[i]; }// filling mant by all bytes of from value expect of the last byte containing sign with exponent part
+    mant &= ternary(cond, MAX_DOUBLE_MANTISSA, MAX_FLOAT_MANTISSA);// need to get rid of the exponent part of the exponent part 
+// check if number is subnormal
+    underfl_cond = !exp && mant;
+    mant |= ternary(cond, DOUBLE_MANTISSA_IMPLICIT_ONE, FLOAT_MANTISSA_IMPLICIT_ONE);
+// error check
+    *err = ternary(exp > ternary(cond, MAX_NORM_DOUBLE_EXP, MAX_NORM_FLOAT_EXP), SNAN, *err);
+    mant = else0(exp, mant);// if exp == 0, it amplies that mant must be 0 too, not mantissa implicit one number 
+    exp -= ternary(cond, DOUBLE_EXP_BIAS, FLOAT_EXP_BIAS);
+    underfl_cond |= (exp < 0) && mant;
+    i = from_s << 3;// size of cast to type in bits
+    // error check
+    pos_over_cond = exp > i; // (exp > i) is check for exponent will shift and make mantissa bits amount more than could fit in cast to type bits 
+    exp = ((int64_t)ternary(cond, AMOUNT_OF_DOUBLE_MANTISSA_BITS, AMOUNT_OF_FLOAT_MANTISSA_BITS) - exp) % i;
+    for(i = cond = 0; i < exp; i++){ cond <<= 1; cond |= 1; }
+    underfl_cond |= (exp > 0) && (mant & cond);
+    mant = ternary(exp < 0, mant << -exp, mant >> exp);// TODO: problem here is negative shift error
+    for(i = cond = exp = 0; i < to_s; i++){
+        to_ptr[i] = (mant >> (8 * i)) & 0xff; 
+        cond |= sec_arg[i];
+    }
+    for(; i < 8; i++){ exp |= (mant >> (8 * i)) & 0xff; } // to check if there is still bits left in the mantisas that wasn't filled, in the case of second argument pointer being anything except zero
+    *err = ternary((exp && cond) | pos_over_cond, POSITIVE_OVERFLOW, *err);
+    *err = ternary((from_ptr[from_s - 1] >> 7) && cond, NEGATIVE_OVERFLOW, *err);
+    *err = ternary(underfl_cond && cond, UNDERFLOW, *err);
 }
 
 void float_n_to_float_k_type_cast(uint8_t* from_ptr, uint8_t from_s, uint8_t* to_ptr, uint8_t to_s, uint8_t* sec_arg, error* err){

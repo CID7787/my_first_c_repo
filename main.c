@@ -17,31 +17,26 @@
 #include "matrix_functions.c"
 #include "print_binary.c"
 
+/*
+int to int, to uint, to float
+uint to uint, to int, to float
+float to float, to int, to uint
+*/
+
+
+
 
 
 int main(){
-  matrix_t a = matrix_create(UINT8, 3, 2), b = matrix_create(FLOAT32, 2, 2);
-  a.elements.ui8 = (uint8_t[]){1, 2,
-                             2, 1,
-                             3, 1};
-  b.elements.f32 = (float[]){2, 2,
-                             3, 1};
-  matrix_t r = matrix_mult_first_arg_t(a, b);
-  print_matrix(r);
+  matrix_t m = matrix_create(UINT32, 100, 100);
+  
+  vertical_gradient(m, (uint32_bytes){ .parts.b1 = 0, .parts.b2 = 255, .parts.b3 = 255 }, (uint32_bytes){ .parts.b1 = 255, .parts.b2 = 165, .parts.b3 = 0 });
+  file_filler("pic.ppm", m);
   return 0;
 }
 
 /*TODO LIST  : FMPG
  graphic:
-  horizontal gradient:
-    left side: red = 0; green = 0; blue = 0; right side: red = 255, green = 0, blue = 0
-    BLACK                      RED
-    ______________________________
-    |                            |
-    |                            |
-    |                            |
-  vertical gradient:
-    top: red =0; green = 0; blue = 0; bottom: red = 0; green = 255; blue = 0;
   diagonal gradient:
     top left corner: red = 0; green = 0; blue = 0; bottom right corner: red = 255;
 */

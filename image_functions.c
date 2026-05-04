@@ -2,7 +2,7 @@
     #include <stdio.h> 
     #include <stdlib.h>
     #include <stdint.h>
-    #include "user_define_datatypes.c" 
+    #include "user_defined_datatypes.c"
     #include "constants.c"
 #endif
 
@@ -80,6 +80,10 @@ void write_P6_PPM_file(const char* filename, uint8_t width, uint8_t height){
 
 
 void file_filler(const char *str, matrix_t pic){
+    if(!(pic.row && pic.col && pic.elements.ui8)){
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
     FILE* fptr = fopen(str, "w");
     uint8_t *arr = malloc((pic.row[0] * pic.col[0] * 3) + 1);
     uint32_t i = 0, r, c, row = pic.row[0], col = pic.col[0];
@@ -95,9 +99,13 @@ void file_filler(const char *str, matrix_t pic){
     fclose(fptr);
     free(arr);
 }
-  
-  
+
+
 void left_side_color(matrix_t pic, uint32_bytes col_b){
+    if(!(pic.row && pic.col && pic.elements.ui8)){
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
     uint32_t r, c, row = pic.row[0], col = pic.col[0], col_till = col >> 1; 
     for(r = 0; r < row; r++){
         for(c = 0; c < col_till; c++){ // col 
@@ -107,8 +115,12 @@ void left_side_color(matrix_t pic, uint32_bytes col_b){
         }
     } 
 }
-  
+
 void right_side_color(matrix_t pic, uint32_bytes col_b){
+    if(!(pic.row && pic.col && pic.elements.ui8)){
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
     uint32_t r, c, row = pic.row[0], col = pic.col[0]; 
     for(r = 0; r < row; r++){
         for(c = col >> 1; c < col; c++){ 
@@ -120,8 +132,12 @@ void right_side_color(matrix_t pic, uint32_bytes col_b){
         }
     } 
 }   
-  
+
 void top_side_color(matrix_t pic, uint32_bytes col_b){
+    if(!(pic.row && pic.col && pic.elements.ui8)){
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
     uint32_t r, c, row = pic.row[0] >> 1, col = pic.col[0]; 
     for(r = 0; r < row; r++){
         for(c = 0; c < col; c++){ // col 
@@ -131,11 +147,15 @@ void top_side_color(matrix_t pic, uint32_bytes col_b){
         }
     } 
 }  
-  
+
 void down_side_color(matrix_t pic, uint32_bytes col_b){
+    if(!(pic.row && pic.col && pic.elements.ui8)){
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
     uint32_t r, c, row = pic.row[0], col = pic.col[0];
     for(r = row >> 1; r < row; r++){
-        for(c = 0; c < col; c++){ // col 
+        for(c = 0; c < col; c++){
             pic.elements.ui8[(((r * col) + c ) << 2)    ] = col_b.parts.b1;
             pic.elements.ui8[(((r * col) + c ) << 2) + 1] = col_b.parts.b2;
             pic.elements.ui8[(((r * col) + c ) << 2) + 2] = col_b.parts.b3;
@@ -145,6 +165,10 @@ void down_side_color(matrix_t pic, uint32_bytes col_b){
 
 
 void even_pix_color(matrix_t pic, uint32_bytes col_b){
+    if(!(pic.row && pic.col && pic.elements.ui8)){
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
     uint32_t i, n = pic.row[0] * pic.col[0];
     for(i = 0; i < n; i++){
         if((i ^ 1) & 1){
@@ -156,6 +180,10 @@ void even_pix_color(matrix_t pic, uint32_bytes col_b){
 }
 
 void odd_pix_color(matrix_t pic, uint32_bytes col_b){
+    if(!(pic.row && pic.col && pic.elements.ui8)){
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
     uint32_t i, n = pic.row[0] * pic.col[0];
     for(i = 0; i < n; i++){
         if(i & 1){
@@ -168,6 +196,10 @@ void odd_pix_color(matrix_t pic, uint32_bytes col_b){
     
 
 void pix_from_k_to_m_color(matrix_t pic, uint32_bytes col_b, uint32_t from, uint32_t to){
+    if(!(pic.row && pic.col && pic.elements.ui8)){
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
     uint32_t i, n = pic.row[0] * pic.col[0];
     if(from > to){ from ^= to; to ^= from; from ^= to; }
     to = ternary(to > n, n, to);
@@ -222,12 +254,52 @@ void coordinate_axis(matrix_t pic, uint32_bytes col_b){
     vertical_line_width_n_offset_k(pic, col_b, 0, pic.col[0] >> 1);    
 }
 
+void horizontal_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
+    if(!(pic.row && pic.col && pic.elements.ui8)){
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
+    int64_t row = pic.row[0], col = pic.col[0], r, c;
+    if(!(col & row)){
+        if(pic.err){ pic.err[0] = INCOMPATIBLE; }
+        return;
+    }
+    int32_t red_b = (col2.parts.b1 - col1.parts.b1) / col, green_b = (col2.parts.b2 - col1.parts.b2) / col, blue_b = (col2.parts.b3 - col1.parts.b3) / col;
+    red_b += (col2.parts.b1 != col2.parts.b1) & !red_b;
+    green_b += (col2.parts.b2 != col2.parts.b2) & !green_b;
+    blue_b += (col2.parts.b3 != col2.parts.b3) & !blue_b;
+    for(r = 0; r < row; r++){
+        for(c = 0; c < col; c++){
+            pic.elements.ui8[ ( ((r * col) + c ) << 2 )    ] = col1.parts.b1 + (c * red_b);
+            pic.elements.ui8[ ( ((r * col) + c ) << 2 ) + 1] = col1.parts.b2 + (c * green_b);
+            pic.elements.ui8[ ( ((r * col) + c ) << 2 ) + 2] = col1.parts.b3 + (c * blue_b);
+        }
+    }
+}
 
+void vertical_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
+    if(!(pic.row && pic.col && pic.elements.ui8)){
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
+    int64_t row = pic.row[0], col = pic.col[0], r, c;
+    if(!(col & row)){
+        if(pic.err){ pic.err[0] = INCOMPATIBLE; }
+        return;
+    }
+    int32_t red_b = (col2.parts.b1 - col1.parts.b1) / row, green_b = (col2.parts.b2 - col1.parts.b2) / row, blue_b = (col2.parts.b3 - col1.parts.b3) / row;
+    red_b += (col2.parts.b1 != col2.parts.b1) & !red_b;
+    green_b += (col2.parts.b2 != col2.parts.b2) & !green_b;
+    blue_b += (col2.parts.b3 != col2.parts.b3) & !blue_b;
+    for(r = 0; r < row; r++){
+        for(c = 0; c < col; c++){
+            pic.elements.ui8[ ( ((r * col) + c ) << 2 )    ] = col1.parts.b1 + (r * red_b);
+            pic.elements.ui8[ ( ((r * col) + c ) << 2 ) + 1] = col1.parts.b2 + (r * green_b);
+            pic.elements.ui8[ ( ((r * col) + c ) << 2 ) + 2] = col1.parts.b3 + (r * blue_b);
+        }
+    }
+}
 
-void diagonal_line(){}
-
-void horizotal_gradient(){}
-
-void vertical_gradient(){}
+// void diagonal_line(matrix_t pic, uint32_bytes col_b, int8_t slope, ){}
 
 void diagonal_gradient(){}
