@@ -20,23 +20,34 @@
 /*
 int to int, to uint, to float
 uint to uint, to int, to float
-float to float, to int, to uint
+float to float
 */
-
-
 
 
 
 int main(){
   matrix_t m = matrix_create(UINT32, 100, 100);
-  
-  vertical_gradient(m, (uint32_bytes){ .parts.b1 = 0, .parts.b2 = 255, .parts.b3 = 255 }, (uint32_bytes){ .parts.b1 = 255, .parts.b2 = 165, .parts.b3 = 0 });
+  vertical_gradient(m, (uint32_bytes){ .parts.b1 = 220, .parts.b2 = 0, .parts.b3 = 230}, (uint32_bytes){ .parts.b1 = 255, .parts.b2 = 165, .parts.b3 = 0});
   file_filler("pic.ppm", m);
+  // // print_matrix((matrix_t){ .elements = m.elements, .type = (datatype[]){UINT8}, .col = (uint32_t[]){40}, .row = (uint32_t[]){1}, .err = m.err});
+  // free(m.elements.ui32);
   return 0;
 }
 
+/*Ask Amirako why compiler throws("free(): invalid size
+                                   zsh: IOT instruction (core dumped)  ./main.exe ")
+int main(){
+  matrix_t m = matrix_create(UINT32, 1, 10);
+  free(m.elements.ui32);
+  return 0;
+}
+*/
+
 /*TODO LIST  : FMPG
- graphic:
+graphic:
+  horizontal gradient:
+  vertical gradient:
   diagonal gradient:
     top left corner: red = 0; green = 0; blue = 0; bottom right corner: red = 255;
+  circle:
 */

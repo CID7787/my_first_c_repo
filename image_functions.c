@@ -2,8 +2,10 @@
     #include <stdio.h> 
     #include <stdlib.h>
     #include <stdint.h>
+    #include "logical_functions_of_decision.c"
     #include "user_defined_datatypes.c"
     #include "constants.c"
+    #include "safe_arithmetic_functions.c"
 #endif
 
 void image_data_int(char* mem_ptr, char c1, char c2, char c3, char c4){
@@ -101,6 +103,7 @@ void file_filler(const char *str, matrix_t pic){
 }
 
 
+
 void left_side_color(matrix_t pic, uint32_bytes col_b){
     if(!(pic.row && pic.col && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
@@ -133,6 +136,8 @@ void right_side_color(matrix_t pic, uint32_bytes col_b){
     } 
 }   
 
+
+
 void top_side_color(matrix_t pic, uint32_bytes col_b){
     if(!(pic.row && pic.col && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
@@ -164,6 +169,7 @@ void down_side_color(matrix_t pic, uint32_bytes col_b){
 }
 
 
+
 void even_pix_color(matrix_t pic, uint32_bytes col_b){
     if(!(pic.row && pic.col && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
@@ -193,7 +199,78 @@ void odd_pix_color(matrix_t pic, uint32_bytes col_b){
         }
     }
 }
-    
+
+
+
+void vertical_line_width_n_offset_k(matrix_t pic, uint32_bytes col_b, uint32_t width, uint32_t offset, uint32_t from_row, uint32_t till_row){// width add up on offset value so vertical line will start from offset value and till offset + width draw it
+    if(!(pic.elements.ui8 && pic.row && pic.col)){ 
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
+    uint32_t c, row = pic.row[0], col = pic.col[0], right_b;
+    offset = ternary(offset > col, col - !!col, offset);
+    right_b = offset + ternary((col - offset) >= width, width, col - offset - !!col);
+    from_row = ternary(from_row > row, row, from_row);
+    till_row = ternary(till_row > row, row, till_row);
+    if(from_row > till_row){ from_row ^= till_row; till_row ^= from_row; from_row ^= till_row; }
+    for( ; from_row < till_row; from_row++){
+        for(c = offset; c <= right_b; c++){
+            pic.elements.ui8[ ( ((from_row * col) + c) << 2 )    ] = col_b.parts.b1;
+            pic.elements.ui8[ ( ((from_row * col) + c) << 2 ) + 1] = col_b.parts.b2;
+            pic.elements.ui8[ ( ((from_row * col) + c) << 2 ) + 2] = col_b.parts.b3;
+        }
+    }
+}
+
+void horizontal_line_width_n_offset_k(matrix_t pic, uint32_bytes col_b, uint32_t width, uint32_t offset, uint32_t from_col, uint32_t till_col){
+    if(!(pic.elements.ui8 && pic.row && pic.col)){ 
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
+    uint32_t r, col = pic.col[0], row = pic.row[0], down_b;
+    offset = ternary(offset > row, row - !!row, offset);
+    down_b = offset + ternary((row - offset) >= width, width, row - offset - !!row);
+    from_col = ternary(from_col > col, col, from_col);
+    till_col = ternary(till_col > col, col, till_col);
+    if(from_col > till_col){ from_col ^= till_col; till_col ^= from_col; from_col ^= till_col; }
+    for( ; from_col < till_col; from_col++){
+        for(r = offset; r <= down_b; r++){
+            pic.elements.ui8[ ( ((r * col) + from_col) << 2 )    ] = col_b.parts.b1;
+            pic.elements.ui8[ ( ((r * col) + from_col) << 2 ) + 1] = col_b.parts.b2;
+            pic.elements.ui8[ ( ((r * col) + from_col) << 2 ) + 2] = col_b.parts.b3;
+        }
+    }
+}
+
+void diagonal_line(matrix_t pic, uint32_bytes col_b, int8_t slope, uint32_t from_col, uint32_t till_col, uint32_t from_row, uint32_t till_row){// slope variable determines whether from left to right it decreases(false == 0) or increases(true == any number except 0
+    if(!(pic.col && pic.row && pic.elements.ui8)){
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
+    uint32_t row = pic.row[0], col = pic.col[0];
+    from_col = ternary(from_col > col, col, from_col);
+    till_col = ternary(till_col > col, col, till_col);
+    from_row = ternary(from_row > row, row, from_row);
+    till_row = ternary(till_row > row, row, till_row);
+    if(from_row > till_row){ from_row ^= till_row; till_row ^= from_row; from_row ^= till_row; }
+    if(((from_col > till_col) & !slope) | ((from_col <= till_col) && slope)){ from_col ^= till_col; till_col ^= from_col; from_col ^= till_col; }
+    if(slope){
+        for( ; (from_row < till_row) && (from_col > till_col); from_col--, from_row++){
+            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 )    ] = col_b.parts.b1;
+            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 ) + 1] = col_b.parts.b2;
+            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 ) + 2] = col_b.parts.b3;            
+        }
+    }
+    else{
+        for( ; (from_row < till_row) & (from_col < till_col); from_col++, from_row++){
+            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 )    ] = col_b.parts.b1;
+            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 ) + 1] = col_b.parts.b2;
+            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 ) + 2] = col_b.parts.b3;            
+        }
+    }
+}
+
+
 
 void pix_from_k_to_m_color(matrix_t pic, uint32_bytes col_b, uint32_t from, uint32_t to){
     if(!(pic.row && pic.col && pic.elements.ui8)){
@@ -211,95 +288,87 @@ void pix_from_k_to_m_color(matrix_t pic, uint32_bytes col_b, uint32_t from, uint
     }
 }
 
-void vertical_line_width_n_offset_k(matrix_t pic, uint32_bytes col_b, uint32_t width, uint32_t offset){// width add up on offset value so vertical line will start from offset value and till offset + width draw it
-    if(!(pic.elements.ui8 && pic.row && pic.col)){ 
-        if(pic.err){ pic.err[0] = NULL_POINTER; }
-        return;
-    }
-    uint32_t r = 0, row = pic.row[0], col = pic.col[0], right_b, c;
-    offset = ternary(offset < col, offset, col - !!col);
-    right_b = offset + ternary((col - offset) >= width, width, col - offset - !!col);
-    for(r = 0; r < row; r++){
-        for(c = offset; c <= right_b; c++){
-            pic.elements.ui8[ ( ((r * col) + c) << 2 )    ] = col_b.parts.b1;
-            pic.elements.ui8[ ( ((r * col) + c) << 2 ) + 1] = col_b.parts.b2;
-            pic.elements.ui8[ ( ((r * col) + c) << 2 ) + 2] = col_b.parts.b3;
-            }
-    }
-}
-
-void horizontal_line_width_n_offset_k(matrix_t pic, uint32_bytes col_b, uint32_t width, uint32_t offset){
-    if(!(pic.elements.ui8 && pic.row && pic.col)){ 
-        if(pic.err){ pic.err[0] = NULL_POINTER; }
-        return;
-    }
-    uint32_t c, col = pic.col[0], row = pic.row[0], r, down_b;
-    offset = ternary(offset < row, offset, row - !!row);
-    down_b = offset + ternary((row - offset) >= width, width, row - offset - !!row);
-    for(c = 0; c < col; c++){
-        for(r = offset; r <= down_b; r++){
-            pic.elements.ui8[ ( ((r * col) + c) << 2 )    ] = col_b.parts.b1;
-            pic.elements.ui8[ ( ((r * col) + c) << 2 ) + 1] = col_b.parts.b2;
-            pic.elements.ui8[ ( ((r * col) + c) << 2 ) + 2] = col_b.parts.b3;
-        }
-    }
-}
-
 void coordinate_axis(matrix_t pic, uint32_bytes col_b){
     if(!(pic.elements.ui8 && pic.row && pic.col)){ 
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
     }
-    horizontal_line_width_n_offset_k(pic, col_b, 0, pic.row[0] >> 1);    
-    vertical_line_width_n_offset_k(pic, col_b, 0, pic.col[0] >> 1);    
+    horizontal_line_width_n_offset_k(pic, col_b, 0, pic.row[0] >> 1, 0, pic.col[0]);    
+    vertical_line_width_n_offset_k(pic, col_b, 0, pic.col[0] >> 1, 0, pic.row[0]);    
 }
 
+
 void horizontal_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
-    if(!(pic.row && pic.col && pic.elements.ui8)){
+    if(!(pic.row && pic.col && pic.elements.ui8 && pic.err)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
     }
-    int64_t row = pic.row[0], col = pic.col[0], r, c;
-    if(!(col & row)){
+    int64_t row = pic.row[0], col = pic.col[0], r, c, r_i, g_i, b_i, row_r;
+    if(!(col && row)){
         if(pic.err){ pic.err[0] = INCOMPATIBLE; }
         return;
     }
-    int32_t red_b = (col2.parts.b1 - col1.parts.b1) / col, green_b = (col2.parts.b2 - col1.parts.b2) / col, blue_b = (col2.parts.b3 - col1.parts.b3) / col;
-    red_b += (col2.parts.b1 != col2.parts.b1) & !red_b;
-    green_b += (col2.parts.b2 != col2.parts.b2) & !green_b;
-    blue_b += (col2.parts.b3 != col2.parts.b3) & !blue_b;
+    int32_t col1_red   = col1.parts.b1, 
+            col1_green = col1.parts.b2,
+            col1_blue  = col1.parts.b3,
+            red_diff   = col2.parts.b1 - col1_red,
+            green_diff = col2.parts.b2 - col1_green,
+            blue_diff  = col2.parts.b3 - col1_blue,
+            red_int_rat   = red_diff   / col,
+            green_int_rat = green_diff / col,
+            blue_int_rat  = blue_diff  / col;
+    double  red_fl_rat   = (double)(red_diff   % col) / col,
+            green_fl_rat = (double)(green_diff % col) / col,
+            blue_fl_rat  = (double)(blue_diff  % col) / col;
     for(r = 0; r < row; r++){
+        row_r = r * col;
         for(c = 0; c < col; c++){
-            pic.elements.ui8[ ( ((r * col) + c ) << 2 )    ] = col1.parts.b1 + (c * red_b);
-            pic.elements.ui8[ ( ((r * col) + c ) << 2 ) + 1] = col1.parts.b2 + (c * green_b);
-            pic.elements.ui8[ ( ((r * col) + c ) << 2 ) + 2] = col1.parts.b3 + (c * blue_b);
+            r_i = (row_r + c) << 2;
+            g_i =  r_i   + 1;
+            b_i =  r_i   + 2;
+            pic.elements.ui8[r_i] = col1_red   + c * (red_int_rat   + red_fl_rat  );
+            pic.elements.ui8[g_i] = col1_green + c * (green_int_rat + green_fl_rat);
+            pic.elements.ui8[b_i] = col1_blue  + c * (blue_int_rat  + blue_fl_rat );
         }
     }
 }
+
 
 void vertical_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
     if(!(pic.row && pic.col && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
     }
-    int64_t row = pic.row[0], col = pic.col[0], r, c;
-    if(!(col & row)){
+    int64_t row = pic.row[0], col = pic.col[0], r, c, r_i, g_i, b_i, row_r;
+    if(!(col && row)){
         if(pic.err){ pic.err[0] = INCOMPATIBLE; }
         return;
     }
-    int32_t red_b = (col2.parts.b1 - col1.parts.b1) / row, green_b = (col2.parts.b2 - col1.parts.b2) / row, blue_b = (col2.parts.b3 - col1.parts.b3) / row;
-    red_b += (col2.parts.b1 != col2.parts.b1) & !red_b;
-    green_b += (col2.parts.b2 != col2.parts.b2) & !green_b;
-    blue_b += (col2.parts.b3 != col2.parts.b3) & !blue_b;
-    for(r = 0; r < row; r++){
-        for(c = 0; c < col; c++){
-            pic.elements.ui8[ ( ((r * col) + c ) << 2 )    ] = col1.parts.b1 + (r * red_b);
-            pic.elements.ui8[ ( ((r * col) + c ) << 2 ) + 1] = col1.parts.b2 + (r * green_b);
-            pic.elements.ui8[ ( ((r * col) + c ) << 2 ) + 2] = col1.parts.b3 + (r * blue_b);
+    int32_t col1_red   = col1.parts.b1, 
+            col1_green = col1.parts.b2,
+            col1_blue  = col1.parts.b3,
+            red_diff   = col2.parts.b1 - col1_red,
+            green_diff = col2.parts.b2 - col1_green,
+            blue_diff  = col2.parts.b3 - col1_blue,
+            red_int_rat   = red_diff   / row,
+            green_int_rat = green_diff / row,
+            blue_int_rat  = blue_diff  / row;
+    double  red_fl_rat   = (double)(red_diff   % row) / row,
+            green_fl_rat = (double)(green_diff % row) / row,
+            blue_fl_rat  = (double)(blue_diff  % row) / row;
+    for(c = 0; c < col; c++){
+        for(r = 0; r < row; r++){
+            r_i = (r * col + c) << 2;
+            g_i =  r_i   + 1;
+            b_i =  r_i   + 2;
+            pic.elements.ui8[r_i] = col1_red   + r * (red_int_rat   + red_fl_rat  );
+            pic.elements.ui8[g_i] = col1_green + r * (green_int_rat + green_fl_rat);
+            pic.elements.ui8[b_i] = col1_blue  + r * (blue_int_rat  + blue_fl_rat );
         }
     }
 }
 
-// void diagonal_line(matrix_t pic, uint32_bytes col_b, int8_t slope, ){}
-
-void diagonal_gradient(){}
+void diagonal_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2, int8_t slope){
+    
+    
+}

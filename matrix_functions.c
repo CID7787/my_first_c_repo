@@ -20,9 +20,9 @@ matrix_t matrix_create(datatype type, uint32_t row, uint32_t col){
     uint32_t condition = ((row * col * amount_of_type_bytes(type)) <= MATRIX_MAX_ELEM_BYTE_SIZE);
     row &= -condition;
     void* r = malloc(sizeof(datatype) 
-                + (sizeof(uint32_t) << 1) 
-                + sizeof(error) 
-                + (row * col * amount_of_type_bytes(type)) );
+                  + (sizeof(uint32_t) << 1) 
+                  + sizeof(error) 
+                  + (row * col * amount_of_type_bytes(type)) );
 
     matrix_t result;
         result.type     = (datatype*)   r;
