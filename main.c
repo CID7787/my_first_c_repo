@@ -26,15 +26,15 @@ float to float
 
 
 int main(){
-  matrix_t m = matrix_create(UINT32, 100, 100);
-  vertical_gradient(m, (uint32_bytes){ .parts.b1 = 220, .parts.b2 = 0, .parts.b3 = 230}, (uint32_bytes){ .parts.b1 = 255, .parts.b2 = 165, .parts.b3 = 0});
-  file_filler("pic.ppm", m);
+  matrix_t m = matrix_create(UINT32, 2500, 5000);
+  horizontal_gradient(m, (uint32_bytes){ .parts.b1 = 0, .parts.b2 = 0, .parts.b3 = 80}, (uint32_bytes){ .parts.b1 = 213, .parts.b2 = 0, .parts.b3 = 84});
+  file_filler("dark_blue_to_red_blue_mix_thick.ppm", m);
   // // print_matrix((matrix_t){ .elements = m.elements, .type = (datatype[]){UINT8}, .col = (uint32_t[]){40}, .row = (uint32_t[]){1}, .err = m.err});
   // free(m.elements.ui32);
   return 0;
 }
 
-/*Ask Amirako why compiler throws("free(): invalid size
+/*Ask 'A' why compiler throws("free(): invalid size
                                    zsh: IOT instruction (core dumped)  ./main.exe ")
 int main(){
   matrix_t m = matrix_create(UINT32, 1, 10);

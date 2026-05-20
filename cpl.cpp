@@ -4,39 +4,63 @@
 #include <iomanip>
 using namespace std;
 
+long long unsigned int sum;
 
 class Point{
 public:
   double x, y;
-  Point(){ x = y = 0; }
-  Point(Point* v){}
-  Point(double a, double b) : x(a), y(b){}
-  void show(){ 
-    cout << "Point : (" << setprecision(16) << x << ", " << setprecision(16) << y << ")" << endl;
-  }
-  ~Point(){ 
-    cout << "Point : (" << setprecision(16) << x << ", " << setprecision(16) << y << ") is erased." << endl;
-
-  }
+  Point() : x(0), y(0) { ++sum; }
+  Point(Point& v) : x(v.x), y(v.y) { ++sum; }
+  Point(double a, double b) : x(a), y(b) { ++sum; }
+  Point(double a) : x(a), y(a) { ++sum; }
+  void show(){ cout << "Point : (" << setprecision(16) << x << ", " << setprecision(16) << y << ")\n"; }
+  void showSumOfPoint(){ cout << "In total : " << sum << " point.\n"; }
 };
 
-int main(){
-  cout << setfill('$')<< setw(4) << 3;
+
+void showPoint(Point& a, Point& b, Point& c){
+  a.show();
+  b.show();
+  c.show();
 }
 
-// int main(){
-//   char c;
-//   double a, b;
-//   Point q;  
-//   while(std::cin>>a>>c>>b){
-//     Point p(a, b);
-//     p.show();
-//   }
-//   Point q1(q), q2(1);
-//   q1.show();
-//   q2.show();
-//   q.show();
-// }
+int main(){
+    int l(0);
+    char c;
+    double a, b;
+    Point p, q, pt[60];
+    while(std::cin>>a>>c>>b){
+        if(a == b){ p.copy(pt[l].setPoint(a, b)); }
+        if(a >  b){ p.copy(pt[l].setPoint(a, b).inverse()); }
+        if(a <  b){ p.inverse(pt[l].setPoint(a, b)); }
+        if(a <  0){ q.copy(p).inverse(); }
+        if(b <  0){ q.inverse(p).copy(pt[l]); }
+        pt[l++].show();
+        p.show();
+    }
+    q.show();
+    cout<<"==========gorgeous separator=========="<<endl;
+    double x(0), y(0);
+    for(int i = 0; i < l; i++){
+        x += pt[i].x(), y -= pt[i].y();
+    }
+    pt[l].x(y), pt[l].y(x);
+    q.copy(pt[l]).show();
+    for(int i = 0; i <= l; i++){
+        pt[i].show();
+    }
+    cout<<"==========gorgeous separator=========="<<endl;
+    const Point const_point(3, 3);
+    const_point.show();
+    for(int i = 0; i <= l; i++){
+        if(const_point.isEqual(pt[i])){
+            ShowPoint(const_point);
+            ShowPoint(const_point.x(), const_point.y());
+            ShowPoint(Point(const_point.x(), const_point.y()));
+        }
+    }
+    const_point.showSumOfPoint();
+}
 /*#1
 class Account {
 private:
