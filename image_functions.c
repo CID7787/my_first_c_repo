@@ -8,78 +8,6 @@
     #include "safe_arithmetic_functions.c"
 #endif
 
-void image_data_int(char* mem_ptr, char c1, char c2, char c3, char c4){
-    mem_ptr[0] = c1;
-    mem_ptr[1] = c2;
-    mem_ptr[2] = c3;
-    mem_ptr[3] = c4;
-}
-
-void write_P3_PPM_file(char* filename, unsigned int width, unsigned int height){
-    // unsigned int p3_default_file_c = 0;
-    int size = width * height * 12;
-    char image_data[size + 1];
-    for(int i = 0; i < size; i += 12){
-        // Red
-        image_data[i + 0] = '0';
-        image_data[i + 1] = '5';
-        image_data[i + 2] = '5';
-        image_data[i + 3] = ' ';
-        // Green
-        image_data[i + 4] = '1';
-        image_data[i + 5] = '2';
-        image_data[i + 6] = '0';
-        image_data[i + 7] = ' ';
-        // Blue
-        image_data[i + 8] = ' ';
-        image_data[i + 9] = ' ';
-        image_data[i +10] = '0';
-        image_data[i +11] = '\n';
-    }
-    image_data[size] = 0;
-    FILE *fptr;
-    
-    if(filename || !sizeof(filename)){ fptr = fopen(filename, "w"); }
-    else{
-        // TODO: add name versioning (default_000.ppm, default_001.ppm, ...)
-        fptr = fopen("./default_file_name.ppm", "w");
-        // char* def_file_name = "./default_file_name000000000.ppm";
-        // def_file_name[19] = p3_default_file_c++ + '0';
-        // const char* str = def_file_name;
-    }
-    
-    if(fptr == NULL){
-        printf("STOP ERROR NULL!");
-        return;
-    }
-    
-    fprintf(fptr, "P3\n%d %d\n255\n%s", width, height, image_data);
-    fclose(fptr);
-}
-
-void write_P6_PPM_file(const char* filename, uint8_t width, uint8_t height){
-    if(!(width && height)){ return; }
-    int32_t size = width * height * 3;
-    char image_data[size + 1];
-    for(int i = 0; i < size; i += 3){
-        image_data[i    ] = 1;
-        image_data[i + 1] = 1;
-        image_data[i + 2] = 1;
-    }
-    image_data[size] = 0;
-    FILE *fptr;
-    if(filename || !sizeof(filename)){ fptr = fopen(filename, "w"); }
-    else{ fptr = fopen("./default_file_name.ppm", "w"); }
-    
-    if(fptr == NULL){
-        printf("STOP ERROR NULL!");
-        return;
-    }
-    fprintf(fptr, "P6\n%u %u\n255\n%s", width, height, image_data);
-    fclose(fptr);
-}
-
-
 
 void file_filler(const char *str, matrix_t pic){
     if(!(pic.row && pic.col && pic.elements.ui8)){
@@ -87,17 +15,21 @@ void file_filler(const char *str, matrix_t pic){
         return;
     }
     FILE* fptr = fopen(str, "w");
-    uint8_t *arr = malloc((pic.row[0] * pic.col[0] * 3) + 1);
+    int8_t *arr = malloc((pic.row[0] * pic.col[0] * 3) + 1);
     uint32_t i = 0, r, c, row = pic.row[0], col = pic.col[0];
     for(r = 0; r < row; r++){
         for(c = 0; c < col; c++, i+=3){
-            arr[i    ] = pic.elements.ui8[ ( ((r * col) + c) << 2 )    ] + !(pic.elements.ui8[ ( ((r * col) + c) << 2 )    ]);
-            arr[i + 1] = pic.elements.ui8[ ( ((r * col) + c) << 2 ) + 1] + !(pic.elements.ui8[ ( ((r * col) + c) << 2 ) + 1]);
-            arr[i + 2] = pic.elements.ui8[ ( ((r * col) + c) << 2 ) + 2] + !(pic.elements.ui8[ ( ((r * col) + c) << 2 ) + 2]);
+            arr[i    ] = pic.elements.ui8[ ( ((r * col) + c) << 2 )    ];
+            arr[i + 1] = pic.elements.ui8[ ( ((r * col) + c) << 2 ) + 1];
+            arr[i + 2] = pic.elements.ui8[ ( ((r * col) + c) << 2 ) + 2];
+            // in case of their value being zero(0)
+            arr[i] += !arr[i];
+            arr[i + 1] += !arr[i + 1];
+            arr[i + 2] += !arr[i + 2];
         }
     }
     arr[i] = 0;
-    fprintf(fptr, "P6\n%u %u\n255\n%s", pic.col[0], pic.row[0], (char*)arr);
+    fprintf(fptr, "P6\n%u %u\n255\n%s", pic.col[0], pic.row[0], arr);
     fclose(fptr);
     free(arr);
 }
@@ -268,7 +200,7 @@ void diagonal_line(matrix_t pic, uint32_bytes col_b, int8_t slope, uint32_t from
             pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 ) + 2] = col_b.parts.b3;            
         }
     }
-}
+}//// what is this???????????????????????
 
 
 
@@ -296,6 +228,7 @@ void coordinate_axis(matrix_t pic, uint32_bytes col_b){
     horizontal_line_width_n_offset_k(pic, col_b, 0, pic.row[0] >> 1, 0, pic.col[0]);    
     vertical_line_width_n_offset_k(pic, col_b, 0, pic.col[0] >> 1, 0, pic.row[0]);    
 }
+
 
 
 void horizontal_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
@@ -333,13 +266,12 @@ void horizontal_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
     }
 }
 
-
 void vertical_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
     if(!(pic.row && pic.col && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
     }
-    int64_t row = pic.row[0], col = pic.col[0], r, c, r_i, g_i, b_i, row_r;
+    int64_t row = pic.row[0], col = pic.col[0], r, c, r_i, g_i, b_i;
     if(!(col && row)){
         if(pic.err){ pic.err[0] = INCOMPATIBLE; }
         return;
@@ -368,7 +300,142 @@ void vertical_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
     }
 }
 
-void diagonal_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2, int8_t slope){
-    
-    
+void left_top_to_right_bottom_diag_grad(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
+    if(!(pic.col && pic.row && pic.elements.ui32)){
+        if(pic.err) pic.err[0] = NULL_POINTER;
+        return;
+    }
+    int64_t row = pic.row[0], col = pic.col[0], r, c, r_i, g_i, b_i;
+    if(!(col && row)){
+        if(pic.err){ pic.err[0] = INCOMPATIBLE; }
+        return;
+    }
+    int32_t col1_red = col1.parts.b1, col1_green = col1.parts.b2, col1_blue = col1.parts.b3,
+            red_diff = col2.parts.b1 - col1.parts.b1, 
+            green_diff = col2.parts.b2 - col1.parts.b2, 
+            blue_diff = col2.parts.b3 - col1.parts.b3,
+            red_int_rat = red_diff / (row + col), 
+            green_int_rat = green_diff / (row + col),
+            blue_int_rat = blue_diff / (row + col);
+    double  red_fl_rat   = (double)(red_diff   % (row + col)) / (row + col),
+            green_fl_rat = (double)(green_diff % (row + col)) / (row + col),
+            blue_fl_rat  = (double)(blue_diff  % (row + col)) / (row + col);
+    for(r = 0; r < row; r++){
+        for(c = 0; c < col; c++){
+            r_i = (r * col + c) << 2;
+            g_i = r_i + 1;
+            b_i = r_i + 2;
+            pic.elements.ui8[r_i] = col1_red   + (r + c) * (red_int_rat   + red_fl_rat);
+            pic.elements.ui8[g_i] = col1_green + (r + c) * (green_int_rat + green_fl_rat);
+            pic.elements.ui8[b_i] = col1_blue  + (r + c) * (blue_int_rat  + blue_fl_rat);
+        }
+    }
 }
+
+void right_top_to_left_bottom_diag_grad(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
+    if(!(pic.col && pic.row && pic.elements.ui32)){
+        if(pic.err) pic.err[0] = NULL_POINTER;
+        return;
+    }
+    int64_t row = pic.row[0], col = pic.col[0], r, col_c, c, r_i, g_i, b_i;
+    if(!(col && row)){
+        if(pic.err){ pic.err[0] = INCOMPATIBLE; }
+        return;
+    }
+    int32_t col1_red = col1.parts.b1, col1_green = col1.parts.b2, col1_blue = col1.parts.b3,
+            red_diff = col2.parts.b1 - col1.parts.b1, 
+            green_diff = col2.parts.b2 - col1.parts.b2, 
+            blue_diff = col2.parts.b3 - col1.parts.b3,
+            red_int_rat = red_diff / (row + col), 
+            green_int_rat = green_diff / (row + col),
+            blue_int_rat = blue_diff / (row + col);
+    double  red_fl_rat   = (double)(red_diff   % (row + col)) / (row + col),
+            green_fl_rat = (double)(green_diff % (row + col)) / (row + col),
+            blue_fl_rat  = (double)(blue_diff  % (row + col)) / (row + col);
+    for(r = 0; r < row; r++){
+        for(c = col, col_c = 0; c--; col_c++){
+            r_i = (r * col + c) << 2;
+            g_i = r_i + 1;
+            b_i = r_i + 2;
+            pic.elements.ui8[r_i] = col1_red   + (r + col_c) * (red_int_rat   + red_fl_rat);
+            pic.elements.ui8[g_i] = col1_green + (r + col_c) * (green_int_rat + green_fl_rat);
+            pic.elements.ui8[b_i] = col1_blue  + (r + col_c) * (blue_int_rat  + blue_fl_rat);
+        }
+    }
+}
+
+void diagonal_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2, int8_t slope){// slope == 0 means that it's going from top left angle down to left, and slope == !0 means it's going from top right angle down till left
+    if(slope) right_top_to_left_bottom_diag_grad(pic, col1, col2);
+    else left_top_to_right_bottom_diag_grad(pic, col1, col2);
+}
+
+
+void rectangle_filled(matrix_t pic, uint32_bytes color, uint32_t x, uint32_t y, uint32_t xlength, uint32_t ylength){// x and y are coordinates of upper-left corner of rectangle(both starts from 1)
+    if(!(x && y && pic.col && pic.row && pic.elements.ui8)){
+        if(pic.err) pic.err[0] = NULL_POINTER;
+        return;
+    } 
+    uint32_t row = pic.row[0], col = pic.col[0], c, red_i, gre_i, blu_i;
+    if(!(row && col)){
+        if(pic.err) pic.err[0] = INCOMPATIBLE;
+        return;
+    }
+    uint8_t red_c = color.parts.b1, green_c = color.parts.b2, blue_c = color.parts.b3;
+    xlength += x;
+    ylength  += y;
+    ylength = ternary(ylength > col, col, ylength);
+    xlength = ternary((xlength > row) | (ylength == col), row, xlength);
+    --y;
+    for( --x; x < xlength; x++){
+        for(c = y; c < ylength; c++){
+            red_i = ((x * col) + c) << 2;
+            gre_i = red_i + 1;
+            blu_i = red_i + 2;
+            pic.elements.ui8[red_i] = red_c;
+            pic.elements.ui8[gre_i] = green_c;
+            pic.elements.ui8[blu_i] = blue_c;
+        }
+    }
+}
+
+
+
+void rectangle_outline(matrix_t pic, uint32_bytes color, uint32_t x, uint32_t y, uint32_t xlength, uint32_t ylength){ // TODO
+    if(!(x && y && pic.col && pic.row && pic.elements.ui8)){
+        if(pic.err) pic.err[0] = NULL_POINTER;
+        return;
+    } 
+    uint32_t row = pic.row[0], col = pic.col[0], r, c, red_i, gre_i, blu_i;
+    if(!(row && col)){
+        if(pic.err) pic.err[0] = INCOMPATIBLE;
+        return;
+    }
+    uint8_t red_c = color.parts.b1, green_c = color.parts.b2, blue_c = color.parts.b3, i;
+    xlength += x;
+    ylength  += y;
+    ylength = ternary(ylength > col, col, ylength);
+    xlength = ternary((xlength > row) | (ylength == col), row, xlength);
+    for(--x, --y, i = 0; i < 2; i++){
+        for(c = y; c < ylength; c++){
+            red_i = ((x * col) + c) << 2;
+            gre_i = red_i + 1;
+            blu_i = red_i + 2;
+            pic.elements.ui8[red_i] = red_c;
+            pic.elements.ui8[gre_i] = green_c;
+            pic.elements.ui8[blu_i] = blue_c;
+        }
+        x = xlength - 1;
+    }
+    for(c = y, i = 0; i < 2; i++){
+        
+    }
+}
+
+
+void grid(){}
+void circle(){ }
+void ring(){ }
+void diag_line_thr_middle_of_img(){ }
+void line_segment(){ }
+void straigh_line_thr_two_points(){ }
+void line_at_angle_a(){ }

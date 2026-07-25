@@ -1,0 +1,110 @@
+// template <typename type>
+// struct Data{
+//     type val;
+//     type *varr;
+//     Data(){ }
+//     Data(type v) : val(v){}
+//     void setValue(type v){}
+//     type operator +(Data& d){}
+//     bool operator >(Data& d){}
+//     bool operator <(Data& d){}
+//     friend ostream& operator <<(ostream&, Data&){}
+// };
+
+// int main(){
+//     Data<int> iData[1001];
+//     Data<double> dData[1001];
+//     int cases, num;
+//     char ch;
+//     int u;
+//     double v;
+//     Data<int> a(10), b(20);
+//     Data<double> c(3.14), d(-4.1);
+//     cout<<"a + b = "<<(a + b)<<endl;
+//     cout<<"max(a, b) = "<<(a > b ? a : b)<<endl;
+//     cout<<"min(a, b) = "<<(a < b ? a : b)<<endl;
+//     cout<<"c + d = "<<(c + d)<<endl;
+//     cout<<"max(c, d) = "<<(c > d ? c : d)<<endl;
+//     cout<<"min(c, d) = "<<(c < d ? c : d)<<endl;
+//     cin>>cases;
+//     for (int i = 0; i < cases; i++)
+//     {
+//         cin>>ch;
+//         cin>>num;
+//         for (int j = 0; j < num; j++)
+//         {
+//             if (ch == 'i')
+//             {
+//                 cin>>u;
+//                 iData[j].setValue(u);
+//             }
+//             else if (ch == 'd')
+//             {
+//                 cin>>v;
+//                 dData[j].setValue(v);
+//             }
+//         }
+//         if (ch == 'i')
+//         {
+//             cout<<GetResult<int>::getMax(iData, num);
+//             cout<<" "<<GetResult<int>::getMin(iData, num);
+//             cout<<" "<<GetResult<int>::getSum(iData, num)<<endl;
+//         }
+//         else if (ch == 'd')
+//         {
+//             cout<<GetResult<double>::getMax(dData, num);
+//             cout<<" "<<GetResult<double>::getMin(dData, num);
+//             cout<<" "<<GetResult<double>::getSum(dData, num)<<endl;
+//         }
+//     }
+//     return 0;
+// }
+
+
+/*#3
+class some {
+public:
+  int a;
+  template<typename> void func(void) {
+    a = b + c;
+  }
+protected:
+  int b;
+private:
+  int c;
+};
+ 
+class hack_template_param{};
+ 
+template<>
+void some::func<hack_template_param>(void) {
+  c = 0;
+}
+ 
+void hack(void) {
+  some o;
+  o.func<hack_template_param>();
+};
+
+
+// #4
+class some {
+public:
+  int a;
+protected:
+  int b;
+private:
+  int c;
+};
+ 
+class hack_some {
+public:
+  int a;
+  int b;
+  int c;
+};
+ 
+void h(some& obj) {
+  reinterpret_cast<hack_some*>(&obj)->c = 0;
+}
+*/

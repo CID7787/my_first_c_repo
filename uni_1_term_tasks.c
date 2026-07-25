@@ -29,7 +29,7 @@ int n_root(void) {
     double num = 625;
     int rootDegree = 2;
  
-    printf("Число а = %f\n", num); 
+    printf("Число a = %f\n", num); 
     printf("Степень n = %d\n", rootDegree); 
     
     double eps = 0.00001;  

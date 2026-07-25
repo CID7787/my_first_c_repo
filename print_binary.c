@@ -43,7 +43,7 @@ void print_binary_with_arrays(fundt_un x, unsigned int byte_amount, unsigned cha
         printf("%u", (x.ui64 >> i) & 1);
     }
 }
-void print_binary_first_amirako_version(fundt_un x){// x = 0
+void print_binary_first_a_ak0s_version(fundt_un x){// x = 0
     int i = 64;
     while(i-- > 0){
         if((i == 62) | (i == 51)){ printf(" "); }
