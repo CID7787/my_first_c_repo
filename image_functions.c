@@ -42,11 +42,19 @@ void left_side_color(matrix_t pic, uint32_bytes col_b){
         return;
     }
     uint32_t r, c, row = pic.row[0], col = pic.col[0], col_till = col >> 1; 
+    uint8_t red_c = col_b.parts.b1, gre_c = col_b.parts.b2, blu_c = col_b.parts.b3, ri, gi, bi;
+    if(!(row && col)){
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
     for(r = 0; r < row; r++){
-        for(c = 0; c < col_till; c++){ // col 
-            pic.elements.ui8[ (((r * col) + c) << 2)    ] = col_b.parts.b1;
-            pic.elements.ui8[ (((r * col) + c) << 2) + 1] = col_b.parts.b2;
-            pic.elements.ui8[ (((r * col) + c) << 2) + 2] = col_b.parts.b3;
+        for(c = 0; c < col_till; c++){  
+            ri = ((r * col) + c) << 2;
+            gi = ri + 1;
+            bi = gi + 1;
+            pic.elements.ui8[ri] = red_c;
+            pic.elements.ui8[gi] = gre_c;
+            pic.elements.ui8[bi] = blu_c;
         }
     } 
 }
@@ -134,7 +142,7 @@ void odd_pix_color(matrix_t pic, uint32_bytes col_b){
 
 
 
-void vertical_line_width_n_offset_k(matrix_t pic, uint32_bytes col_b, uint32_t width, uint32_t offset, uint32_t from_row, uint32_t till_row){// width add up on offset value so vertical line will start from offset value and till offset + width draw it
+void vertical_line(matrix_t pic, uint32_bytes col_b, uint32_t width, uint32_t offset, uint32_t from_row, uint32_t till_row){// width add up on offset value so vertical line will start from offset value and till offset + width draw it
     if(!(pic.elements.ui8 && pic.row && pic.col)){ 
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
@@ -154,54 +162,34 @@ void vertical_line_width_n_offset_k(matrix_t pic, uint32_bytes col_b, uint32_t w
     }
 }
 
-void horizontal_line_width_n_offset_k(matrix_t pic, uint32_bytes col_b, uint32_t width, uint32_t offset, uint32_t from_col, uint32_t till_col){
+void horizontal_line(matrix_t pic, uint32_bytes col_b, uint32_t from_row, uint32_t till_row, uint32_t from_col, uint32_t till_col){// from_row and from_col starts indexing rows from 1
     if(!(pic.elements.ui8 && pic.row && pic.col)){ 
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
     }
-    uint32_t r, col = pic.col[0], row = pic.row[0], down_b;
-    offset = ternary(offset > row, row - !!row, offset);
-    down_b = offset + ternary((row - offset) >= width, width, row - offset - !!row);
+    uint32_t r, ri, gi, bi, col = pic.col[0], row = pic.row[0];
+    if(!(row && col)){ 
+        if(pic.err){ pic.err[0] = INCOMPATIBLE; }
+        return;
+    }
+    uint8_t red_c = col_b.parts.b1, gre_c = col_b.parts.b2, blu_c = col_b.parts.b3;
+    --from_row, --from_col;
+    from_row = ternary(from_row > row, row, from_row);
+    till_row = ternary(till_row > row, row, till_row);
     from_col = ternary(from_col > col, col, from_col);
     till_col = ternary(till_col > col, col, till_col);
-    if(from_col > till_col){ from_col ^= till_col; till_col ^= from_col; from_col ^= till_col; }
+    if(from_col > till_col){ r = till_col; till_col = from_col; from_col = r; }
     for( ; from_col < till_col; from_col++){
-        for(r = offset; r <= down_b; r++){
-            pic.elements.ui8[ ( ((r * col) + from_col) << 2 )    ] = col_b.parts.b1;
-            pic.elements.ui8[ ( ((r * col) + from_col) << 2 ) + 1] = col_b.parts.b2;
-            pic.elements.ui8[ ( ((r * col) + from_col) << 2 ) + 2] = col_b.parts.b3;
+        for(r = from_row; r < till_row; r++){
+            ri = ((r * col) + from_col) << 2;
+            gi = ri + 1;
+            bi = ri + 2;
+            pic.elements.ui8[ri] = red_c;
+            pic.elements.ui8[gi] = gre_c;
+            pic.elements.ui8[bi] = blu_c;
         }
     }
 }
-
-void diagonal_line(matrix_t pic, uint32_bytes col_b, int8_t slope, uint32_t from_col, uint32_t till_col, uint32_t from_row, uint32_t till_row){// slope variable determines whether from left to right it decreases(false == 0) or increases(true == any number except 0
-    if(!(pic.col && pic.row && pic.elements.ui8)){
-        if(pic.err){ pic.err[0] = NULL_POINTER; }
-        return;
-    }
-    uint32_t row = pic.row[0], col = pic.col[0];
-    from_col = ternary(from_col > col, col, from_col);
-    till_col = ternary(till_col > col, col, till_col);
-    from_row = ternary(from_row > row, row, from_row);
-    till_row = ternary(till_row > row, row, till_row);
-    if(from_row > till_row){ from_row ^= till_row; till_row ^= from_row; from_row ^= till_row; }
-    if(((from_col > till_col) & !slope) | ((from_col <= till_col) && slope)){ from_col ^= till_col; till_col ^= from_col; from_col ^= till_col; }
-    if(slope){
-        for( ; (from_row < till_row) && (from_col > till_col); from_col--, from_row++){
-            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 )    ] = col_b.parts.b1;
-            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 ) + 1] = col_b.parts.b2;
-            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 ) + 2] = col_b.parts.b3;            
-        }
-    }
-    else{
-        for( ; (from_row < till_row) & (from_col < till_col); from_col++, from_row++){
-            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 )    ] = col_b.parts.b1;
-            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 ) + 1] = col_b.parts.b2;
-            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 ) + 2] = col_b.parts.b3;            
-        }
-    }
-}//// what is this???????????????????????
-
 
 
 void pix_from_k_to_m_color(matrix_t pic, uint32_bytes col_b, uint32_t from, uint32_t to){
@@ -209,14 +197,18 @@ void pix_from_k_to_m_color(matrix_t pic, uint32_bytes col_b, uint32_t from, uint
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
     }
-    uint32_t i, n = pic.row[0] * pic.col[0];
-    if(from > to){ from ^= to; to ^= from; from ^= to; }
-    to = ternary(to > n, n, to);
+    uint32_t n = pic.row[0] * pic.col[0];
+    if(!n){
+        if(pic.err){ pic.err[0] = INCOMPATIBLE; }
+        return;
+    }
+    to   = ternary(to   > n, n, to);
     from = ternary(from > n, n, from);
-    for(i = from; i < to; i++){
-        pic.elements.ui8[(i << 2)    ] = col_b.parts.b1;
-        pic.elements.ui8[(i << 2) + 1] = col_b.parts.b2;
-        pic.elements.ui8[(i << 2) + 2] = col_b.parts.b3;
+    if(from > to){ from ^= to; to ^= from; from ^= to; }
+    for(from; from < to; from++){
+        pic.elements.ui8[(from << 2)    ] = col_b.parts.b1;
+        pic.elements.ui8[(from << 2) + 1] = col_b.parts.b2;
+        pic.elements.ui8[(from << 2) + 2] = col_b.parts.b3;
     }
 }
 
@@ -225,10 +217,28 @@ void coordinate_axis(matrix_t pic, uint32_bytes col_b){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
     }
-    horizontal_line_width_n_offset_k(pic, col_b, 0, pic.row[0] >> 1, 0, pic.col[0]);    
-    vertical_line_width_n_offset_k(pic, col_b, 0, pic.col[0] >> 1, 0, pic.row[0]);    
+    horizontal_line(pic, col_b, pic.row[0] >> 1, pic.row[0] >> 1, 1, pic.col[0]);    
+    horizontal_line(pic, col_b, 1, pic.row[0], pic.col[0] >> 1, pic.col[0] >> 1);    
 }
 
+void grid(matrix_t pic, uint32_bytes color, uint32_t unit_scale){
+    if(!(pic.row && pic.col && pic.elements.i32)){
+        if(pic.err) pic.err[0] = NULL_POINTER;
+        return;
+    }
+    uint32_t row = pic.row[0], col = pic.col[0], r, c;
+    if(!(row && col)){
+        if(pic.err) pic.err[0] = INCOMPATIBLE;
+        return;
+    }
+    unit_scale++;
+    for(r = 1; r < row; r+=unit_scale){
+        horizontal_line(pic, color, r, r, 1, col); 
+    }
+    for(c = 1; c < col; c+=unit_scale){
+        horizontal_line(pic, color, 1, row, c, c); 
+    }
+}
 
 
 void horizontal_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
@@ -398,44 +408,91 @@ void rectangle_filled(matrix_t pic, uint32_bytes color, uint32_t x, uint32_t y, 
     }
 }
 
-
-
-void rectangle_outline(matrix_t pic, uint32_bytes color, uint32_t x, uint32_t y, uint32_t xlength, uint32_t ylength){ // TODO
-    if(!(x && y && pic.col && pic.row && pic.elements.ui8)){
+void rectangle_outline(matrix_t pic, uint32_bytes color, uint32_t left_up_x, uint32_t right_down_x, uint32_t left_up_y, uint32_t right_down_y){// all four coordinates starts from 1
+    if(!(pic.col && pic.row && pic.elements.ui8)){
         if(pic.err) pic.err[0] = NULL_POINTER;
         return;
-    } 
-    uint32_t row = pic.row[0], col = pic.col[0], r, c, red_i, gre_i, blu_i;
-    if(!(row && col)){
+    }
+    if(!(pic.row[0] && pic.col[0])){// catchs case when row or column amount equals to zero  
         if(pic.err) pic.err[0] = INCOMPATIBLE;
         return;
     }
+    
+    uint32_t row = pic.row[0], col = pic.col[0], r, c, red_i, gre_i, blu_i;
     uint8_t red_c = color.parts.b1, green_c = color.parts.b2, blue_c = color.parts.b3, i;
-    xlength += x;
-    ylength  += y;
-    ylength = ternary(ylength > col, col, ylength);
-    xlength = ternary((xlength > row) | (ylength == col), row, xlength);
-    for(--x, --y, i = 0; i < 2; i++){
-        for(c = y; c < ylength; c++){
-            red_i = ((x * col) + c) << 2;
+    
+    // varifying parameters correctness 
+    left_up_x += !left_up_x;
+    left_up_y += !left_up_y;
+    right_down_x += !right_down_x - 1;
+    right_down_y += !right_down_y;
+    left_up_x = ternary(left_up_x > row, row, left_up_x);
+    left_up_y = ternary(left_up_y > col, col, left_up_y);
+    right_down_x = ternary(right_down_x > row, row, right_down_x);
+    right_down_y = ternary(right_down_y > col, col, right_down_y);
+    if(left_up_x > right_down_x){ r = left_up_x; left_up_x = right_down_x; right_down_x = r; }
+    if(left_up_y > right_down_y){ r = left_up_y; left_up_y = right_down_y; right_down_y = r; }
+
+    // evaluating top and bottom parts
+    for(r = left_up_x, i = 0; i < 2; r = right_down_x, i++){
+        for(c = left_up_y; c < right_down_y; c++){
+            red_i = ((r * col) + c) << 2;
             gre_i = red_i + 1;
             blu_i = red_i + 2;
             pic.elements.ui8[red_i] = red_c;
             pic.elements.ui8[gre_i] = green_c;
             pic.elements.ui8[blu_i] = blue_c;
         }
-        x = xlength - 1;
     }
-    for(c = y, i = 0; i < 2; i++){
-        
+    // evaluating right and left sides
+    for(c = left_up_y, i = 0, ++left_up_x; i < 2; c = --right_down_y, i++){
+        for(r = left_up_x; r < right_down_x; r++){
+            red_i = ((r * col) + c) << 2;
+            gre_i = red_i + 1;
+            blu_i = red_i + 2;
+            pic.elements.ui8[red_i] = red_c;
+            pic.elements.ui8[gre_i] = green_c;
+            pic.elements.ui8[blu_i] = blue_c;
+        }
     }
 }
 
 
-void grid(){}
+void diagonal_line(matrix_t pic, uint32_bytes col_b, int8_t slope, uint32_t from_col, uint32_t till_col, uint32_t from_row, uint32_t till_row){// slope variable determines whether from left to right it decreases(false == 0) or increases(true == any number except 0
+    if(!(pic.col && pic.row && pic.elements.ui8)){
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
+    uint32_t row = pic.row[0], col = pic.col[0];
+    from_col = ternary(from_col > col, col, from_col);
+    till_col = ternary(till_col > col, col, till_col);
+    from_row = ternary(from_row > row, row, from_row);
+    till_row = ternary(till_row > row, row, till_row);
+    if(from_row > till_row){ from_row ^= till_row; till_row ^= from_row; from_row ^= till_row; }
+    if(((from_col > till_col) & !slope) | ((from_col <= till_col) && slope)){ from_col ^= till_col; till_col ^= from_col; from_col ^= till_col; }
+    if(slope){
+        for( ; (from_row < till_row) && (from_col > till_col); from_col--, from_row++){
+            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 )    ] = col_b.parts.b1;
+            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 ) + 1] = col_b.parts.b2;
+            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 ) + 2] = col_b.parts.b3;            
+        }
+    }
+    else{
+        for( ; (from_row < till_row) & (from_col < till_col); from_col++, from_row++){
+            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 )    ] = col_b.parts.b1;
+            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 ) + 1] = col_b.parts.b2;
+            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 ) + 2] = col_b.parts.b3;            
+        }
+    }
+}//// what is this???????????????????????
+
+
+
 void circle(){ }
 void ring(){ }
 void diag_line_thr_middle_of_img(){ }
 void line_segment(){ }
 void straigh_line_thr_two_points(){ }
 void line_at_angle_a(){ }
+void triangle(){ }
+void heart(){ }
