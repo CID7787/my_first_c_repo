@@ -191,6 +191,35 @@ void horizontal_line(matrix_t pic, uint32_bytes col_b, uint32_t from_row, uint32
     }
 }
 
+void diagonal_line(matrix_t pic, uint32_bytes col_b, uint32_t start_r, uint32_t start_c, uint32_t length, uint8_t slope){ // start_r and start_c indexing starts from 1, length is amount of diagonal pixels, for slope desc reference next string
+// slope '0' correspond to the angle 45 from start point, '1' to the angle 135, '2' to the angle 225, '3' to the angle 315  
+    if(!(pic.col && pic.row && pic.elements.ui8)){
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
+    uint32_t row = pic.row[0], col = pic.col[0], ri, gi, bi;
+    if(!(row && col)){
+        if(pic.err){ pic.err[0] = INCOMPATIBLE; }
+        return;
+    }
+    uint8_t r_step, c_step;
+    switch(slope){
+        case 1: r_step = c_step = -1; break;
+        case 2: r_step = 1, c_step = -1; break;
+        case 3: r_step = 1, c_step = 1; break;
+        default: r_step = -1, c_step = 1;
+    }
+    for(--start_r, --start_c; (start_r < row) & (start_c < col) & (length-- > 0); start_r += r_step, start_c += c_step){
+        ri = ((start_r * col) + start_c) << 2;
+        gi = ri + 1;
+        bi = ri + 2;
+        pic.elements.ui8[ri] = col_b.parts.b1;
+        pic.elements.ui8[gi] = col_b.parts.b2;
+        pic.elements.ui8[bi] = col_b.parts.b3;
+    }
+}
+
+
 
 void pix_from_k_to_m_color(matrix_t pic, uint32_bytes col_b, uint32_t from, uint32_t to){
     if(!(pic.row && pic.col && pic.elements.ui8)){
@@ -458,39 +487,40 @@ void rectangle_outline(matrix_t pic, uint32_bytes color, uint32_t left_up_x, uin
 }
 
 
-void diagonal_line(matrix_t pic, uint32_bytes col_b, int8_t slope, uint32_t from_col, uint32_t till_col, uint32_t from_row, uint32_t till_row){// slope variable determines whether from left to right it decreases(false == 0) or increases(true == any number except 0
+
+void ring(matrix_t pic, uint32_bytes color, uint32_t centre_r, uint32_t centre_c, uint32_t radius){
     if(!(pic.col && pic.row && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
     }
-    uint32_t row = pic.row[0], col = pic.col[0];
-    from_col = ternary(from_col > col, col, from_col);
-    till_col = ternary(till_col > col, col, till_col);
-    from_row = ternary(from_row > row, row, from_row);
-    till_row = ternary(till_row > row, row, till_row);
-    if(from_row > till_row){ from_row ^= till_row; till_row ^= from_row; from_row ^= till_row; }
-    if(((from_col > till_col) & !slope) | ((from_col <= till_col) && slope)){ from_col ^= till_col; till_col ^= from_col; from_col ^= till_col; }
-    if(slope){
-        for( ; (from_row < till_row) && (from_col > till_col); from_col--, from_row++){
-            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 )    ] = col_b.parts.b1;
-            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 ) + 1] = col_b.parts.b2;
-            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 ) + 2] = col_b.parts.b3;            
+    uint32_t col = pic.col[0], row = pic.row[0], ri, gi, bi, r, c;
+    if(!(col && row)){
+        if(pic.err){ pic.err[0] = INCOMPATIBLE; }
+        return;
+    }
+    centre_r += !centre_r;
+    centre_c += !centre_c;
+    centre_r = ternary(centre_r > row, row, centre_r);
+    centre_c = ternary(centre_c > col, col, centre_c);
+    --centre_r, --centre_c;
+    for(r = 0; r < row; r++){
+        for(c = 0; c < col; c++){
+            ri = r - centre_r;
+            gi = c - centre_c;
+            if( ((ri * ri) + (gi * gi)) == (radius * radius) ){
+                ri = ((r * col) + c) << 2;
+                gi = ri + 1;
+                bi = ri + 2;
+                pic.elements.ui8[ri] = color.parts.b1;
+                pic.elements.ui8[gi] = color.parts.b2;
+                pic.elements.ui8[bi] = color.parts.b3;
+            }
         }
     }
-    else{
-        for( ; (from_row < till_row) & (from_col < till_col); from_col++, from_row++){
-            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 )    ] = col_b.parts.b1;
-            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 ) + 1] = col_b.parts.b2;
-            pic.elements.ui8[ ( ((from_row * col) + from_col ) << 2 ) + 2] = col_b.parts.b3;            
-        }
-    }
-}//// what is this???????????????????????
-
-
+}
 
 void circle(){ }
-void ring(){ }
-void diag_line_thr_middle_of_img(){ }
+
 void line_segment(){ }
 void straigh_line_thr_two_points(){ }
 void line_at_angle_a(){ }
