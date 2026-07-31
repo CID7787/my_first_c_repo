@@ -39,10 +39,10 @@ void f(matrix_t m){
 }
 
 int main(){
-    uint32_t row = 10, col = 10;
+    uint32_t row =  3000, col = 3000;
     matrix_t m = matrix_create(UINT32, row, col);
     pix_from_k_to_m_color(m, (uint32_bytes){ .parts.b1 = 255, .parts.b2 = 255, .parts.b3 = 255}, 0, row * col);
-    circle(m, (uint32_bytes){ .parts.b1 = 0, .parts.b2 = 0, .parts.b3 = 0}, 5, 5, 3);
+    ring(m, (uint32_bytes){ .parts.b1 = 0, .parts.b2 = 0, .parts.b3 = 0}, 500, 500, 300, 3000);
     file_filler("example.ppm", m);
     free(m.type);
     return 0;

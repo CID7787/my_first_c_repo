@@ -493,7 +493,7 @@ void circle(matrix_t pic, uint32_bytes color, uint32_t centre_r, uint32_t centre
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
     }
-    uint32_t col = pic.col[0], row = pic.row[0], ri, gi, bi, r, c, half_rad = radius >> 1;
+    uint32_t col = pic.col[0], row = pic.row[0], ri, gi, bi, r, c;
     if(!(col && row)){
         if(pic.err){ pic.err[0] = INCOMPATIBLE; }
         return;
@@ -503,7 +503,6 @@ void circle(matrix_t pic, uint32_bytes color, uint32_t centre_r, uint32_t centre
     centre_r = ternary(centre_r > row, row, centre_r);
     centre_c = ternary(centre_c > col, col, centre_c);
     --centre_r, --centre_c;
-    half_rad += half_rad >> 1;
     radius *= radius;
     for(r = 0; r < row; r++){
         for(c = 0; c < col; c++){
@@ -521,7 +520,41 @@ void circle(matrix_t pic, uint32_bytes color, uint32_t centre_r, uint32_t centre
     }
 }
 
-void ring(){ }
+void ring(matrix_t pic, uint32_bytes color, uint32_t centre_r, uint32_t centre_c, uint32_t radius, uint32_t tolerance){
+    if(!(pic.col && pic.row && pic.elements.ui8)){
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
+    uint32_t col = pic.col[0], row = pic.row[0], ri, gi, bi, r, c, half_rad = radius >> 1;
+    if(!(col && row)){
+        if(pic.err){ pic.err[0] = INCOMPATIBLE; }
+        return;
+    }
+    centre_r += !centre_r;
+    centre_c += !centre_c;
+    centre_r = ternary(centre_r > row, row, centre_r);
+    centre_c = ternary(centre_c > col, col, centre_c);
+    --centre_r, --centre_c;
+    radius *= radius;
+    for(r = 0; r < row; r++){
+        for(c = 0; c < col; c++){
+            ri = r - centre_r;
+            gi = c - centre_c;
+            if(  ( ((ri * ri) + (gi * gi)) <= (radius + tolerance) ) 
+               & ( ((ri * ri) + (gi * gi)) >= (radius - tolerance) )  ){
+                ri = ((r * col) + c) << 2;
+                gi = ri + 1;
+                bi = ri + 2;
+                pic.elements.ui8[ri] = color.parts.b1;
+                pic.elements.ui8[gi] = color.parts.b2;
+                pic.elements.ui8[bi] = color.parts.b3;
+            }
+        }
+    }
+}
+
+
+
 
 void line_segment(){ }
 void straigh_line_thr_two_points(){ }
