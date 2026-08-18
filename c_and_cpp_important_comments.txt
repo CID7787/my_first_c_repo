@@ -108,3 +108,21 @@ void h(some& obj) {
   reinterpret_cast<hack_some*>(&obj)->c = 0;
 }
 */
+
+/*
+#include <bits/stdc++.h>
+using namespace std;
+
+struct a{
+    a(int c){ cout << "creaate\n"; }
+    ~a(){ cout << "erase\n"; }
+};
+
+void pro(const a& v){}
+
+int main(){
+    pro(10);
+    cout << "main end";
+    return 0;
+}
+*/

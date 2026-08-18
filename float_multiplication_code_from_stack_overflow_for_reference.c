@@ -25,7 +25,7 @@
 
 uint32_t fp32_mul_core (uint32_t a, uint32_t b)
 {
-    uint64_t prod;
+    uint64_t prod;//TODO
     uint32_t expoa, expob, manta, mantb, shift;
     uint32_t r, signr, expor, mantr_hi, mantr_lo;
 

@@ -1,13 +1,58 @@
-#ifndef headerfile
-    #include <stdint.h>
-    #include <stdlib.h>
-    #include "user_defined_datatypes.c"
-    #include "constants.c"
-    #include "logical_functions_of_decision.c"
-    #include "bitwise_functions.c"
-    #include "safe_arithmetic_functions.c"
-    #include "new_vector_functions.c"
-#endif
+#include <stdio.h>
+#include <stdlib.h>
+typedef unsigned int uint;
+typedef unsigned char uchar;
+
+long unsigned int ternary(){}
+
+int main(){
+    uint n, k, x, y, i, u;
+    scanf("%u%u", &n, &u);
+    uchar* arr = calloc(n * n, 1);
+    while(u--){
+        scanf("%u%u%u", &k, &x, &y);
+        --y;
+        i = x;
+        while(i < n){ arr[(i++ * n) + y] = 1; }
+        i = x;
+        while(i)
+    }
+    return 0;   
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// #ifndef headerfile
+//     #include <stdint.h>
+//     #include <stdlib.h>
+//     #include "user_defined_datatypes.c"
+//     #include "constants.c"
+//     #include "logical_functions_of_decision.c"
+//     #include "bitwise_functions.c"
+//     #include "safe_arithmetic_functions.c"
+//     #include "new_vector_functions.c"
+// #endif
+
+
+
+
+
 
 
 /*
@@ -106,6 +151,7 @@ int main()
     }
     return 0;
 }
+
 
 */
 

@@ -339,6 +339,7 @@ void vertical_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
     }
 }
 
+
 void left_top_to_right_bottom_diag_grad(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
     if(!(pic.col && pic.row && pic.elements.ui32)){
         if(pic.err) pic.err[0] = NULL_POINTER;
@@ -407,6 +408,7 @@ void diagonal_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2, int8_
     if(slope) right_top_to_left_bottom_diag_grad(pic, col1, col2);
     else left_top_to_right_bottom_diag_grad(pic, col1, col2);
 }
+
 
 
 void rectangle_filled(matrix_t pic, uint32_bytes color, uint32_t x, uint32_t y, uint32_t xlength, uint32_t ylength){// x and y are coordinates of upper-left corner of rectangle(both starts from 1)
@@ -554,10 +556,90 @@ void ring(matrix_t pic, uint32_bytes color, uint32_t centre_r, uint32_t centre_c
 }
 
 
+void straigh_line_thr_two_points(matrix_t pic, uint32_bytes color, uint32_t r1, uint32_t c1, uint32_t r2, uint32_t c2){// (r1, c1) and (r2, c2) are coordinates of first and second points' row and column(indexing starts from 1)
+    if(!(pic.col && pic.row && pic.elements.f32)){
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
+    if(!(pic.row[0] && pic.col[0] && r1 && r2 && c1 && c2)){
+        if(pic.err){ pic.err[0] = INCOMPATIBLE; }
+        return;
+    }
+    uint32_t ri, gi, bi;
+    int8_t cond1 = r1 == r2, cond2 = c1 == c2;
+    int64_t dc, dr, d_twice, d_slope, cont;
+    --r1, --r2, --c1, --c2;
+    if(cond1 | cond2){
+        cond1 = !cond1 * (1 - ((r1 > r2) << 1));
+        cond2 = !cond2 * (1 - ((c1 > c2) << 1));
+        while((r1 ^ r2) | (c1 ^ c2)){
+            ri = ( (r1 * pic.col[0]) + c1 ) << 2;
+            gi = ri + 1;
+            bi = gi + 1;
+            pic.elements.ui8[ri] = color.parts.b1;
+            pic.elements.ui8[gi] = color.parts.b2;
+            pic.elements.ui8[bi] = color.parts.b3;
+            r1 += cond1, c1 += cond2;
+        }
+    }
+    else{
+        if(c1 > c2){
+            dc = c1;
+            c1 = c2;
+            c2 = dc;
+            dc = r1;
+            r1 = r2;
+            r2 = dc;
+        }
+        dc = c2 - c1, dr = ternary(r2 > r1, r2 - r1, r1 - r2);
+        cond1 = 1 - ((r2 < r1) << 1);
+        if(dc >= dr){
+            printf("%d %d", dr, dc);
+            d_twice = dr << 1;
+            d_slope = d_twice - dc;
+            for(dc <<= 1; c1 <= c2; c1++){
+                // setting color value
+                ri = ( (r1 * pic.col[0]) + c1 ) << 2;
+                gi = ri + 1;
+                bi = gi + 1;
+                pic.elements.ui8[ri] = color.parts.b1;
+                pic.elements.ui8[gi] = color.parts.b2;
+                pic.elements.ui8[bi] = color.parts.b3;
+                // preparing parameters for the next iteration
+                d_slope += d_twice;
+                cont = d_slope >= 0;
+                r1 += cond1 & -cont;
+                d_slope -= dc & -cont;
+            }
+        }
+        else{
+            d_twice = dc << 1;
+            d_slope = d_twice - dr;
+            for(dr <<= 1; r1 ^ r2; r1 += cond1){ // TODO!
+                ri = ( (r1 * pic.col[0]) + c1 ) << 2;
+                gi = ri + 1;
+                bi = gi + 1;
+                pic.elements.ui8[ri] = color.parts.b1;
+                pic.elements.ui8[gi] = color.parts.b2;
+                pic.elements.ui8[bi] = color.parts.b3;
+                d_slope += d_twice;
+                cont = d_slope >=0;
+                c1 += cont;
+                d_slope -= dr & -cont; // if cont equals to 1 then we get -1(111111) & dr's value == we get value of dr, otherwise we get 0(0000) & dr == we get 0;
+            }
+            ri = ( (r2 * pic.col[0]) + c1 ) << 2;
+            gi = ri + 1;
+            bi = gi + 1;
+            pic.elements.ui8[ri] = color.   parts.b1;
+            pic.elements.ui8[gi] = color.parts.b2;
+            pic.elements.ui8[bi] = color.parts.b3;
+
+        }
+    }
+}
 
 
 void line_segment(){ }
-void straigh_line_thr_two_points(){ }
 void line_at_angle_a(){ }
 void triangle(){ }
 void heart(){ }
