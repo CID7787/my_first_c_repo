@@ -168,3 +168,23 @@ union uint32_bytes_union{
   uint32_t ui32;
   four_uint8_struct parts;
 } typedef uint32_bytes;
+
+
+typedef struct Object_2D{
+    uint32_t x, y, mass;
+    int32_t *veloc, *accelor;// velocity == pixels amount / per frame
+    uint32_bytes color;
+} object_t;
+
+typedef struct DOT_2D{
+    object_t obj;
+    int64_t charge;
+} dot_t;
+
+typedef struct Circle_2D{
+    object_t obj;
+    uint32_t rad;
+    int8_t filled;
+    uint32_bytes outline_col;
+} circle_t;
+

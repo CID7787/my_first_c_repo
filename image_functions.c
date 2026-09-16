@@ -7,6 +7,8 @@
     #include "constants.c"
     #include "safe_arithmetic_functions.c"
 #endif
+#define SQUARE(x) ((x) * (x)) 
+
 
 // .cpp file filler function
 void file_filler(const char *str, matrix_t pic){
@@ -37,7 +39,7 @@ void file_filler(const char *str, matrix_t pic){
 
 // split left and right of matrix and fill it with specific color
 
-void left_side_color(matrix_t pic, uint32_bytes col_b){
+void draw_left_side_color(matrix_t pic, uint32_bytes col_b){
     if(!(pic.row && pic.col && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
@@ -60,7 +62,7 @@ void left_side_color(matrix_t pic, uint32_bytes col_b){
     } 
 }
 
-void right_side_color(matrix_t pic, uint32_bytes col_b){
+void draw_right_side_color(matrix_t pic, uint32_bytes col_b){
     if(!(pic.row && pic.col && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
@@ -78,7 +80,7 @@ void right_side_color(matrix_t pic, uint32_bytes col_b){
 
 // split up and down of matrix and fill it with specific color
 
-void top_side_color(matrix_t pic, uint32_bytes col_b){
+void draw_top_side_color(matrix_t pic, uint32_bytes col_b){
     if(!(pic.row && pic.col && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
@@ -93,7 +95,7 @@ void top_side_color(matrix_t pic, uint32_bytes col_b){
     } 
 }  
 
-void down_side_color(matrix_t pic, uint32_bytes col_b){
+void draw_down_side_color(matrix_t pic, uint32_bytes col_b){
     if(!(pic.row && pic.col && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
@@ -111,7 +113,7 @@ void down_side_color(matrix_t pic, uint32_bytes col_b){
 
 // specific pixels(matrix elements) filler functions
 
-void pix_from_k_to_m_color(matrix_t pic, uint32_bytes col_b, uint32_t from, uint32_t to){
+void draw_pix_from_k_to_m_color(matrix_t pic, uint32_bytes col_b, uint32_t from, uint32_t to){
     if(!(pic.row && pic.col && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
@@ -131,7 +133,7 @@ void pix_from_k_to_m_color(matrix_t pic, uint32_bytes col_b, uint32_t from, uint
     }
 }
 
-void even_pix_color(matrix_t pic, uint32_bytes col_b){
+void draw_even_pix_color(matrix_t pic, uint32_bytes col_b){
     if(!(pic.row && pic.col && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
@@ -146,7 +148,7 @@ void even_pix_color(matrix_t pic, uint32_bytes col_b){
     }
 }
 
-void odd_pix_color(matrix_t pic, uint32_bytes col_b){
+void draw_odd_pix_color(matrix_t pic, uint32_bytes col_b){
     if(!(pic.row && pic.col && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
@@ -164,7 +166,7 @@ void odd_pix_color(matrix_t pic, uint32_bytes col_b){
 
 // line drawing functions
 
-void vertical_line(matrix_t pic, uint32_bytes col_b, uint32_t width, uint32_t offset, uint32_t from_row, uint32_t till_row){// width add up on offset value so vertical line will start from offset value and till offset + width draw it
+void draw_vertical_line(matrix_t pic, uint32_bytes col_b, uint32_t width, uint32_t offset, uint32_t from_row, uint32_t till_row){// width add up on offset value so vertical line will start from offset value and till offset + width draw it
     if(!(pic.elements.ui8 && pic.row && pic.col)){ 
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
@@ -184,7 +186,7 @@ void vertical_line(matrix_t pic, uint32_bytes col_b, uint32_t width, uint32_t of
     }
 }
 
-void horizontal_line(matrix_t pic, uint32_bytes col_b, uint32_t from_row, uint32_t till_row, uint32_t from_col, uint32_t till_col){// from_row and from_col starts indexing rows from 1
+void draw_horizontal_line(matrix_t pic, uint32_bytes col_b, uint32_t from_row, uint32_t till_row, uint32_t from_col, uint32_t till_col){// from_row and from_col starts indexing rows from 1
     if(!(pic.elements.ui8 && pic.row && pic.col)){ 
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
@@ -213,7 +215,7 @@ void horizontal_line(matrix_t pic, uint32_bytes col_b, uint32_t from_row, uint32
     }
 }
 
-void diagonal_line(matrix_t pic, uint32_bytes col_b, uint32_t start_r, uint32_t start_c, uint32_t length, uint8_t slope){ // start_r and start_c indexing starts from 1, length is amount of diagonal pixels, for slope desc reference next string
+void draw_diagonal_line(matrix_t pic, uint32_bytes col_b, uint32_t start_r, uint32_t start_c, uint32_t length, uint8_t slope){ // start_r and start_c indexing starts from 1, length is amount of diagonal pixels, for slope desc reference next string
 // slope '0' correspond to the angle 45 from start point, '1' to the angle 135, '2' to the angle 225, '3' to the angle 315  
     if(!(pic.col && pic.row && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
@@ -241,7 +243,7 @@ void diagonal_line(matrix_t pic, uint32_bytes col_b, uint32_t start_r, uint32_t 
     }
 }
 
-void straight_line_thr_two_points(matrix_t pic, uint32_bytes color, uint32_t r1, uint32_t c1, uint32_t r2, uint32_t c2){// (r1, c1) and (r2, c2) are coordinates of first and second points' row and column(indexing starts from 1)
+void draw_straight_line_thr_two_points(matrix_t pic, uint32_bytes color, uint32_t r1, uint32_t c1, uint32_t r2, uint32_t c2){// (r1, c1) and (r2, c2) are coordinates of first and second points' row and column(indexing starts from 1)
     if(!(pic.col && pic.row && pic.elements.f32)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
@@ -325,16 +327,16 @@ void straight_line_thr_two_points(matrix_t pic, uint32_bytes color, uint32_t r1,
 
 // coordinate axis and grid functions
 
-void coordinate_axis(matrix_t pic, uint32_bytes col_b){
+void draw_coordinate_axis(matrix_t pic, uint32_bytes col_b){
     if(!(pic.elements.ui8 && pic.row && pic.col)){ 
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
     }
-    horizontal_line(pic, col_b, pic.row[0] >> 1, pic.row[0] >> 1, 1, pic.col[0]);    
-    horizontal_line(pic, col_b, 1, pic.row[0], pic.col[0] >> 1, pic.col[0] >> 1);    
+    draw_horizontal_line(pic, col_b, pic.row[0] >> 1, pic.row[0] >> 1, 1, pic.col[0]);    
+    draw_horizontal_line(pic, col_b, 1, pic.row[0], pic.col[0] >> 1, pic.col[0] >> 1);    
 }
 
-void grid(matrix_t pic, uint32_bytes color, uint32_t unit_scale){
+void draw_grid(matrix_t pic, uint32_bytes color, uint32_t unit_scale){
     if(!(pic.row && pic.col && pic.elements.i32)){
         if(pic.err) pic.err[0] = NULL_POINTER;
         return;
@@ -346,17 +348,17 @@ void grid(matrix_t pic, uint32_bytes color, uint32_t unit_scale){
     }
     unit_scale++;
     for(r = 1; r < row; r+=unit_scale){
-        horizontal_line(pic, color, r, r, 1, col); 
+        draw_horizontal_line(pic, color, r, r, 1, col); 
     }
     for(c = 1; c < col; c+=unit_scale){
-        horizontal_line(pic, color, 1, row, c, c); 
+        draw_horizontal_line(pic, color, 1, row, c, c); 
     }
 }
 
 
 // gradient drawing functions
 
-void horizontal_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
+void draw_horizontal_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
     if(!(pic.row && pic.col && pic.elements.ui8 && pic.err)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
@@ -391,7 +393,7 @@ void horizontal_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
     }
 }
 
-void vertical_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
+void draw_vertical_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
     if(!(pic.row && pic.col && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
@@ -425,7 +427,7 @@ void vertical_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
     }
 }
 
-void left_top_to_right_bottom_diag_grad(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
+void draw_left_top_to_right_bottom_diag_grad(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
     if(!(pic.col && pic.row && pic.elements.ui32)){
         if(pic.err) pic.err[0] = NULL_POINTER;
         return;
@@ -457,7 +459,7 @@ void left_top_to_right_bottom_diag_grad(matrix_t pic, uint32_bytes col1, uint32_
     }
 }
 
-void right_top_to_left_bottom_diag_grad(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
+void draw_right_top_to_left_bottom_diag_grad(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
     if(!(pic.col && pic.row && pic.elements.ui32)){
         if(pic.err) pic.err[0] = NULL_POINTER;
         return;
@@ -489,15 +491,15 @@ void right_top_to_left_bottom_diag_grad(matrix_t pic, uint32_bytes col1, uint32_
     }
 }
 
-void diagonal_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2, int8_t slope){// slope == 0 means that it's going from top left angle down to left, and slope == !0 means it's going from top right angle down till left
-    if(slope) right_top_to_left_bottom_diag_grad(pic, col1, col2);
-    else left_top_to_right_bottom_diag_grad(pic, col1, col2);
+void draw_diagonal_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2, int8_t slope){// slope == 0 means that it's going from top left angle down to left, and slope == !0 means it's going from top right angle down till left
+    if(slope) draw_right_top_to_left_bottom_diag_grad(pic, col1, col2);
+    else draw_left_top_to_right_bottom_diag_grad(pic, col1, col2);
 }
 
 
 // shape drawing functions
 
-void rectangle_filled(matrix_t pic, uint32_bytes color, uint32_t x, uint32_t y, uint32_t xlength, uint32_t ylength){// x and y are coordinates of upper-left corner of rectangle(both starts from 1)
+void draw_rectangle_filled(matrix_t pic, uint32_bytes color, uint32_t x, uint32_t y, uint32_t xlength, uint32_t ylength){// x and y are coordinates of upper-left corner of rectangle(both starts from 1)
     if(!(x && y && pic.col && pic.row && pic.elements.ui8)){
         if(pic.err) pic.err[0] = NULL_POINTER;
         return;
@@ -525,7 +527,7 @@ void rectangle_filled(matrix_t pic, uint32_bytes color, uint32_t x, uint32_t y, 
     }
 }
 
-void rectangle_outline(matrix_t pic, uint32_bytes color, uint32_t left_up_x, uint32_t right_down_x, uint32_t left_up_y, uint32_t right_down_y){// all four coordinates starts from 1
+void draw_rectangle_outline(matrix_t pic, uint32_bytes color, uint32_t left_up_x, uint32_t right_down_x, uint32_t left_up_y, uint32_t right_down_y){// all four coordinates starts from 1
     if(!(pic.col && pic.row && pic.elements.ui8)){
         if(pic.err) pic.err[0] = NULL_POINTER;
         return;
@@ -574,39 +576,45 @@ void rectangle_outline(matrix_t pic, uint32_bytes color, uint32_t left_up_x, uin
     }
 }
 
-void circle(matrix_t pic, uint32_bytes color, uint32_t centre_r, uint32_t centre_c, uint32_t radius){
+void draw_circle(matrix_t pic, uint32_bytes color, uint32_t centre_r, uint32_t centre_c, uint32_t radius){
     if(!(pic.col && pic.row && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
     }
-    uint32_t col = pic.col[0], row = pic.row[0], ri, gi, bi, r, c;
+    int64_t r, c;
+    uint32_t col = pic.col[0], row = pic.row[0], ri, r_down_lim, c_right_lim, c_left_lim;
     if(!(col && row)){
         if(pic.err){ pic.err[0] = INCOMPATIBLE; }
         return;
     }
-    centre_r += !centre_r;
-    centre_c += !centre_c;
+    r_down_lim  = ((uint64_t)centre_r + radius) > row ? row : centre_r + radius;
+    c_right_lim = ((uint64_t)centre_c + radius) > col ? col : centre_c + radius; 
+    
+    r = radius > centre_r ? 1 : centre_r - radius; 
+    r -= r > 0; 
+    
+    c_left_lim = radius > centre_c ? 1 : centre_c - radius;
+    c_left_lim -= c_left_lim > 0;
+        
     centre_r = ternary(centre_r > row, row, centre_r);
     centre_c = ternary(centre_c > col, col, centre_c);
-    --centre_r, --centre_c;
+    centre_r -= centre_r > 0;
+    centre_c -= centre_c > 0;
+
     radius *= radius;
-    for(r = 0; r < row; r++){
-        for(c = 0; c < col; c++){
-            ri = r - centre_r;
-            gi = c - centre_c;
-            if((ri * ri) + (gi * gi) <= radius){
+    for( ; r < r_down_lim; r++){
+        for(c = c_left_lim; c < c_right_lim; c++){
+            if(SQUARE(r - centre_r) + SQUARE(c - centre_c) <= radius){
                 ri = ((r * col) + c) << 2;
-                gi = ri + 1;
-                bi = ri + 2;
-                pic.elements.ui8[ri] = color.parts.b1;
-                pic.elements.ui8[gi] = color.parts.b2;
-                pic.elements.ui8[bi] = color.parts.b3;
+                pic.elements.ui8[ri    ] = color.parts.b1;
+                pic.elements.ui8[ri + 1] = color.parts.b2;
+                pic.elements.ui8[ri + 2] = color.parts.b3;
             }
         }
     }
 }
 
-void ring(matrix_t pic, uint32_bytes color, uint32_t centre_r, uint32_t centre_c, uint32_t radius, uint32_t tolerance){
+void draw_ring(matrix_t pic, uint32_bytes color, uint32_t centre_r, uint32_t centre_c, uint32_t radius, uint32_t tolerance){
     if(!(pic.col && pic.row && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;

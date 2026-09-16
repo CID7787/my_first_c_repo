@@ -24,61 +24,64 @@ uint to uint, to int, to float
 float to float
 */
 
-void f(matrix_t m){
-    for(int r = 0, ri, gi,bi; r < m.row[0]; r++){
-        printf("%03u %03u %03u", m.elements.ui8[(r * m.col[0]) << 2], m.elements.ui8[((r * m.col[0]) << 2) + 1], m.elements.ui8[((r * m.col[0]) << 2) + 2]);
-        for(int c = 1; c < m.col[0]; c++){
-            
-            ri = ((r * m.col[0]) + c) << 2;
-            gi = ri + 1;
-            bi = ri + 2;
-            printf("  %03u %03u %03u", m.elements.ui8[ri], m.elements.ui8[gi], m.elements.ui8[bi]);
-        }
-        puts("\n\n");
-    }
-}
-
 /*
 yay -S ivpn
 yay -S ivpn-ui
 */
 
-#define PI 3.14159
-
-struct PointIn2D{ float x, y; }typedef Vec2;
-
-
-// What is the problem with this function?
-Vec2* circle_points(Vec2 orig, uint32_t r, uint32_t n){
-    if((n > 360) | !n){ return (Vec2*)0; }
-    Vec2* arr = malloc(n * sizeof(Vec2));
-    float ang = 0, inter = (double)(2 * PI) / n;
-    for(int i = 0; i < n; i++, ang += inter){
-        arr[i].x = r * cos(ang) + orig.x;
-        arr[i].y = r * sin(ang) + orig.y;
+void dropping_circles(){
+    uint32_t row = 1028, col = 1028, i = 0;
+    matrix_t m = matrix_create(UINT32, row, col);
+    uint32_t vel[2] = {0,0}, acel[2] = {3, 0};
+    char frame_name[] = "frame00.ppm";
+    circle_t cir = (circle_t){ .obj = (object_t){ .x = 0, .y = row >> 1, .veloc = vel, .accelor = acel, .color = (uint32_bytes){ .parts = (four_uint8_struct){255, 160, 0} } }, .rad = 10 };
+    while((cir.obj.x + cir.rad) < col){
+        draw_pix_from_k_to_m_color(m, (uint32_bytes){ .parts = (four_uint8_struct){40, 160, 90}}, 0, row * col);
+        draw_circle(m, cir.obj.color, cir.obj.y, cir.obj.x, 10);
+        cir.obj.veloc[0] += cir.obj.accelor[0];
+        cir.obj.veloc[1] += cir.obj.accelor[1];
+        cir.obj.x += abs(cir.obj.veloc[0]) < cir.obj.x ? cir.obj.veloc[0] : -(int32_t)cir.obj.x + cir.rad;
+        cir.obj.y += abs(cir.obj.veloc[1]) < cir.obj.y ? cir.obj.veloc[1] : -(int32_t)cir.obj.y + cir.rad;
+        i++;
+        // printf("%u , %u      %d, %d\n", cir.obj.x, cir.obj.y, cir.obj.veloc[0], cir.obj.veloc[1]);
+        // if(i > 20){ break; }
+        printf("%d  ", i);
+        frame_name[6] = (i % 10)   + '0';
+        frame_name[5] = (i / 10)   + '0';
+        // frame_name[6] = (i / 100)  + '0';
+        // frame_name[5] = (i / 1000) + '0';
+        // frame_name[5] = (i % 100000) / 10000;
+        file_filler(frame_name, m);
     }
-    return arr;
+    free(m.type);
+    // system("ffmpeg -framerate 4 -i frame%05d.ppm vid.mp4");
+}
+
+typedef struct linked_list_type{
+    uint32_t val;
+    struct linked_list_type *next;
+} link_list;
+
+void data_str_practical_first_ques(){   
+    link_list  list1 = (link_list){ .val = 212}, list2, *list3, *llist = list3 = malloc(sizeof(link_list));
+    llist->next = &list1;
+    uint32_t value, min_one = -1, i = 0;
+    while(i++ < 2){
+        printf("start: ");
+        value = 1;
+        while(value ^ min_one){
+            scanf("%u", &value);    
+            llist->next->val = value;
+            llist->next->next = malloc(sizeof(link_list));
+        }
+        free(llist->next->next);
+        if(i & 1) llist = &list2; 
+    }
+    free(list3);
 }
 
 int main(){
-    char fname[12] = "frame00.ppm"; 
-    matrix_t m;
-    uint32_t row = 256, col = 256;
-    int a = 1;
-    while(a <= 16){
-        m = matrix_create(UINT32, row, col);
-        pix_from_k_to_m_color(m, (uint32_bytes){ .parts = (four_uint8_struct){0,0,0}}, 0, row * col);
-        Vec2* res = circle_points((Vec2){row >> 1, col >> 1}, 100, a);
-        for(int i = 0; i < 16; i++){
-            straight_line_thr_two_points(m, (uint32_bytes){ .parts = (four_uint8_struct){255, 255, 255}}, 128, 128, (int)res[i].y, (int)res[i].x);
-        }
-        fname[6] = '0' + (a % 10);
-        fname[5] = '0' + a / 10;
-        file_filler(fname, m);
-        free(res);
-        free(m.type);
-        ++a;
-    }
+    dropping_circles();
 }
 /*
 PRIMITIVE PHYSICS ENGINE ELEMENTS:
