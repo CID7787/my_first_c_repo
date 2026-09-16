@@ -8,7 +8,7 @@
     #include "safe_arithmetic_functions.c"
 #endif
 
-
+// .cpp file filler function
 void file_filler(const char *str, matrix_t pic){
     if(!(pic.row && pic.col && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
@@ -35,6 +35,7 @@ void file_filler(const char *str, matrix_t pic){
 }
 
 
+// split left and right of matrix and fill it with specific color
 
 void left_side_color(matrix_t pic, uint32_bytes col_b){
     if(!(pic.row && pic.col && pic.elements.ui8)){
@@ -70,13 +71,12 @@ void right_side_color(matrix_t pic, uint32_bytes col_b){
             pic.elements.ui8[(((r * col) + c ) << 2)    ] = col_b.parts.b1;
             pic.elements.ui8[(((r * col) + c ) << 2) + 1] = col_b.parts.b2;
             pic.elements.ui8[(((r * col) + c ) << 2) + 2] = col_b.parts.b3;
-            printf("%u %u %u   ", pic.elements.ui8[(((r * col) + c ) << 2)    ], pic.elements.ui8[(((r * col) + c ) << 2) +1], pic.elements.ui8[(((r * col) + c ) << 2)+2]);
-            if(c == (col - 1)){ printf("\n\n"); }
         }
     } 
 }   
 
 
+// split up and down of matrix and fill it with specific color
 
 void top_side_color(matrix_t pic, uint32_bytes col_b){
     if(!(pic.row && pic.col && pic.elements.ui8)){
@@ -109,6 +109,27 @@ void down_side_color(matrix_t pic, uint32_bytes col_b){
 }
 
 
+// specific pixels(matrix elements) filler functions
+
+void pix_from_k_to_m_color(matrix_t pic, uint32_bytes col_b, uint32_t from, uint32_t to){
+    if(!(pic.row && pic.col && pic.elements.ui8)){
+        if(pic.err){ pic.err[0] = NULL_POINTER; }
+        return;
+    }
+    uint32_t n = pic.row[0] * pic.col[0];
+    if(!n){
+        if(pic.err){ pic.err[0] = INCOMPATIBLE; }
+        return;
+    }
+    to   = ternary(to   > n, n, to);
+    from = ternary(from > n, n, from);
+    if(from > to){ from ^= to; to ^= from; from ^= to; }
+    for(from; from < to; from++){
+        pic.elements.ui8[(from << 2)    ] = col_b.parts.b1;
+        pic.elements.ui8[(from << 2) + 1] = col_b.parts.b2;
+        pic.elements.ui8[(from << 2) + 2] = col_b.parts.b3;
+    }
+}
 
 void even_pix_color(matrix_t pic, uint32_bytes col_b){
     if(!(pic.row && pic.col && pic.elements.ui8)){
@@ -141,6 +162,7 @@ void odd_pix_color(matrix_t pic, uint32_bytes col_b){
 }
 
 
+// line drawing functions
 
 void vertical_line(matrix_t pic, uint32_bytes col_b, uint32_t width, uint32_t offset, uint32_t from_row, uint32_t till_row){// width add up on offset value so vertical line will start from offset value and till offset + width draw it
     if(!(pic.elements.ui8 && pic.row && pic.col)){ 
@@ -219,27 +241,89 @@ void diagonal_line(matrix_t pic, uint32_bytes col_b, uint32_t start_r, uint32_t 
     }
 }
 
-
-
-void pix_from_k_to_m_color(matrix_t pic, uint32_bytes col_b, uint32_t from, uint32_t to){
-    if(!(pic.row && pic.col && pic.elements.ui8)){
+void straight_line_thr_two_points(matrix_t pic, uint32_bytes color, uint32_t r1, uint32_t c1, uint32_t r2, uint32_t c2){// (r1, c1) and (r2, c2) are coordinates of first and second points' row and column(indexing starts from 1)
+    if(!(pic.col && pic.row && pic.elements.f32)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
         return;
     }
-    uint32_t n = pic.row[0] * pic.col[0];
-    if(!n){
+    if(!(pic.row[0] && pic.col[0] && r1 && r2 && c1 && c2)){
         if(pic.err){ pic.err[0] = INCOMPATIBLE; }
         return;
     }
-    to   = ternary(to   > n, n, to);
-    from = ternary(from > n, n, from);
-    if(from > to){ from ^= to; to ^= from; from ^= to; }
-    for(from; from < to; from++){
-        pic.elements.ui8[(from << 2)    ] = col_b.parts.b1;
-        pic.elements.ui8[(from << 2) + 1] = col_b.parts.b2;
-        pic.elements.ui8[(from << 2) + 2] = col_b.parts.b3;
+    uint32_t ri, gi, bi;
+    int8_t cond1 = r1 == r2, cond2 = c1 == c2;
+    int64_t dc, dr, d_twice, d_slope, cont;
+    --r1, --r2, --c1, --c2;
+    if(cond1 | cond2){
+        cond1 = !cond1 * (1 - ((r1 > r2) << 1));
+        cond2 = !cond2 * (1 - ((c1 > c2) << 1));
+        while((r1 ^ r2) | (c1 ^ c2)){
+            ri = ( (r1 * pic.col[0]) + c1 ) << 2;
+            gi = ri + 1;
+            bi = gi + 1;
+            pic.elements.ui8[ri] = color.parts.b1;
+            pic.elements.ui8[gi] = color.parts.b2;
+            pic.elements.ui8[bi] = color.parts.b3;
+            r1 += cond1, c1 += cond2;
+        }
+    }
+    else{
+        if(c1 > c2){
+            dc = c1;
+            c1 = c2;
+            c2 = dc;
+            dc = r1;
+            r1 = r2;
+            r2 = dc;
+        }
+        dc = c2 - c1, dr = ternary(r2 > r1, r2 - r1, r1 - r2);
+        cond1 = 1 - ((r2 < r1) << 1);
+        if(dc >= dr){
+            d_twice = dr << 1;
+            d_slope = d_twice - dc;
+            for(dc <<= 1; c1 <= c2; c1++){
+                // setting color value
+                ri = ( (r1 * pic.col[0]) + c1 ) << 2;
+                gi = ri + 1;
+                bi = gi + 1;
+                pic.elements.ui8[ri] = color.parts.b1;
+                pic.elements.ui8[gi] = color.parts.b2;
+                pic.elements.ui8[bi] = color.parts.b3;
+                // preparing parameters for the next iteration
+                d_slope += d_twice;
+                cont = d_slope >= 0;
+                r1 += cond1 & -cont;
+                d_slope -= dc & -cont;
+            }
+        }
+        else{
+            d_twice = dc << 1;
+            d_slope = d_twice - dr;
+            for(dr <<= 1; r1 ^ r2; r1 += cond1){ // TODO!
+                ri = ( (r1 * pic.col[0]) + c1 ) << 2;
+                gi = ri + 1;
+                bi = gi + 1;
+                pic.elements.ui8[ri] = color.parts.b1;
+                pic.elements.ui8[gi] = color.parts.b2;
+                pic.elements.ui8[bi] = color.parts.b3;
+                d_slope += d_twice;
+                cont = d_slope >=0;
+                c1 += cont;
+                d_slope -= dr & -cont; // if cont equals to 1 then we get -1(111111) & dr's value == we get value of dr, otherwise we get 0(0000) & dr == we get 0;
+            }
+            ri = ( (r2 * pic.col[0]) + c1 ) << 2;
+            gi = ri + 1;
+            bi = gi + 1;
+            pic.elements.ui8[ri] = color.   parts.b1;
+            pic.elements.ui8[gi] = color.parts.b2;
+            pic.elements.ui8[bi] = color.parts.b3;
+
+        }
     }
 }
+
+
+// coordinate axis and grid functions
 
 void coordinate_axis(matrix_t pic, uint32_bytes col_b){
     if(!(pic.elements.ui8 && pic.row && pic.col)){ 
@@ -269,6 +353,8 @@ void grid(matrix_t pic, uint32_bytes color, uint32_t unit_scale){
     }
 }
 
+
+// gradient drawing functions
 
 void horizontal_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
     if(!(pic.row && pic.col && pic.elements.ui8 && pic.err)){
@@ -338,7 +424,6 @@ void vertical_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
         }
     }
 }
-
 
 void left_top_to_right_bottom_diag_grad(matrix_t pic, uint32_bytes col1, uint32_bytes col2){
     if(!(pic.col && pic.row && pic.elements.ui32)){
@@ -410,6 +495,7 @@ void diagonal_gradient(matrix_t pic, uint32_bytes col1, uint32_bytes col2, int8_
 }
 
 
+// shape drawing functions
 
 void rectangle_filled(matrix_t pic, uint32_bytes color, uint32_t x, uint32_t y, uint32_t xlength, uint32_t ylength){// x and y are coordinates of upper-left corner of rectangle(both starts from 1)
     if(!(x && y && pic.col && pic.row && pic.elements.ui8)){
@@ -488,8 +574,6 @@ void rectangle_outline(matrix_t pic, uint32_bytes color, uint32_t left_up_x, uin
     }
 }
 
-
-
 void circle(matrix_t pic, uint32_bytes color, uint32_t centre_r, uint32_t centre_c, uint32_t radius){
     if(!(pic.col && pic.row && pic.elements.ui8)){
         if(pic.err){ pic.err[0] = NULL_POINTER; }
@@ -556,90 +640,23 @@ void ring(matrix_t pic, uint32_bytes color, uint32_t centre_r, uint32_t centre_c
 }
 
 
-void straigh_line_thr_two_points(matrix_t pic, uint32_bytes color, uint32_t r1, uint32_t c1, uint32_t r2, uint32_t c2){// (r1, c1) and (r2, c2) are coordinates of first and second points' row and column(indexing starts from 1)
-    if(!(pic.col && pic.row && pic.elements.f32)){
-        if(pic.err){ pic.err[0] = NULL_POINTER; }
-        return;
-    }
-    if(!(pic.row[0] && pic.col[0] && r1 && r2 && c1 && c2)){
-        if(pic.err){ pic.err[0] = INCOMPATIBLE; }
-        return;
-    }
-    uint32_t ri, gi, bi;
-    int8_t cond1 = r1 == r2, cond2 = c1 == c2;
-    int64_t dc, dr, d_twice, d_slope, cont;
-    --r1, --r2, --c1, --c2;
-    if(cond1 | cond2){
-        cond1 = !cond1 * (1 - ((r1 > r2) << 1));
-        cond2 = !cond2 * (1 - ((c1 > c2) << 1));
-        while((r1 ^ r2) | (c1 ^ c2)){
-            ri = ( (r1 * pic.col[0]) + c1 ) << 2;
-            gi = ri + 1;
-            bi = gi + 1;
-            pic.elements.ui8[ri] = color.parts.b1;
-            pic.elements.ui8[gi] = color.parts.b2;
-            pic.elements.ui8[bi] = color.parts.b3;
-            r1 += cond1, c1 += cond2;
-        }
-    }
-    else{
-        if(c1 > c2){
-            dc = c1;
-            c1 = c2;
-            c2 = dc;
-            dc = r1;
-            r1 = r2;
-            r2 = dc;
-        }
-        dc = c2 - c1, dr = ternary(r2 > r1, r2 - r1, r1 - r2);
-        cond1 = 1 - ((r2 < r1) << 1);
-        if(dc >= dr){
-            printf("%d %d", dr, dc);
-            d_twice = dr << 1;
-            d_slope = d_twice - dc;
-            for(dc <<= 1; c1 <= c2; c1++){
-                // setting color value
-                ri = ( (r1 * pic.col[0]) + c1 ) << 2;
-                gi = ri + 1;
-                bi = gi + 1;
-                pic.elements.ui8[ri] = color.parts.b1;
-                pic.elements.ui8[gi] = color.parts.b2;
-                pic.elements.ui8[bi] = color.parts.b3;
-                // preparing parameters for the next iteration
-                d_slope += d_twice;
-                cont = d_slope >= 0;
-                r1 += cond1 & -cont;
-                d_slope -= dc & -cont;
-            }
-        }
-        else{
-            d_twice = dc << 1;
-            d_slope = d_twice - dr;
-            for(dr <<= 1; r1 ^ r2; r1 += cond1){ // TODO!
-                ri = ( (r1 * pic.col[0]) + c1 ) << 2;
-                gi = ri + 1;
-                bi = gi + 1;
-                pic.elements.ui8[ri] = color.parts.b1;
-                pic.elements.ui8[gi] = color.parts.b2;
-                pic.elements.ui8[bi] = color.parts.b3;
-                d_slope += d_twice;
-                cont = d_slope >=0;
-                c1 += cont;
-                d_slope -= dr & -cont; // if cont equals to 1 then we get -1(111111) & dr's value == we get value of dr, otherwise we get 0(0000) & dr == we get 0;
-            }
-            ri = ( (r2 * pic.col[0]) + c1 ) << 2;
-            gi = ri + 1;
-            bi = gi + 1;
-            pic.elements.ui8[ri] = color.   parts.b1;
-            pic.elements.ui8[gi] = color.parts.b2;
-            pic.elements.ui8[bi] = color.parts.b3;
+/* triangle functions problems: NO IDEA WHAT SHOULD DO ITS PARAMETRS
 
-        }
-    }
+rectangular triangle
+draw triangle with sides, edge points or angles known
+
+*/
+
+void triangle_filled(matrix_t pic, uint32_bytes color){ 
+
 }
+
+void triangle_outline(matrix_t pic, uint32_bytes color){
+
+}
+
 
 
 void line_segment(){ }
 void line_at_angle_a(){ }
-void triangle(){ }
 void heart(){ }
