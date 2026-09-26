@@ -5,83 +5,84 @@
 #include <stdint.h> 
 #define headerfile 1
 
-#include "constants.c"
-#include "user_defined_datatypes.c"
-#include "logical_functions_of_decision.c"
-#include "additional_functions.c"
-#include "bitwise_functions.c"
-#include "type_cast_functions.c"
-#include "safe_arithmetic_functions.c"
-#include "image_functions.c"
-#include "new_vector_functions.c"
-#include "matrix_functions.c"
-#include "print_binary.c"
-// #include "raylib.h"
+// #include "constants.c"
+// #include "user_defined_datatypes.c"
+// #include "logical_functions_of_decision.c"
+// #include "additional_functions.c"
+// #include "bitwise_functions.c"
+// #include "type_cast_functions.c"
+// #include "safe_arithmetic_functions.c"
+// #include "image_functions.c"
+// #include "new_vector_functions.c"
+// #include "matrix_functions.c"
+// #include "print_binary.c"
 
-/* type cast functions' tests
-int to int, to uint, to float
-uint to uint, to int, to float
-float to float
-*/
 
-/*
-yay -S ivpn
-yay -S ivpn-ui
-*/
+typedef struct ListNode{
+    uint32_t val;
+    struct ListNode *next_n;
+} node;
 
-void dropping_circles(){
-    uint32_t row = 1028, col = 1028, i = 0;
-    matrix_t m = matrix_create(UINT32, row, col);
-    uint32_t vel[2] = {0,0}, acel[2] = {3, 0};
-    char frame_name[] = "frame00.ppm";
-    circle_t cir = (circle_t){ .obj = (object_t){ .x = 0, .y = row >> 1, .veloc = vel, .accelor = acel, .color = (uint32_bytes){ .parts = (four_uint8_struct){255, 160, 0} } }, .rad = 10 };
-    while((cir.obj.x + cir.rad) < col){
-        draw_pix_from_k_to_m_color(m, (uint32_bytes){ .parts = (four_uint8_struct){40, 160, 90}}, 0, row * col);
-        draw_circle(m, cir.obj.color, cir.obj.y, cir.obj.x, 10);
-        cir.obj.veloc[0] += cir.obj.accelor[0];
-        cir.obj.veloc[1] += cir.obj.accelor[1];
-        cir.obj.x += abs(cir.obj.veloc[0]) < cir.obj.x ? cir.obj.veloc[0] : -(int32_t)cir.obj.x + cir.rad;
-        cir.obj.y += abs(cir.obj.veloc[1]) < cir.obj.y ? cir.obj.veloc[1] : -(int32_t)cir.obj.y + cir.rad;
-        i++;
-        // printf("%u , %u      %d, %d\n", cir.obj.x, cir.obj.y, cir.obj.veloc[0], cir.obj.veloc[1]);
-        // if(i > 20){ break; }
-        printf("%d  ", i);
-        frame_name[6] = (i % 10)   + '0';
-        frame_name[5] = (i / 10)   + '0';
-        // frame_name[6] = (i / 100)  + '0';
-        // frame_name[5] = (i / 1000) + '0';
-        // frame_name[5] = (i % 100000) / 10000;
-        file_filler(frame_name, m);
+void print_list(node* head){
+    if(head->next_n){
+        printf("%u", head->next_n->val);
+        head = head->next_n;
     }
-    free(m.type);
-    // system("ffmpeg -framerate 4 -i frame%05d.ppm vid.mp4");
+    else{
+        puts("NULL");
+        return;
+    }
+    while(head->next_n){
+        printf(" %u", head->next_n->val);
+        head = head->next_n;
+    }
 }
 
-typedef struct linked_list_type{
-    uint32_t val;
-    struct linked_list_type *next;
-} link_list;
-
-void data_str_practical_first_ques(){   
-    link_list  list1 = (link_list){ .val = 212}, list2, *list3, *llist = list3 = malloc(sizeof(link_list));
-    llist->next = &list1;
-    uint32_t value, min_one = -1, i = 0;
-    while(i++ < 2){
-        printf("start: ");
-        value = 1;
-        while(value ^ min_one){
-            scanf("%u", &value);    
-            llist->next->val = value;
-            llist->next->next = malloc(sizeof(link_list));
-        }
-        free(llist->next->next);
-        if(i & 1) llist = &list2; 
+node* concat(node* list1_h, node* list2_h){
+    node *res = (node*)malloc(sizeof(node)),
+        **node_arr = (node*[]){list1_h->next_n, list2_h->next_n},
+         *itr_node = res;
+    uint8_t index_cond;
+    while(node_arr[0] && node_arr[1]){
+        index_cond = node_arr[0]->val > node_arr[1]->val;
+        itr_node = (itr_node->next_n = node_arr[index_cond]);
+        node_arr[index_cond] = node_arr[index_cond]->next_n;
     }
-    free(list3);
+    itr_node->next_n = node_arr[node_arr[1] != 0];    
+    return res;
+}
+
+
+void call_func(){
+    node *list1_h = (node*)malloc(sizeof(node)), 
+         *list2_h = (node*)malloc(sizeof(node)),
+         *list3 = list1_h;
+    uint32_t value;
+    list1_h->val = list2_h->val = 0;
+    scanf("%u",  &value);
+    while(value ^ -1){
+        list3->next_n = (node*)malloc(sizeof(node));
+        list3->next_n->val = value;
+        list3 = list3->next_n;
+        ++list1_h->val;
+        scanf("%u", &value);
+    }
+    list3->next_n = 0;
+    list3 = list2_h;
+    scanf("%u",  &value);
+    while(value ^ -1){
+        list3->next_n = (node*)malloc(sizeof(node));
+        list3->next_n->val = value;
+        list3 = list3->next_n;
+        ++list2_h->val;
+        scanf("%u", &value);
+    }
+    list3->next_n = 0;
+    print_list( concat(list1_h, list2_h) );
 }
 
 int main(){
-    dropping_circles();
+    call_func();
 }
 /*
 PRIMITIVE PHYSICS ENGINE ELEMENTS:
