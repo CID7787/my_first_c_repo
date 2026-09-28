@@ -17,72 +17,9 @@
 // #include "matrix_functions.c"
 // #include "print_binary.c"
 
-
-typedef struct ListNode{
-    uint32_t val;
-    struct ListNode *next_n;
-} node;
-
-void print_list(node* head){
-    if(head->next_n){
-        printf("%u", head->next_n->val);
-        head = head->next_n;
-    }
-    else{
-        puts("NULL");
-        return;
-    }
-    while(head->next_n){
-        printf(" %u", head->next_n->val);
-        head = head->next_n;
-    }
-}
-
-node* concat(node* list1_h, node* list2_h){
-    node *res = (node*)malloc(sizeof(node)),
-        **node_arr = (node*[]){list1_h->next_n, list2_h->next_n},
-         *itr_node = res;
-    uint8_t index_cond;
-    while(node_arr[0] && node_arr[1]){
-        index_cond = node_arr[0]->val > node_arr[1]->val;
-        itr_node = (itr_node->next_n = node_arr[index_cond]);
-        node_arr[index_cond] = node_arr[index_cond]->next_n;
-    }
-    itr_node->next_n = node_arr[node_arr[1] != 0];    
-    return res;
-}
-
-
-void call_func(){
-    node *list1_h = (node*)malloc(sizeof(node)), 
-         *list2_h = (node*)malloc(sizeof(node)),
-         *list3 = list1_h;
-    uint32_t value;
-    list1_h->val = list2_h->val = 0;
-    scanf("%u",  &value);
-    while(value ^ -1){
-        list3->next_n = (node*)malloc(sizeof(node));
-        list3->next_n->val = value;
-        list3 = list3->next_n;
-        ++list1_h->val;
-        scanf("%u", &value);
-    }
-    list3->next_n = 0;
-    list3 = list2_h;
-    scanf("%u",  &value);
-    while(value ^ -1){
-        list3->next_n = (node*)malloc(sizeof(node));
-        list3->next_n->val = value;
-        list3 = list3->next_n;
-        ++list2_h->val;
-        scanf("%u", &value);
-    }
-    list3->next_n = 0;
-    print_list( concat(list1_h, list2_h) );
-}
-
 int main(){
-    call_func();
+    
+    return 0;
 }
 /*
 PRIMITIVE PHYSICS ENGINE ELEMENTS:
