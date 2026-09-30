@@ -1,177 +1,270 @@
+// C program to to implement binary tree
+
 #include <stdio.h>
 #include <stdlib.h>
-typedef unsigned int uint;
-typedef unsigned char uchar;
 
-long unsigned int ternary(){}
+// Define a structure for tree nodes
+typedef struct Node {
+    int data;
+    struct Node* left;
+    struct Node* right;
+} Node;
 
-int main(){
-    uint n, k, x, y, i, u;
-    scanf("%u%u", &n, &u);
-    uchar* arr = calloc(n * n, 1);
-    while(u--){
-        scanf("%u%u%u", &k, &x, &y);
-        --y;
-        i = x;
-        while(i < n){ arr[(i++ * n) + y] = 1; }
-        i = x;
-        while(i)
-    }
-    return 0;   
+// Function to create a new node
+Node* createNode(int data)
+{
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->data = data;
+    newNode->left = NULL;
+    newNode->right = NULL;
+    return newNode;
 }
 
+// Function for inserting a node in a binary tree
+void insert(Node** root, int data)
+{
+    Node* newNode = createNode(data);
+    if (*root == NULL) {
+        *root = newNode;
+        return;
+    }
 
+    // Level order traversal to find the appropriate place
+    // for insertion
+    Node* temp;
+    Node* queue[100];
+    int front = -1, rear = -1;
+    queue[++rear] = *root;
 
+    while (front != rear) {
+        temp = queue[++front];
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// #ifndef headerfile
-//     #include <stdint.h>
-//     #include <stdlib.h>
-//     #include "user_defined_datatypes.c"
-//     #include "constants.c"
-//     #include "logical_functions_of_decision.c"
-//     #include "bitwise_functions.c"
-//     #include "safe_arithmetic_functions.c"
-//     #include "new_vector_functions.c"
-// #endif
-
-
-
-
-
-
-
-/*
-#include <iostream>
-using namespace std;
-typedef unsigned int uint;
-
-uint i;
-
-template <typename type>
-struct Data{
-    type val;
-    Data(type a = 0) : val(a){}
-    void setValue(type a){ val = a; }
-    type operator +(Data<type> a){ return type{val + a.val}; }
-    bool operator >(Data<type> a){ return val > a.val; }
-    bool operator <(Data<type> a){ return val < a.val; }
-    template<typename t>
-    friend ostream& operator<<(ostream& os, Data<t> a){ return os << a.val; }
-};
-
-template <typename type>
-struct GetResult{
-    template<typename t>
-    static t getMax(Data<t> *a, uint n){
-        t most;
-        if(n) most = a[0].val;
-        for(i = 1; i < n; i++){
-            if(a[i].val > most){ most = a[i].val; }
+        //  Insert new node as the left child
+        if (temp->left == NULL) {
+            temp->left = newNode;
+            return;
         }
-        return most;
+        // if left child is not missing push it to the queue
+        else {
+            queue[++rear] = temp->left;
+        }
+        // Insert new node as the right child
+        if (temp->right == NULL) {
+            temp->right = newNode;
+            return;
+        }
+        // if right child is not missing push it to the
+        // queue
+        else {
+            queue[++rear] = temp->right;
+        }
     }
-    template<typename t>
-    static t getMin(Data<t> *a, uint n){
-        t most;
-        if(n) most = a[0].val;
-        for(i = 1; i < n; i++){
-            if(a[i].val < most){ most = a[i].val; }
-        } 
-        return most;
+}
+
+// Function to perform level order traversal to find the
+// deepest rightmost node
+Node* getDeepestRightmostNode(Node* root)
+{
+    Node* temp;
+    Node* queue[100];
+    int front = -1, rear = -1;
+    queue[++rear] = root;
+
+    while (front != rear) {
+        temp = queue[++front];
+
+        if (temp->left != NULL) {
+            queue[++rear] = temp->left;
+        }
+
+        if (temp->right != NULL) {
+            queue[++rear] = temp->right;
+        }
     }
-    template<typename t>
-    static t getSum(Data<t> *a, uint n){
-        t accum = 0;
-        for(i = 0; i < n; i++) accum += a[i].val;
-        return accum;
+    return temp;
+}
+
+// Function for deleting deepest rightmost node in a binary
+// tree
+void deleteDeepestRightmostNode(Node* root, Node* dNode)
+{
+    Node* temp;
+    Node* queue[100];
+    int front = -1, rear = -1;
+    queue[++rear] = root;
+
+    while (front != rear) {
+        temp = queue[++front];
+
+        if (temp == dNode) {
+            temp = NULL;
+            free(dNode);
+            return;
+        }
+
+        if (temp->right != NULL) {
+            if (temp->right == dNode) {
+                temp->right = NULL;
+                free(dNode);
+                return;
+            }
+            else {
+                queue[++rear] = temp->right;
+            }
+        }
+
+        if (temp->left != NULL) {
+            if (temp->left == dNode) {
+                temp->left = NULL;
+                free(dNode);
+                return;
+            }
+            else {
+                queue[++rear] = temp->left;
+            }
+        }
     }
-};
+}
+
+// Function to delete a node in the binary tree
+void delete (Node** root, int data)
+{
+    if (*root == NULL) {
+        printf("Tree is empty.\n");
+        return;
+    }
+
+    if ((*root)->left == NULL && (*root)->right == NULL) {
+        if ((*root)->data == data) {
+            free(*root);
+            *root = NULL;
+            return;
+        }
+        else {
+            printf("Node not found.\n");
+            return;
+        }
+    }
+
+    Node* temp;
+    Node* queue[100];
+    int front = -1, rear = -1;
+    queue[++rear] = *root;
+    Node* keyNode = NULL;
+
+    while (front != rear) {
+        temp = queue[++front];
+
+        if (temp->data == data) {
+            keyNode = temp;
+        }
+
+        if (temp->left != NULL) {
+            queue[++rear] = temp->left;
+        }
+
+        if (temp->right != NULL) {
+            queue[++rear] = temp->right;
+        }
+    }
+
+    if (keyNode != NULL) {
+        Node* deepestNode = getDeepestRightmostNode(*root);
+        keyNode->data = deepestNode->data;
+        deleteDeepestRightmostNode(*root, deepestNode);
+    }
+    else {
+        printf("Node not found.\n");
+    }
+}
+
+// Function to search for a node in the binary tree
+Node* search(Node* root, int data)
+{
+    if (root == NULL) {
+        return NULL;
+    }
+
+    Node* temp;
+    Node* queue[100];
+    int front = -1, rear = -1;
+    queue[++rear] = root;
+
+    while (front != rear) {
+        temp = queue[++front];
+
+        if (temp->data == data) {
+            return temp;
+        }
+
+        if (temp->left != NULL) {
+            queue[++rear] = temp->left;
+        }
+
+        if (temp->right != NULL) {
+            queue[++rear] = temp->right;
+        }
+    }
+    return NULL;
+}
+
+// function to perform inorder traversal in a binary tree
+void inorderTraversal(Node* root)
+{
+    if (root == NULL) {
+        return;
+    }
+
+    inorderTraversal(root->left);
+    printf("%d ", root->data);
+    inorderTraversal(root->right);
+}
 
 int main()
 {
-    Data<int> iData[1001];
-    Data<double> dData[1001];
-    int cases, num;
-    char ch;
-    int u;
-    double v;
-    Data<int> a(10), b(20);
-    Data<double> c(3.14), d(-4.1);
-    cout<<"a + b = "<<(a + b)<<endl;
-    cout<<"max(a, b) = "<<(a > b ? a : b)<<endl;
-    cout<<"min(a, b) = "<<(a < b ? a : b)<<endl;
-    cout<<"c + d = "<<(c + d)<<endl;
-    cout<<"max(c, d) = "<<(c > d ? c : d)<<endl;
-    cout<<"min(c, d) = "<<(c < d ? c : d)<<endl;
-    cin>>cases;
-    for (int i = 0; i < cases; i++)
-    {
-        cin>>ch;
-        cin>>num;
-        for (int j = 0; j < num; j++)
-        {
-            if (ch == 'i')
-            {
-                cin>>u;
-                iData[j].setValue(u);
-            }
-            else if (ch == 'd')
-            {
-                cin>>v;
-                dData[j].setValue(v);
-            }
-        }
-        if (ch == 'i')
-        {
-            cout<<GetResult<int>::getMax(iData, num);
-            cout<<" "<<GetResult<int>::getMin(iData, num);
-            cout<<" "<<GetResult<int>::getSum(iData, num)<<endl;
-        }
-        else if (ch == 'd')
-        {
-            cout<<GetResult<double>::getMax(dData, num);
-            cout<<" "<<GetResult<double>::getMin(dData, num);
-            cout<<" "<<GetResult<double>::getSum(dData, num)<<endl;
-        }
+    Node* root = NULL;
+
+    // Inserting nodes
+    insert(&root, 20);
+    insert(&root, 30);
+    insert(&root, 40);
+    insert(&root, 50);
+    insert(&root, 60);
+    insert(&root, 70);
+    insert(&root, 80);
+
+    // Inorder traversal
+    printf("Inorder traversal of the given Binary Search "
+           "Tree is: ");
+    inorderTraversal(root);
+    printf("\n");
+
+    // Deleting a node
+    int deleteValue = 20;
+    delete (&root, deleteValue);
+    printf("After deletion of %d: ", deleteValue);
+    inorderTraversal(root);
+    printf("\n");
+
+    // Inserting a new node
+    int insertValue = 25;
+    insert(&root, insertValue);
+    printf("After insertion of %d: ", insertValue);
+    inorderTraversal(root);
+    printf("\n");
+
+    // Searching for a node
+    int target = 25;
+    Node* searchResult = search(root, target);
+    if (searchResult != NULL) {
+        printf("Node %d found in the BST.\n", target);
     }
+    else {
+        printf("Node %d not found in the BST.\n", target);
+    }
+
     return 0;
 }
-
-
-*/
-
-/*
-int main(){
-    int arr[3] = {1,2,3};
-    int *pp = arr;
-    int* p = (int*)(&arr + 1);
-    int **ppp = &pp;
-    cout << *arr << '\n' << *((int*)(&arr + 1) -1)<< '\n' << *(arr + 1);
-    // cout << pp << '\n' << &p << '\n' << &ppp;
-    // cout << p << '\n' << *(&arr + 1) << '\n' << (arr + 3);
-    // cout << *(*(&arr + 1) - 1);
-    // cout << (arr == &(arr[0]));
-    // cout << (p == (arr + 3));
-
-}
-
-
-*/
 
 
 /*

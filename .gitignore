@@ -1,1 +1,8 @@
 raylib/
+*.exe
+*.ppm
+*.mp4
+*.mpeg
+*.jpeg
+*.png
+.directory
