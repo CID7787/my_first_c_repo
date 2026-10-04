@@ -17,8 +17,60 @@
 // #include "matrix_functions.c"
 // #include "print_binary.c"
 
-int main(){
+#define get(a, b, c, d, n) ( (a) + ( ((b) * (n) + (c)) << 1 ) )[(d)]
+const uint32_t max_uint32 = ~0u;
+
+uint32_t min_dist(uint32_t *dist_arr, char *check_cond, uint32_t n){
+    uint32_t min_distance = max_uint32, min_ind;
+    while(n--){
+        if(!check_cond[n] && dist_arr[n] <= min_distance)
+            min_distance = dist_arr[n], min_ind = n;
+    }
+    return min_ind;
+}
+
+void my_graph_algo(uint32_t *graph, uint32_t n, uint32_t from, uint32_t to){
+    uint32_t dist[n], money[n], count = n - 1, vert1, vert2, dist_var;
+    char check_vert[n];
     
+    for(int i = 0; i < n; i++){ 
+        dist[i] = max_uint32;
+        check_vert[i] = 0; 
+    }
+    
+    dist[from] = money[from] = 0;
+
+    while(count--){
+        
+        vert1 = min_dist(dist, check_vert, n);
+        check_vert[vert1] = 1;
+        if(vert1 == to) break;
+        vert2 = n;
+        while(vert2--){
+            if (!check_vert[vert2] && get(graph, vert1, vert2, 0, n)
+                                   && (dist[vert1] + get(graph, vert1, vert2, 0, n) <= dist[vert2]) ){
+                dist_var = dist[vert2];
+                dist[vert2] = dist[vert1] + get(graph, vert1, vert2, 0, n);
+                if(dist_var == dist[vert2] && (money[vert1] + get(graph, vert1, vert2, 1, n) < money[vert2]) || dist[vert2] < dist_var)
+                    money[vert2] = money[vert1] + get(graph, vert1, vert2, 1, n);
+            }
+        }
+
+    }
+    printf("%u %u", dist[to], money[to]);
+}
+
+
+int main(){
+    uint32_t n, c, from, to, city1, city2, length, money;
+    scanf("%u%u%u%u", &n, &c, &from, &to);
+    uint32_t *graph = calloc(n * n * 2, 4); 
+    while(c--){
+        scanf("%u%u%u%u", &city1, &city2, &length, &money);
+        get(graph, city1, city2, 0, n) = get(graph, city2, city1, 0, n) = length;
+        get(graph, city1, city2, 1, n) = get(graph, city2, city1, 1, n) =  money;
+    }
+    my_graph_algo(graph, n, from, to);
     return 0;
 }
 /*

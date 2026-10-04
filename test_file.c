@@ -1,5 +1,3 @@
-// C program to to implement binary tree
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -266,7 +264,7 @@ int main()
     return 0;
 }
 
-
+ 
 /*
 struct Citrus{
     string al;
