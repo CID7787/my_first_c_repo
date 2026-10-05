@@ -158,22 +158,22 @@ union int_64_bit_construction{
 }typedef int64_constr;
 
 struct four_bytes_uint8_var_struct{
-  uint8_t b1: 8;
-  uint8_t b2: 8;
-  uint8_t b3: 8;
-  uint8_t b4: 8;
-} typedef four_uint8_struct;
-
-union uint32_bytes_union{
-  uint32_t ui32;
-  four_uint8_struct parts;
+    uint8_t b1: 8;
+    uint8_t b2: 8;
+    uint8_t b3: 8;
+    uint8_t b4: 8;
 } typedef uint32_bytes;
+
+typedef union uint32_parts{
+    uint32_t ui32;
+    uint32_bytes parts;
+} uint32_type;
 
 
 typedef struct Object_2D{
     uint32_t x, y, mass;
     int32_t *veloc, *accelor;// velocity == pixels amount / per frame
-    uint32_bytes color;
+    uint32_type color;
 } object_t;
 
 typedef struct DOT_2D{
@@ -181,10 +181,14 @@ typedef struct DOT_2D{
     int64_t charge;
 } dot_t;
 
+typedef struct PointIn2D{ 
+    uint32_t x, y; 
+} Vec2;
+
 typedef struct Circle_2D{
     object_t obj;
     uint32_t rad;
     int8_t filled;
-    uint32_bytes outline_col;
+    uint32_type outline_col;
 } circle_t;
 

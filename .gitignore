@@ -5,4 +5,6 @@ raylib/
 *.mpeg
 *.jpeg
 *.png
+*.txt
+!c_and_cpp_important_comments.txt
 .directory
